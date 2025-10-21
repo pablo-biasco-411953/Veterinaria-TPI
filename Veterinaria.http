@@ -1,0 +1,11 @@
+@Veterinaria_HostAddress = http://localhost:5041
+
+GET {{Veterinaria_HostAddress}}/todos/
+Accept: application/json
+
+###
+
+GET {{Veterinaria_HostAddress}}/todos/1
+Accept: application/json
+
+###
