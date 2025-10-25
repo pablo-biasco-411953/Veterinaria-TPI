@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="es" data-bs-theme="dark">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DOGTOR — Turnos</title>
+
+    <!-- Bootstrap + Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Fuentes + CSS general -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700&family=Poppins:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="../Css/app.css">
+</head>
+
+<body>
+    <div class="app-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="brand d-flex align-items-center gap-2">
+                <img src="../Assets/logo2.png" alt="Dogtor" width="34" height="34">
+                <span>DOGTOR</span>
+            </div>
+            <nav class="nav flex-column">
+                <a class="nav-link" href="./dashboard.html"><i class="bi bi-speedometer2 me-2"></i>Menú</a>
+                <a class="nav-link active" href="./turnos.html"><i class="bi bi-calendar-event me-2"></i>Turnos</a>
+                <a class="nav-link" href="./clientes.html"><i class="bi bi-people me-2"></i>Clientes y Mascotas</a>
+                <a class="nav-link" href="./historial.html"><i class="bi bi-activity me-2"></i>Historial</a>
+            </nav>
+        </aside>
+
+        <!-- Contenido principal -->
+        <main class="content">
+            <header class="topbar d-flex justify-content-between align-items-center">
+                <h1 class="page-title">Gestión de Turnos</h1>
+                <div class="user d-flex align-items-center gap-2 position-relative">
+                    <span class="text-secondary small d-none d-md-inline" id="userRole">Recepción</span>
+
+                    <!-- Botón de perfil -->
+                    <button id="btnPerfil" class="avatar-initials border-0 bg-transparent"
+                        aria-label="Usuario">US</button>
+
+                    <!-- Menú desplegable -->
+                    <div id="menuPerfil" class="perfil-menu d-none">
+                        <ul class="list-unstyled mb-0">
+                            <li><button class="dropdown-item" id="btnEditarPerfil"><i class="bi bi-person"></i> Editar
+                                    perfil</button></li>
+                            <li><button class="dropdown-item" id="btnCambiarClave"><i class="bi bi-key"></i> Cambiar
+                                    contraseña</button></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><button class="dropdown-item text-danger" id="btnCerrarSesion"><i
+                                        class="bi bi-box-arrow-right"></i> Cerrar sesión</button></li>
+                        </ul>
+                    </div>
+                </div>
+
+            </header>
+
+            <!-- Filtros -->
+            <section class="card mb-3">
+                <div class="card-body d-flex flex-wrap gap-3 align-items-end">
+                    <div class="flex-grow-1">
+                        <label class="form-label text-secondary small">Buscar (mascota o tutor)</label>
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text"><i class="bi bi-search"></i></span>
+                            <input type="text" id="filtroTexto" class="form-control" placeholder="Ej: Luna, Ana Gómez…">
+                            <button id="btnLimpiar" class="btn btn-outline-secondary">Limpiar</button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="form-label text-secondary small">Fecha</label>
+                        <input type="date" id="filtroFecha" class="form-control form-control-sm">
+                    </div>
+                    <div>
+                        <label class="form-label text-secondary small">Estado</label>
+                        <select id="filtroEstado" class="form-select form-select-sm">
+                            <option value="">Todos</option>
+                            <option value="pendiente">Pendiente</option>
+                            <option value="confirmado">Confirmado</option>
+                            <option value="atendido">Atendido</option>
+                        </select>
+                    </div>
+                    <button id="btnNuevo" class="btn btn-sm btn-success ms-auto"><i class="bi bi-plus-lg"></i> Nuevo
+                        turno</button>
+                </div>
+            </section>
+
+            <!-- Tabla de turnos -->
+            <section class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>Listado de turnos</span>
+                    <span class="small text-secondary" id="totalTurnos">—</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Hora</th>
+                                <th>Mascota</th>
+                                <th>Cliente</th>
+                                <th>Tipo de Atención</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaTurnos">
+                            <!-- filas JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <footer class="py-4 text-center text-secondary small">
+                © 2025 Dogtor — Clínica Veterinaria Inteligente
+            </footer>
+        </main>
+    </div>
+
+    <!-- Modal: Nuevo turno (con alta de cliente+mascota) -->
+    <div class="modal fade" id="modalTurno" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <form id="formTurno" class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-plus-lg"></i> Registrar nuevo turno</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Modo de alta -->
+                    <div class="mb-3">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="modoAlta" id="modoExistente"
+                                value="existente" checked>
+                            <label class="form-check-label" for="modoExistente">Cliente/Mascota existente</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="modoAlta" id="modoNuevo" value="nuevo">
+                            <label class="form-check-label" for="modoNuevo">Registrar nuevo cliente y mascota</label>
+                        </div>
+                    </div>
+
+                    <!-- EXISTENTE -->
+                    <div id="bloqueExistente">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label">Mascota</label>
+                                <select id="tMascota" class="form-select"></select>
+                                <div class="form-text text-secondary">El tutor se completa automáticamente.</div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Tutor</label>
+                                <input id="tTutor" class="form-control" type="text" disabled>
+                            </div>
+                        </div>
+                        <hr class="my-3">
+                    </div>
+
+                    <!-- NUEVO -->
+                    <div id="bloqueNuevo" class="d-none">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Nombre del tutor</label>
+                                <input id="nCliNombre" class="form-control" type="text" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Apellido del tutor</label>
+                                <input id="nCliApellido" class="form-control" type="text" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Email</label>
+                                <input id="nCliEmail" class="form-control" type="email" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Teléfono</label>
+                                <input id="nCliTel" class="form-control" type="text" />
+                            </div>
+
+                            <div class="col-12">
+                                <hr>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Nombre de la mascota</label>
+                                <input id="nMasNombre" class="form-control" type="text" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Raza</label>
+                                <input id="nMasRaza" class="form-control" type="text" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Tipo</label>
+                                <select id="nMasTipo" class="form-select">
+                                    <option value="1">Canino</option>
+                                    <option value="2">Felino</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Sexo</label>
+                                <select id="nMasSexo" class="form-select">
+                                    <option value="H">Hembra</option>
+                                    <option value="M">Macho</option>
+                                </select>
+                            </div>
+                        </div>
+                        <hr class="my-3">
+                    </div>
+
+                    <!-- Datos del turno -->
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Fecha</label>
+                            <input id="tFecha" class="form-control" type="date">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Hora</label>
+                            <select id="tHora" class="form-select"></select>
+                            <div class="form-text text-secondary">Sólo horarios libres.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Tipo de atención</label>
+                            <select id="tAtencion" class="form-select"></select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Estado</label>
+                            <select id="tEstado" class="form-select">
+                                <option value="pendiente">Pendiente</option>
+                                <option value="confirmado">Confirmado</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12">
+                            <div id="tAlert" class="alert alert-danger d-none mb-0"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Cancelar</button>
+                    <button class="btn btn-success" type="submit">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../Js/app.js"></script>
+    <script src="../Js/turnos.js"></script>
+</body>
+
+</html>

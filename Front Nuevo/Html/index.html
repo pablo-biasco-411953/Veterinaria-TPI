@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DOGTOR — Login</title>
+
+    <!-- Tipografías -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Poppins:wght@400;600&display=swap"
+        rel="stylesheet">
+
+    <link rel="icon" type="image/png" href="/Assets/logo2.png" />
+    <link rel="stylesheet" href="../css/styles.css" />
+    <meta name="theme-color" content="#0B1220" />
+    <noscript>
+        <style>
+            .auth {
+                display: block;
+                padding: 2rem
+            }
+
+            .form {
+                opacity: .7
+            }
+        </style>
+    </noscript>
+</head>
+
+<body>
+    <main class="auth">
+        <section class="card" role="region" aria-labelledby="brand">
+            <div class="logo-wrap">
+                <img class="logo" src="../Assets/logo2.png" alt="DOGTOR - logo" width="160" height="160"
+                    loading="eager" />
+            </div>
+
+            <h1 id="brand" class="brand">DOGTOR</h1>
+            <p class="tagline">Clínica Veterinaria</p>
+
+            <form id="loginForm" class="form" autocomplete="on" novalidate>
+                <label class="field">
+                    <span>Email</span>
+                    <input type="email" name="email" placeholder="nombre@correo.com" required inputmode="email"
+                        autocomplete="email" />
+                </label>
+
+                <label class="field">
+                    <span>Contraseña</span>
+                    <input type="password" name="password" placeholder="••••••••" required
+                        autocomplete="current-password" />
+                </label>
+
+                <div class="actions">
+                    <button type="submit" class="btn primary">Ingresar</button>
+                    <a class="link" href="#" aria-label="Recuperar contraseña">¿Olvidaste tu contraseña?</a>
+                </div>
+            </form>
+
+            <footer class="foot" aria-label="Registro">
+                <span>¿No tenés cuenta?</span>
+                <a class="link" href="#">Crear cuenta</a>
+            </footer>
+        </section>
+    </main>
+
+    <!-- JS del login -->
+    <script defer src="../js/login.js"></script>
+</body>
+
+</html>
