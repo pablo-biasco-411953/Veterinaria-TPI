@@ -1,0 +1,299 @@
+@import url('https://fonts.googleapis.com/css2?family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=Outfit:wght@600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=Outfit:wght@700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Arvo:ital,wght@0,400;0,700;1,400;1,700&family=Gravitas+One&family=Kranky&family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=Outfit:wght@200&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Poller+One&family=Rampart+One&family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&family=Vast+Shadow&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Gravitas+One&family=Kranky&family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=Outfit:wght@700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Poller+One&family=Rampart+One&family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&family=Vast+Shadow&display=swap');
+:root {
+
+   
+    --color-barra-lateral: rgb(255, 255, 255);
+    --color-texto: rgb(0, 0, 0);
+    --color-texto-menu: rgb(134, 136, 144);
+    --color-boton: rgb(0, 0, 0);
+    --color-boton-texto: rgb(255, 255, 255); 
+    --color-menu-hover:rgb(238,238,238);
+    --color-menu-hover-texto:rbg(0,0,0);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Outfit", serif;
+    text-decoration: none;
+    outline: none;
+    box-shadow: none; 
+    
+}
+body {
+    height: 100vh;
+    width: 100%;
+    background-color:#49cdb9
+}
+.barra-lateral{
+    width: 250px;
+    height: 100%;
+    overflow: hidden;
+    padding:20px 15px;
+    background-color: var(--color-barra-lateral);
+    transition: width 0.5s ease;
+    position: fixed;
+
+    /*Nombre de la pagina */
+}
+.mini-barra-lateral{
+    width: 80px;
+}
+.barra-lateral .nombre-pagina{
+    border:8px;
+    width: 100%;
+    text-decoration: none;
+    height: 45px;
+    display: flex;
+    align-items: center;
+}
+    /*Icono de la pagina */
+.barra-lateral .nombre-pagina ion-icon{
+    border: 2px;
+    min-width: 50px;
+    font-size:40px;
+    cursor: pointer;
+}
+.barra-lateral span{
+    border: 2px;
+    width:100%;
+    text-decoration: none;
+    white-space: nowrap;
+    font-size: 18px;
+    text-align: left;
+    opacity: 1;
+    transition: 0,5s ease, width 0.5s ease;
+   
+
+}
+.barra-lateral span.oculto{
+    opacity: 0;
+    width: 0;
+}
+   
+
+/*Span de la pagina */
+.barra-lateral .nombre-pagina span{
+    border: 2px;
+    text-decoration: none;
+    white-space: wrap;
+    margin-left: 5px;
+    font-size: 18px;
+    opacity: 1;
+    transition: 0,5s ease;
+}
+.barra-lateral .nombre-pagina span.oculto{
+    opacity: 0;
+}
+   /*BOTÓN MASCOTA */
+.barra-lateral .boton{
+    width: 100%;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top:40px;
+    border: none;
+    border-radius: 10px;
+    background-color: var(--color-boton);
+    color: var(--color-boton-texto);
+    cursor: pointer;
+
+}
+.barra-lateral .nombre-pagina span{
+    margin-left:5px;
+    text-decoration: none;
+    font-size: 25px;
+    cursor: pointer;
+}
+.barra-lateral .boton ion-icon
+{
+    border: 2px ;
+    min-width: 50px;
+    font-size: 25px;
+}
+
+
+.barra-lateral .botonSec {
+    border: 2px ;
+    width: 100%;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    border-radius: 10px;
+    background-color:var(--color-barra-lateral);
+    color: var(--color-texto-menu);
+    cursor: pointer;
+    margin-bottom: 20px;
+    margin-top: 5px;
+}
+
+.barra-lateral .botonSec ion-icon{
+    border: 2px ;
+    min-width: 50px;
+    font-size: 20px;
+    cursor: pointer;
+
+}
+
+.barra-lateral .botonSec:hover{
+    background-color: var(--color-menu-hover);
+    color:var(--color-menu-hover-texto)
+}
+
+
+
+.barra-lateral .usuario ion-icon{
+    border: 2px;
+    min-width: 50px;
+    font-size:40px;
+    
+   
+}
+.barra-lateral .usuario{
+    border:8px;
+    width: 100%;
+    margin-top: 300px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+}
+
+.barra-lateral .cerrar{
+    border:8px;
+    width: 100%;
+    margin-top: 200px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    margin-left: -20px;
+}
+
+
+.titulo {
+    width: 100%; 
+    display: flex; 
+    justify-content: center;
+    margin-top: 0;
+    
+}
+
+.titulo h1 {
+    margin: 40; 
+    padding: 10px 0; 
+    text-align: center; 
+    margin-left: 200px;
+   
+    font-size: 40px;
+   
+  font-weight: 400;
+  font-style: normal;
+    color: rgb(255, 255, 255);
+    
+}
+
+.contenido {
+    display: flex;
+    flex-direction: column; 
+    align-items: center; 
+    background-image: url(images/mascotas.jpg);
+    background-repeat: no-repeat;
+    background-size: cover;
+    min-height: 100vh;  
+    display: flex;
+    flex-direction: column; 
+    background-color: rgba(240, 248, 255, 0.429);
+   
+}
+
+.profesionales {
+    display: flex;
+    justify-content: center; 
+    gap: 50px; 
+    margin-top: 20px;
+    
+}
+
+.contenido .profesional {
+    display: flex;
+    flex-direction: column;
+    align-items: center; 
+   
+    
+}
+
+.prof1, .prof2 {
+    font-size: 25px;
+    background-color: rgba(255, 255, 255, 0.358);
+   color: rgb(0, 0, 0);
+   border-radius: 5px; 
+    text-align: center; 
+    margin-left: 200px;
+   
+  font-optical-sizing: auto;
+  font-weight: 500;
+  font-style: normal;
+  margin-top:30px;
+
+}
+
+.img1, .img2 {
+    margin-top: 30px;
+    width: 250px;
+    height: 250px;
+    object-fit: cover; 
+    margin-left: 200px;
+    border-radius: 10px;
+    
+}
+
+.horario1, .horario2{
+    font-size: 25px;
+    color: black;
+    text-align: center; 
+    margin: 0 0 10px 0; 
+    margin-left: 200px;
+    margin-top: 20px;
+    font-family: "Outfit", serif;    
+    font-optical-sizing: auto;
+    font-weight: 200;
+    font-style: bold;
+    background-color: rgba(255, 255, 255, 0.358);
+    border-radius: 5px; 
+
+}
+.barra-lateral .navegacion ul {
+    list-style: none;
+    padding: 0;
+}
+
+.barra-lateral .navegacion ul li {
+    margin-bottom: 20px; /* Aumentar el espaciado entre opciones */
+}
+
+.barra-lateral .navegacion ul li {
+    margin-bottom: 20px; /* Aumentar el espaciado entre opciones */
+}
+
+.barra-lateral .cerrar .botonSec:hover {
+    background-color: #f8d7da; /* Hover para "Cerrar sesión" */
+    border-radius: 5px;
+    color: #dc3545;
+}
+
+#formulario{
+    width: 30%;
+}
+
+#formulario div{
+    margin-bottom: 5%;
+}
+
+#formulario button{
+    width: 100%;
+}

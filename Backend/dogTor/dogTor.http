@@ -1,0 +1,6 @@
+@dogTor_HostAddress = http://localhost:5010
+
+GET {{dogTor_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

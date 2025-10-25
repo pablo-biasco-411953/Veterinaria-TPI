@@ -1,0 +1,16 @@
+.titulo{
+    color:cadetblue;
+    text-align: center;
+}
+
+.volver{
+    margin-bottom: 100px;
+    background-color: rgb(74, 168, 160);
+    font-size: large;
+    padding: 1rem;
+    
+}
+.volver a{
+    color: white;
+    text-decoration: none;
+}
