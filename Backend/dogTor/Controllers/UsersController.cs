@@ -27,8 +27,9 @@ namespace dogTor.Controllers
         public async Task<IActionResult> CrearUsuario([FromBody] DtoCliente usuarioDto)
         {
             if (usuarioDto == null)
+            {
                 return BadRequest("Datos inválidos");
-
+            }
             try
             {
                 DtoCliente nuevoUsuario = await _userService.RegisterUserAsync(usuarioDto);
@@ -58,7 +59,7 @@ namespace dogTor.Controllers
             {
                 DtoCliente user = await _userService.LoginAsync(credentials);
 
-                var token = GenerateJwtToken(user.Username, user.CodCliente.Value);
+                var token = GenerateJwtToken(user.Dni ?? 0, user.CodCliente.Value);
 
                 return Ok(new { Token = token });
             }
@@ -72,14 +73,14 @@ namespace dogTor.Controllers
             }
         }
 
-        private string GenerateJwtToken(string username, int userId)
+        private string GenerateJwtToken(int username, int userId)
         {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"]));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var claims = new[]
             {
-                new Claim(JwtRegisteredClaimNames.Sub, username),
+                new Claim(JwtRegisteredClaimNames.Sub, username.ToString()),
                 new Claim("userId", userId.ToString()),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };

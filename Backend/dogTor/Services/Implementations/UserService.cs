@@ -20,7 +20,7 @@ namespace dogTor.Services.Implementations
         public async Task<DtoCliente> RegisterUserAsync(DtoCliente newClientDto)
         {
             // Validamos que el usuario no esté registrado antes
-            if (await _userRepository.GetUserByUsernameAsync(newClientDto.Username) != null)
+            if (await _userRepository.GetUserByUsernameAsync(newClientDto.Dni.Value) != null)
             {
                 throw new InvalidOperationException("El nombre de usuario ya está registrado.");
             }

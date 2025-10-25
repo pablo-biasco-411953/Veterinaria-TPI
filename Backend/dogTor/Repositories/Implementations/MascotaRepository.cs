@@ -31,8 +31,9 @@ namespace dogTor.Repository
             var mascotaActual = await GetByIdAsync(id);
 
             if (mascotaActual == null)
+            {
                 return false;
-
+            }
             mascotaActual.Eliminado = true;
 
             return await _context.SaveChangesAsync() > 0;
@@ -66,8 +67,9 @@ namespace dogTor.Repository
             var mascotaExistente = await GetByIdAsync(id);
 
             if (mascotaExistente == null)
+            {
                 return false;
-
+            }
             mascotaExistente.Nombre = mascotaActualizada.Nombre;
             mascotaExistente.CodCliente = mascotaActualizada.CodCliente;
             mascotaExistente.Edad = mascotaActualizada.Edad;

@@ -21,10 +21,10 @@ namespace dogTor.Repository
         }
 
         // GET: Buscamos cliente por username
-        public async Task<Cliente?> GetUserByUsernameAsync(string username)
+        public async Task<Cliente?> GetUserByUsernameAsync(int username)
         {
             var clienteBuscado = await _context.Clientes
-                .FirstOrDefaultAsync(c => c.Username == username);
+                .FirstOrDefaultAsync(c => c.Dni == username);
             return clienteBuscado;
         }
     }

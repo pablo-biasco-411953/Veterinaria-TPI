@@ -57,7 +57,6 @@ CREATE TABLE [dbo].[CLIENTE](
 	[telefono] [varchar](10) NOT NULL,
 	[dni] [int] NOT NULL,
     -- Campos de Autenticación (hash de Password de tamaño seguro)
-    [username] [varchar](150) NOT NULL,
     [password] [varchar](150) NOT NULL, 
 PRIMARY KEY CLUSTERED 
 (
@@ -65,7 +64,7 @@ PRIMARY KEY CLUSTERED
 ),
 UNIQUE NONCLUSTERED 
 (
-    [username] ASC -- Asegura que el nombre de usuario sea único
+    [dni] ASC -- Asegura que el dni sea único
 )
 ) ON [PRIMARY]
 GO
@@ -189,7 +188,7 @@ GO
 
 -- CLIENTE (cod_cliente)
 -- NOTA: Los valores de 'password' son hashes SIMULADOS.
-INSERT INTO [dbo].[CLIENTE] ([nombre], [apellido], [telefono], [dni], [username], [password]) VALUES
+INSERT INTO [dbo].[CLIENTE] ([nombre], [apellido], [telefono], [dni], [password]) VALUES
 ('Ana', 'Gómez', '3511112233', 12345678, 'ana.gomez', 'hash_ana_gomez'),        -- 1
 ('Carlos', 'López', '3514445566', 23456789, 'carlos.l', 'hash_carlos_lopez'),    -- 2
 ('Laura', 'Martínez', '3517778899', 34567890, 'laura.m', 'hash_laura_m');         -- 3

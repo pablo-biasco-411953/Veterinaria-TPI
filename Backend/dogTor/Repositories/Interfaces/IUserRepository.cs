@@ -4,7 +4,7 @@ namespace dogTor.Repository
 {
     public interface IUserRepository
     {
-        Task<Cliente> GetUserByUsernameAsync(string username);
+        Task<Cliente> GetUserByUsernameAsync(int username);
 
         Task<bool> CreateUserAsync(Cliente cliente);
     }
