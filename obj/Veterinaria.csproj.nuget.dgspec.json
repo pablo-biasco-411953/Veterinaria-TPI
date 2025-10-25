@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\GrupoWG\\Veterinaria-TPI\\dogTor\\dogTor.csproj": {}
+    "D:\\GrupoWG\\Veterinaria-TPI\\Veterinaria.csproj": {}
   },
   "projects": {
-    "D:\\GrupoWG\\Veterinaria-TPI\\dogTor\\dogTor.csproj": {
+    "D:\\GrupoWG\\Veterinaria-TPI\\Veterinaria.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\GrupoWG\\Veterinaria-TPI\\dogTor\\dogTor.csproj",
-        "projectName": "dogTor",
-        "projectPath": "D:\\GrupoWG\\Veterinaria-TPI\\dogTor\\dogTor.csproj",
+        "projectUniqueName": "D:\\GrupoWG\\Veterinaria-TPI\\Veterinaria.csproj",
+        "projectName": "Veterinaria",
+        "projectPath": "D:\\GrupoWG\\Veterinaria-TPI\\Veterinaria.csproj",
         "packagesPath": "C:\\Users\\pabli\\.nuget\\packages\\",
-        "outputPath": "D:\\GrupoWG\\Veterinaria-TPI\\dogTor\\obj\\",
+        "outputPath": "D:\\GrupoWG\\Veterinaria-TPI\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -50,31 +50,25 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "dependencies": {
-            "BCrypt": {
-              "target": "Package",
-              "version": "[1.0.0, )"
-            },
             "BCrypt.Net-Core": {
               "target": "Package",
               "version": "[1.6.0, )"
             },
-            "Microsoft.AspNetCore.Authentication.JwtBearer": {
+            "Microsoft.AspNetCore.Identity": {
               "target": "Package",
-              "version": "[8.0.0, )"
+              "version": "[2.3.1, )"
             },
-            "Microsoft.EntityFrameworkCore.SqlServer": {
-              "target": "Package",
-              "version": "[9.0.10, )"
-            },
-            "Microsoft.EntityFrameworkCore.Tools": {
-              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+            "Microsoft.DotNet.ILCompiler": {
               "suppressParent": "All",
               "target": "Package",
-              "version": "[9.0.10, )"
+              "version": "[8.0.21, )",
+              "autoReferenced": true
             },
-            "Swashbuckle.AspNetCore": {
+            "Microsoft.NET.ILLink.Tasks": {
+              "suppressParent": "All",
               "target": "Package",
-              "version": "[6.6.2, )"
+              "version": "[8.0.21, )",
+              "autoReferenced": true
             }
           },
           "imports": [
@@ -88,6 +82,12 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "runtime.win-x64.Microsoft.DotNet.ILCompiler",
+              "version": "[8.0.21, 8.0.21]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.AspNetCore.App": {
               "privateAssets": "none"

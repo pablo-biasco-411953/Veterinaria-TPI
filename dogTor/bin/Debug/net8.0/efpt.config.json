@@ -1,6 +1,6 @@
 ﻿{
    "CodeGenerationMode": 4,
-   "ContextClassName": "dogtorContext",
+   "ContextClassName": "veterinariaContext",
    "ContextNamespace": null,
    "FilterSchemas": false,
    "IncludeConnectionString": false,
@@ -21,6 +21,10 @@
       },
       {
          "Name": "[dbo].[CLIENTE]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[DETALLE_ATENCION]",
          "ObjectType": 0
       },
       {

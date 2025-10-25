@@ -22,4 +22,6 @@ public partial class Atencion
     public virtual Mascotum CodMascotaNavigation { get; set; }
 
     public virtual TipoAtencion CodTipoANavigation { get; set; }
+
+    public virtual ICollection<DetalleAtencion> DetalleAtencions { get; set; } = new List<DetalleAtencion>();
 }

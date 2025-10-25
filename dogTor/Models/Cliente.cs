@@ -11,9 +11,15 @@ public partial class Cliente
 
     public string Nombre { get; set; }
 
+    public string Apellido { get; set; }
+
     public string Telefono { get; set; }
 
     public int Dni { get; set; }
+
+    public string Username { get; set; }
+
+    public string Password { get; set; }
 
     public virtual ICollection<Mascotum> Mascota { get; set; } = new List<Mascotum>();
 }

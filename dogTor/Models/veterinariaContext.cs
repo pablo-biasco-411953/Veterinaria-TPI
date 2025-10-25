@@ -6,9 +6,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace dogTor.Models;
 
-public partial class dogtorContext : DbContext
+public partial class veterinariaContext : DbContext
 {
-    public dogtorContext(DbContextOptions<dogtorContext> options)
+    public veterinariaContext(DbContextOptions<veterinariaContext> options)
         : base(options)
     {
     }
@@ -16,6 +16,8 @@ public partial class dogtorContext : DbContext
     public virtual DbSet<Atencion> Atencions { get; set; }
 
     public virtual DbSet<Cliente> Clientes { get; set; }
+
+    public virtual DbSet<DetalleAtencion> DetalleAtencions { get; set; }
 
     public virtual DbSet<Disponibilidad> Disponibilidads { get; set; }
 
@@ -29,7 +31,7 @@ public partial class dogtorContext : DbContext
     {
         modelBuilder.Entity<Atencion>(entity =>
         {
-            entity.HasKey(e => e.CodAtencion).HasName("PK__ATENCION__6AC5F2D056AFB299");
+            entity.HasKey(e => e.CodAtencion).HasName("PK__ATENCION__6AC5F2D099D9870F");
 
             entity.ToTable("ATENCION");
 
@@ -44,46 +46,86 @@ public partial class dogtorContext : DbContext
             entity.HasOne(d => d.CodDisponibilidadNavigation).WithMany(p => p.Atencions)
                 .HasForeignKey(d => d.CodDisponibilidad)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__ATENCION__cod_di__440B1D61");
+                .HasConstraintName("FK__ATENCION__cod_di__47DBAE45");
 
             entity.HasOne(d => d.CodMascotaNavigation).WithMany(p => p.Atencions)
                 .HasForeignKey(d => d.CodMascota)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__ATENCION__cod_ma__44FF419A");
+                .HasConstraintName("FK__ATENCION__cod_ma__48CFD27E");
 
             entity.HasOne(d => d.CodTipoANavigation).WithMany(p => p.Atencions)
                 .HasForeignKey(d => d.CodTipoA)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__ATENCION__cod_ti__45F365D3");
+                .HasConstraintName("FK__ATENCION__cod_ti__49C3F6B7");
         });
 
         modelBuilder.Entity<Cliente>(entity =>
         {
-            entity.HasKey(e => e.CodCliente).HasName("PK__CLIENTE__08ED61F3781D2B1B");
+            entity.HasKey(e => e.CodCliente).HasName("PK__CLIENTE__08ED61F351FA4587");
 
             entity.ToTable("CLIENTE");
 
+            entity.HasIndex(e => e.Username, "UQ__CLIENTE__F3DBC57249521E8C").IsUnique();
+
             entity.Property(e => e.CodCliente).HasColumnName("cod_cliente");
+            entity.Property(e => e.Apellido)
+                .IsRequired()
+                .HasMaxLength(100)
+                .IsUnicode(false)
+                .HasColumnName("apellido");
             entity.Property(e => e.Dni).HasColumnName("dni");
             entity.Property(e => e.Nombre)
                 .IsRequired()
                 .HasMaxLength(100)
                 .IsUnicode(false)
                 .HasColumnName("nombre");
+            entity.Property(e => e.Password)
+                .IsRequired()
+                .HasMaxLength(150)
+                .IsUnicode(false)
+                .HasColumnName("password");
             entity.Property(e => e.Telefono)
                 .IsRequired()
                 .HasMaxLength(10)
                 .IsUnicode(false)
                 .HasColumnName("telefono");
+            entity.Property(e => e.Username)
+                .IsRequired()
+                .HasMaxLength(150)
+                .IsUnicode(false)
+                .HasColumnName("username");
+        });
+
+        modelBuilder.Entity<DetalleAtencion>(entity =>
+        {
+            entity.HasKey(e => e.CodDetalle).HasName("PK__DETALLE___03E666AEFCFB53CE");
+
+            entity.ToTable("DETALLE_ATENCION");
+
+            entity.Property(e => e.CodDetalle).HasColumnName("cod_detalle");
+            entity.Property(e => e.CodAtencion).HasColumnName("cod_atencion");
+            entity.Property(e => e.CodTipoA).HasColumnName("cod_tipoA");
+            entity.Property(e => e.Observaciones)
+                .HasMaxLength(250)
+                .IsUnicode(false)
+                .HasColumnName("observaciones");
+
+            entity.HasOne(d => d.CodAtencionNavigation).WithMany(p => p.DetalleAtencions)
+                .HasForeignKey(d => d.CodAtencion)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__DETALLE_A__cod_a__4AB81AF0");
+
+            entity.HasOne(d => d.CodTipoANavigation).WithMany(p => p.DetalleAtencions)
+                .HasForeignKey(d => d.CodTipoA)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__DETALLE_A__cod_t__4BAC3F29");
         });
 
         modelBuilder.Entity<Disponibilidad>(entity =>
         {
-            entity.HasKey(e => e.CodDisponibilidad).HasName("PK__DISPONIB__2B79026964A32769");
+            entity.HasKey(e => e.CodDisponibilidad).HasName("PK__DISPONIB__2B790269FE7D817D");
 
             entity.ToTable("DISPONIBILIDAD");
-
-            entity.HasIndex(e => new { e.Fecha, e.Hora }, "UQ__DISPONIB__56E71B4F39FCA002").IsUnique();
 
             entity.Property(e => e.CodDisponibilidad).HasColumnName("cod_disponibilidad");
             entity.Property(e => e.Fecha)
@@ -95,7 +137,7 @@ public partial class dogtorContext : DbContext
 
         modelBuilder.Entity<Mascotum>(entity =>
         {
-            entity.HasKey(e => e.CodMascota).HasName("PK__MASCOTA__6BC4D21DDAF4F76F");
+            entity.HasKey(e => e.CodMascota).HasName("PK__MASCOTA__6BC4D21D84D300B5");
 
             entity.ToTable("MASCOTA");
 
@@ -105,7 +147,6 @@ public partial class dogtorContext : DbContext
             entity.Property(e => e.Edad).HasColumnName("edad");
             entity.Property(e => e.Eliminado)
                 .HasDefaultValue(true)
-                .HasAnnotation("Relational:DefaultConstraintName", "DF_MASCOTA_eliminado")
                 .HasColumnName("eliminado");
             entity.Property(e => e.Nombre)
                 .IsRequired()
@@ -116,22 +157,23 @@ public partial class dogtorContext : DbContext
             entity.HasOne(d => d.CodClienteNavigation).WithMany(p => p.Mascota)
                 .HasForeignKey(d => d.CodCliente)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__MASCOTA__cod_cli__46E78A0C");
+                .HasConstraintName("FK__MASCOTA__cod_cli__45F365D3");
 
             entity.HasOne(d => d.CodTipoNavigation).WithMany(p => p.Mascota)
                 .HasForeignKey(d => d.CodTipo)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__MASCOTA__cod_tip__47DBAE45");
+                .HasConstraintName("FK__MASCOTA__cod_tip__46E78A0C");
         });
 
         modelBuilder.Entity<TipoAtencion>(entity =>
         {
-            entity.HasKey(e => e.CodTipoA).HasName("PK__TIPO_ATE__A85295C94EE2C645");
+            entity.HasKey(e => e.CodTipoA).HasName("PK__TIPO_ATE__A85295C9F3E47F80");
 
             entity.ToTable("TIPO_ATENCION");
 
             entity.Property(e => e.CodTipoA).HasColumnName("cod_tipoA");
             entity.Property(e => e.Descripcion)
+                .IsRequired()
                 .HasMaxLength(50)
                 .IsUnicode(false)
                 .HasColumnName("descripcion");
@@ -139,7 +181,7 @@ public partial class dogtorContext : DbContext
 
         modelBuilder.Entity<TipoMascotum>(entity =>
         {
-            entity.HasKey(e => e.CodTipo).HasName("PK__TIPO_MAS__7C06900DCED20727");
+            entity.HasKey(e => e.CodTipo).HasName("PK__TIPO_MAS__7C06900D8891C2B5");
 
             entity.ToTable("TIPO_MASCOTA");
 

@@ -12,4 +12,6 @@ public partial class TipoAtencion
     public string Descripcion { get; set; }
 
     public virtual ICollection<Atencion> Atencions { get; set; } = new List<Atencion>();
+
+    public virtual ICollection<DetalleAtencion> DetalleAtencions { get; set; } = new List<DetalleAtencion>();
 }
