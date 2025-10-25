@@ -2,7 +2,7 @@ const API_URL = 'https://localhost:7033/api';
 
 // USUARIO
 export async function registerUser(userData) {
-    return fetch(`${API_URL}/User`, {
+    return fetch(`${API_URL}/User/register`, {  
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userData)
