@@ -1,4 +1,6 @@
-using dogTor.Models; 
+using dogTor.Models;
+using dogTor.Repositories.Implementations;
+using dogTor.Repositories.Interfaces;
 using dogTor.Repository;
 using dogTor.Services.Implementations; 
 using dogTor.Services.Interfaces; 
@@ -19,6 +21,7 @@ builder.Services.AddScoped<IAtencionService, AtencionService>();
 builder.Services.AddScoped<IMascotaRepository, MascotaRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAtencionRepository, AtencionRepository>();
+builder.Services.AddScoped<IServicioReservadoRepository, ServicioReservadoRepository>();
 
 // Servicios
 builder.Services.AddScoped<IMascotaService, MascotaService>();
