@@ -61,7 +61,17 @@ namespace dogTor.Controllers
 
                 var token = GenerateJwtToken(user.Dni ?? 0, user.CodCliente.Value);
 
-                return Ok(new { Token = token });
+                return Ok(new
+                {
+                    Token = token,
+                    User = new
+                    {
+                        Id = user.CodCliente,
+                        Nombre = user.Nombre,
+                        Apellido = user.Apellido,
+                        Dni = user.Dni
+                    }
+                });
             }
             catch (UnauthorizedAccessException)
             {

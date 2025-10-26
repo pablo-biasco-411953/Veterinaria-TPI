@@ -1,11 +1,11 @@
 -- 1. CREACIÓN DE LA BASE DE DATOS (si no existe)
-IF NOT EXISTS(SELECT * FROM sys.databases WHERE name = 'dogtor3')
+IF NOT EXISTS(SELECT * FROM sys.databases WHERE name = 'dogtor')
 BEGIN
-    CREATE DATABASE dogtor3;
+    CREATE DATABASE dogtor;
 END
 GO
 
-USE dogtor3;
+USE dogtor;
 GO
 
 -- 2. CREACIÓN DE TABLAS DE CATÁLOGO
@@ -150,7 +150,7 @@ ALTER TABLE [dbo].[DETALLE_ATENCION] WITH CHECK ADD FOREIGN KEY([cod_tipoA])
 REFERENCES [dbo].[TIPO_ATENCION] ([cod_tipoA])
 GO
 
-USE dogtor3;
+USE dogtor;
 GO
 
 ------------------------------------------------------------------
@@ -189,9 +189,9 @@ GO
 -- CLIENTE (cod_cliente)
 -- NOTA: Los valores de 'password' son hashes SIMULADOS.
 INSERT INTO [dbo].[CLIENTE] ([nombre], [apellido], [telefono], [dni], [password]) VALUES
-('Ana', 'Gómez', '3511112233', 12345678, 'ana.gomez', 'hash_ana_gomez'),        -- 1
-('Carlos', 'López', '3514445566', 23456789, 'carlos.l', 'hash_carlos_lopez'),    -- 2
-('Laura', 'Martínez', '3517778899', 34567890, 'laura.m', 'hash_laura_m');         -- 3
+('Ana', 'Gómez', '3511112233', 12345678, 'hash_ana_gomez'),        -- 1
+('Carlos', 'López', '3514445566', 23456789, 'hash_carlos_lopez'),    -- 2
+('Laura', 'Martínez', '3517778899', 34567890,'hash_laura_m');         -- 3
 GO
 
 ------------------------------------------------------------------

@@ -72,6 +72,18 @@ namespace Veterinaria6.Repository
                 .FirstOrDefaultAsync(a => a.CodAtencion == id);
         }
 
+        public async Task<List<Atencion>> GetByClienteId(int clienteId)
+        {
+            return await _context.Atencions
+                .Include(a => a.CodMascotaNavigation)
+                    .ThenInclude(m => m.CodClienteNavigation)
+                .Include(a => a.CodTipoANavigation)
+                .Include(a => a.CodDisponibilidadNavigation)
+                .Include(a => a.DetalleAtencions)
+                .Where(a => a.CodMascotaNavigation.CodClienteNavigation.CodCliente == clienteId)
+                .ToListAsync();
+        }
+
         // INSERT: Crear nueva atención y marcar disponibilidad
         public async Task<bool> Insert(Atencion atencion, int codDisponibilidad)
         {

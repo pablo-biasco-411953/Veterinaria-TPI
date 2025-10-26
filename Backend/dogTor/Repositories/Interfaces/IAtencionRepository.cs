@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using dogTor.Models;
+using dogTor.Dtos;
 
 namespace dogTor.Repository
 {
@@ -12,6 +13,7 @@ namespace dogTor.Repository
         Task<List<TipoAtencion>> GetTiposAtencion();
         Task<List<Disponibilidad>> GetDisponibilidadFecha();
         Task<List<Disponibilidad>> GetDisponibilidadHora();
+        Task<List<Atencion>> GetByClienteId(int clienteId);
         Task<bool> Insert(Atencion atencion, int codDisponibilidad);
         Task Delete(int id);
     }

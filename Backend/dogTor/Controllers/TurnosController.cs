@@ -76,6 +76,24 @@ namespace dogTor.Controllers
             }
         }
 
+        [HttpGet("AtencionesxCliente/{clienteId}")]
+        public async Task<IActionResult> GetAtencionesByClienteId(int clienteId)
+        {
+            try
+            {
+                var atenciones = await _atencionService.GetAtencionesByClienteIdAsync(clienteId);
+
+                if (atenciones == null || atenciones.Count == 0)
+                    return NotFound($"No se encontraron atenciones para el cliente con ID {clienteId}.");
+
+                return Ok(atenciones);
+            }
+            catch
+            {
+                return StatusCode(500, "Error interno al recuperar las atenciones del cliente.");
+            }
+        }
+
         // GET /api/turnos/disponibilidad
         // Obtener la disponibilidad de turnos
         [HttpGet("disponibilidad")]

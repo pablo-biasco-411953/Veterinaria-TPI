@@ -1,72 +1,133 @@
-// ===== mascotas prueba=====
-const Tipo_Mascota = [
-    { id_tipo_mascota: 1, nombre: 'Canina' },
-    { id_tipo_mascota: 2, nombre: 'Felina' },
-];
+// app.js
+import { 
+    getMascotaByClienteId, getTiposMascota, getAllAtenciones, getTiposAtencion, 
+    getDisponibilidadFecha, getTurnosDisponibles,getProximasAtenciones
+} from './api.js';
 
-const Tipo_Atencion = [
-    { id_tipo_atencion: 1, nombre: 'Vacunación', duracion_min: 20, precio: 12000 },
-    { id_tipo_atencion: 2, nombre: 'Control general', duracion_min: 30, precio: 15000 },
-    { id_tipo_atencion: 3, nombre: 'Radiografía', duracion_min: 40, precio: 25000 },
-];
+// ===== Variables globales =====
+let Mascota = [];
+let Tipo_Atencion = [];
+let Disponibilidad = [];
+let Turno = [];
+let TipoMascota = [];  // Tipos de mascota desde la API
 
-const Cliente = [
-    { id_cliente: 1, nombre: 'Ana', apellido: 'Gómez', email: 'ana@mail.com', telefono: '11-5555-5555' },
-    { id_cliente: 2, nombre: 'Carlos', apellido: 'López', email: 'carlos@mail.com', telefono: '11-4444-4444' },
-];
-
-const Mascota = [
-    { id_mascota: 1, id_cliente: 1, id_tipo_mascota: 1, nombre: 'Luna', raza: 'Mestizo', sexo: 'H' },
-    { id_mascota: 2, id_cliente: 2, id_tipo_mascota: 1, nombre: 'Rocky', raza: 'Labrador', sexo: 'M' },
-    { id_mascota: 3, id_cliente: 2, id_tipo_mascota: 2, nombre: 'Mila', raza: 'Siames', sexo: 'H' },
-];
-
-// Disponibilidad
 const hoy = new Date();
 const yyyy_mm_dd = hoy.toISOString().slice(0, 10);
-const Disponibilidad = [
-    { id_disponibilidad: 1, fecha: yyyy_mm_dd, hora_desde: '09:00', hora_hasta: '09:30', estado: 'disponible' },
-    { id_disponibilidad: 2, fecha: yyyy_mm_dd, hora_desde: '09:30', hora_hasta: '10:00', estado: 'disponible' },
-    { id_disponibilidad: 3, fecha: yyyy_mm_dd, hora_desde: '10:00', hora_hasta: '10:30', estado: 'disponible' },
-    { id_disponibilidad: 4, fecha: yyyy_mm_dd, hora_desde: '10:30', hora_hasta: '11:00', estado: 'disponible' },
-    { id_disponibilidad: 5, fecha: yyyy_mm_dd, hora_desde: '11:00', hora_hasta: '11:30', estado: 'disponible' },
-    { id_disponibilidad: 6, fecha: yyyy_mm_dd, hora_desde: '11:30', hora_hasta: '12:00', estado: 'disponible' },
-];
 
-// Turnos de ejemplo
-const Turno = [
-    { id_turno: 1, id_mascota: 1, id_cliente: 1, id_tipo_atencion: 1, fecha: yyyy_mm_dd, hora: '10:00', estado: 'confirmado' },
-    { id_turno: 2, id_mascota: 2, id_cliente: 2, id_tipo_atencion: 2, fecha: yyyy_mm_dd, hora: '12:00', estado: 'pendiente' },
-    // históricos 'atendido' del mes (para facturación mock)
-    { id_turno: 3, id_mascota: 3, id_cliente: 2, id_tipo_atencion: 3, fecha: yyyy_mm_dd.slice(0, 7) + '-05', hora: '09:00', estado: 'atendido' },
-    { id_turno: 4, id_mascota: 1, id_cliente: 1, id_tipo_atencion: 1, fecha: yyyy_mm_dd.slice(0, 7) + '-10', hora: '11:00', estado: 'atendido' },
-];
-
-// ===== Helpers =====
+// ===== Helpers DOM =====
 const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 
-// ===== Helpers datos =====
+// ===== Helpers de datos =====
 function nombreCliente(id) {
-    const c = Cliente.find(x => x.id_cliente === id);
-    return c ? `${c.nombre} ${c.apellido}` : '—';
+    const m = Mascota.find(x => x.id_mascota === id);
+    if (!m || !m.cliente) return '—';
+    return `${m.cliente.nombre} ${m.cliente.apellido}`;
 }
+
 function nombreMascota(id) {
     const m = Mascota.find(x => x.id_mascota === id);
     return m ? m.nombre : '—';
 }
+
 function nombreAtencion(id) {
     const t = Tipo_Atencion.find(x => x.id_tipo_atencion === id);
     return t ? t.nombre : '—';
 }
+
 function precioAtencion(id) {
     const t = Tipo_Atencion.find(x => x.id_tipo_atencion === id);
     return t ? t.precio : 0;
 }
 
-//perfil usuario (iniciales)
+function renderFiltroTipoMascota() {
+    const cont = document.getElementById('filtroTipoMascota');
+    if (!cont) return;
+
+    cont.innerHTML = '';
+
+    // Botón "Todos"
+    const btnTodos = document.createElement('button');
+    btnTodos.className = 'btn btn-outline-info active';
+    btnTodos.textContent = 'Todos';
+    btnTodos.dataset.tipo = '';
+    cont.appendChild(btnTodos);
+
+    // Botones dinámicos por cada tipo
+    TipoMascota.forEach(t => {
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-outline-info';
+        btn.textContent = t.nombre;          // Nombre del tipo
+        btn.dataset.tipo = t.codTipoMascota; // Código del tipo
+        cont.appendChild(btn);
+    });
+
+    // Eventos de filtrado
+    cont.querySelectorAll('button').forEach(b => {
+        b.addEventListener('click', () => {
+            // Activar botón seleccionado
+            cont.querySelectorAll('button').forEach(x => x.classList.remove('active'));
+            b.classList.add('active');
+
+            filtrarMascotas(b.dataset.tipo);
+        });
+    });
+}
+
+function filtrarMascotas(tipoId) {
+    const tarjetas = document.querySelectorAll('.card-mascota');
+    tarjetas.forEach(t => {
+        if (!tipoId || t.dataset.tipo === tipoId) {
+            t.style.display = '';
+        } else {
+            t.style.display = 'none';
+        }
+    });
+}
+
+async function cargarTiposMascota() {
+    try {
+        const res = await getTiposMascota(); 
+        TipoMascota = await res.json();
+        renderFiltroTipoMascota();
+    } catch (err) {
+        console.error("Error cargando tipos de mascota:", err);
+        TipoMascota = [];
+    }
+}
+
+function renderMascotas() {
+    const grid = document.getElementById('gridMascotas');
+    if (!grid) return;
+
+    grid.innerHTML = ''; // limpiar grid antes de agregar
+
+    Mascotas.forEach(m => {
+        const col = document.createElement('div');
+        col.className = 'col-6 col-md-4 card-mascota';
+        col.dataset.tipo = m.tipo?.codTipoMascota || ''; // clave para filtrar
+
+        col.innerHTML = `
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">${m.nombre}</h5>
+                    <p class="card-text">Tipo: ${m.tipo?.nombre || '—'}</p>
+                    <p class="card-text">Edad: ${m.edad}</p>
+                    <p class="card-text small text-secondary">Cliente: ${m.cliente?.nombre} ${m.cliente?.apellido}</p>
+                </div>
+            </div>
+        `;
+
+        grid.appendChild(col);
+    });
+
+    // actualizar contador de mascotas visibles
+    document.getElementById('count').textContent = Mascotas.length;
+}
+
+// ===== Perfil usuario =====
 function setUserBadgeFromSession() {
-    const badge = $('#avatar');
+    const badge = $('#avatar') || $('#btnPerfil');
     if (!badge) return;
 
     const raw = sessionStorage.getItem('dogtorUser');
@@ -88,24 +149,29 @@ function setUserBadgeFromSession() {
 
 // ===== KPIs =====
 function renderKPIs() {
-    $('#kpiPacientes').textContent = Mascota.length.toString();
+    const raw = sessionStorage.getItem('dogtorUser');
+    if (!raw) return;
+    const user = JSON.parse(raw);
+    const userId = user.id;
 
-    const turnosHoy = Turno.filter(t => t.fecha === yyyy_mm_dd && ['pendiente', 'confirmado'].includes(t.estado)).length;
-    $('#kpiTurnosHoy').textContent = turnosHoy.toString();
+    // 🐶 Total de mascotas del cliente
+    const kpiPacientes = $('#kpiPacientes');
+    if (kpiPacientes) kpiPacientes.textContent = Mascota.length.toString();
 
-    const horasTomadas = new Set(Turno.filter(t => t.fecha === yyyy_mm_dd).map(t => t.hora));
-    const libres = Disponibilidad.filter(d => d.fecha === yyyy_mm_dd && d.estado === 'disponible' && !horasTomadas.has(d.hora_desde)).length;
+    // 📅 Total de turnos del cliente (independiente de la fecha)
+    const turnosCliente = Turno.filter(t => t.id_cliente === userId);
+    $('#kpiTurnosHoy').textContent = turnosCliente.length.toString();
+
+    // 🕒 Disponibilidad actual
+    const horasTomadas = new Set(turnosCliente.map(t => t.hora));
+    const libres = Disponibilidad.filter(d => !d.ocupado && !horasTomadas.has(d.hora)).length;
     $('#kpiDisponibles').textContent = libres.toString();
 
-    const mes = yyyy_mm_dd.slice(0, 7);
-    const atendidosMes = Turno.filter(t => t.estado === 'atendido' && t.fecha.startsWith(mes));
-    const total = atendidosMes.reduce((acc, t) => acc + precioAtencion(t.id_tipo_atencion), 0);
+    // 💰 Facturación simulada (puede ser 0 si el backend no lo da)
+    const total = turnosCliente.reduce((acc, t) => acc + precioAtencion(t.id_tipo_atencion), 0);
     $('#kpiFacturacion').textContent = '$ ' + new Intl.NumberFormat('es-AR').format(total);
 }
-
-// ===== gráfico de turnos (por MES) =====
-
-// clave de mes: "YYYY-MM"
+// ===== Gráfico de turnos =====
 function monthKey(dateStr) {
     const d = new Date(dateStr + 'T00:00:00');
     const y = d.getFullYear();
@@ -113,14 +179,12 @@ function monthKey(dateStr) {
     return `${y}-${m}`;
 }
 
-// últimos N meses 
 function lastNMonths(n = 6) {
     const now = new Date();
     const out = [];
     for (let i = n - 1; i >= 0; i--) {
         const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
         const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-        // label corto en español (si cambia de año, agrego el año)
         const base = d.toLocaleString('es-AR', { month: 'short' });
         const label = (d.getFullYear() !== now.getFullYear()) ? `${base} ${d.getFullYear()}` : base;
         out.push({ key, label });
@@ -134,7 +198,6 @@ function renderChart() {
     const canvas = $('#chartTurnos');
     if (!canvas || typeof Chart === 'undefined') return;
 
-    // evitar duplicados
     if (chartTurnosInstance) {
         chartTurnosInstance.destroy();
         chartTurnosInstance = null;
@@ -144,7 +207,6 @@ function renderChart() {
     const labels = months.map(m => m.label);
     const buckets = Object.fromEntries(months.map(m => [m.key, { pendiente: 0, confirmado: 0, atendido: 0 }]));
 
-    // contar por estado agrupando por mes
     Turno.forEach(t => {
         if (!t.fecha) return;
         const key = monthKey(t.fecha);
@@ -194,17 +256,8 @@ function renderChart() {
                 }
             },
             scales: {
-                x: {
-                    stacked: true,
-                    grid: { color: 'rgba(255,255,255,0.06)' },
-                    ticks: { color: '#9CB2CC' }
-                },
-                y: {
-                    stacked: true,
-                    beginAtZero: true,
-                    grid: { color: 'rgba(255,255,255,0.06)' },
-                    ticks: { color: '#9CB2CC', precision: 0, stepSize: 1 }
-                }
+                x: { stacked: true, grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: '#9CB2CC' } },
+                y: { stacked: true, beginAtZero: true, grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: '#9CB2CC', precision: 0, stepSize: 1 } }
             },
             onHover: (evt, elements) => {
                 if (!totalSpan) return;
@@ -221,7 +274,6 @@ function renderChart() {
         }
     });
 
-    // set inicial del total (último mes mostrado)
     if (totalSpan) {
         const last = dataPend.length - 1;
         const tot = dataPend[last] + dataConf[last] + dataAtnd[last];
@@ -230,27 +282,6 @@ function renderChart() {
 }
 
 // ===== Próximos turnos =====
-function renderProximos() {
-    const cont = $('#listaProximos');
-    cont.innerHTML = '';
-    const prox = Turno
-        .filter(t => t.fecha >= yyyy_mm_dd)
-        .sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora))
-        .slice(0, 5);
-
-    prox.forEach(t => {
-        const li = document.createElement('a');
-        li.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
-        li.innerHTML = `
-      <div>
-        <div class="fw-semibold">${nombreMascota(t.id_mascota)} — ${nombreAtencion(t.id_tipo_atencion)}</div>
-        <small class="text-secondary">${t.fecha} ${t.hora} • ${nombreCliente(t.id_cliente)}</small>
-      </div>
-      <span class="badge rounded-pill ${badgeEstado(t.estado)}">${t.estado}</span>
-    `;
-        cont.appendChild(li);
-    });
-}
 function badgeEstado(estado) {
     switch (estado) {
         case 'confirmado': return 'text-bg-info';
@@ -261,7 +292,34 @@ function badgeEstado(estado) {
     }
 }
 
-// ===== Tabla Disponibilidad=====
+function renderProximos() {
+    const cont = $('#listaProximos');
+    cont.innerHTML = '';
+
+    if (!Turno.length) {
+        cont.innerHTML = '<div class="list-group-item text-center text-secondary">No hay próximos turnos</div>';
+        return;
+    }
+
+    const prox = Turno
+        .filter(t => t.fecha >= yyyy_mm_dd)
+        .sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora))
+        .slice(0, 5);
+
+    prox.forEach(t => {
+        const li = document.createElement('a');
+        li.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
+        li.innerHTML = `
+            <div>
+                <div class="fw-semibold">${t.nombreMascota} — ${t.nombreAtencion}</div>
+                <small class="text-secondary">${t.fecha} ${t.hora} • ${t.nombreCliente}</small>
+            </div>
+            <span class="badge rounded-pill ${badgeEstado(t.estado)}">${t.estado}</span>
+        `;
+        cont.appendChild(li);
+    });
+}
+// ===== Tabla Disponibilidad =====
 function renderDisponibilidad() {
     const tbody = $('#tablaDisponibilidad');
     tbody.innerHTML = '';
@@ -285,53 +343,171 @@ function renderDisponibilidad() {
         });
 }
 
-setUserBadgeFromSession();
-renderKPIs();
-renderChart();
-renderProximos();
-renderDisponibilidad();
+// ===== Inicialización =====
+async function cargarDatos(userId) {
+    await Promise.all([
+        cargarMascotas(userId),
+        cargarTiposAtencion(),
+        cargarTurnosDisponibles(),
+        cargarTurnosProximos(userId)
+    ]);
+}
 
-// === PERFIL: menú desplegable ===
-(function () {
-    const btnPerfil = document.getElementById('btnPerfil');
-    const menu = document.getElementById('menuPerfil');
+async function initClientes() {
+    const raw = sessionStorage.getItem('dogtorUser');
+    if (!raw) { window.location.href = './index.html'; return; }
 
-    if (!btnPerfil || !menu) return;
+    const user = JSON.parse(raw);
+    await Promise.all([
+        cargarTiposMascota(),
+        cargarMascotas(user.id)
+    ]);
+}
 
-    btnPerfil.addEventListener('click', (e) => {
-        e.stopPropagation();
-        menu.classList.toggle('d-none');
-    });
+document.addEventListener('DOMContentLoaded', initClientes);
 
-    document.addEventListener('click', () => {
-        if (!menu.classList.contains('d-none')) {
-            menu.classList.add('d-none');
+async function initDashboard() {
+    const raw = sessionStorage.getItem('dogtorUser');
+    console.log("data sin tratar: ", raw)
+    if (!raw) { window.location.href = '../Html/index.html'; return; }
+    const user = JSON.parse(raw);
+    console.log("datos user: ",user)
+    await cargarDatos(user.id);
+
+    setUserBadgeFromSession();
+    renderKPIs();
+    renderChart();
+    renderProximos();
+    renderDisponibilidad();
+    renderMascotas();
+    setupPerfilMenu();
+}
+
+// ===== Cargar datos API =====
+async function cargarMascotas(userId) {
+    try {
+        console.log("eluid: ",userId)
+        const res = await getMascotaByClienteId(userId); 
+        if (!res.ok) throw new Error('Error al cargar mascotas');
+        Mascota = await res.json();
+    } catch (err) {
+        console.error(err);
+        Mascota = [];
+    }
+}
+
+async function cargarTiposAtencion() {
+    try {
+        const res = await getTiposAtencion();
+        if (!res.ok) throw new Error('Error al cargar tipos de atención');
+        Tipo_Atencion = await res.json();
+    } catch (err) {
+        console.error(err);
+        Tipo_Atencion = [];
+    }
+}
+
+async function cargarDisponibilidad() {
+    try {
+        const res = await getDisponibilidadFecha();
+        if (!res.ok) throw new Error('Error al cargar disponibilidad');
+        Disponibilidad = await res.json();
+    } catch (err) {
+        console.error(err);
+        Disponibilidad = [];
+    }
+}
+
+async function cargarTurnosDisponibles() {
+    const tabla = document.getElementById('tablaDisponibilidad');
+
+    if (!tabla) return console.error("No se encontró el tbody con id 'tablaDisponibilidad'");
+
+    try {
+        const res = await getTurnosDisponibles();
+        if (!res.ok) throw new Error(`Error ${res.status}`);
+
+        const turnos = await res.json();
+        console.log("turnos disponibles:", turnos);
+
+        tabla.innerHTML = ''; // limpiar tabla
+
+        if (!turnos || !turnos.length) {
+            tabla.innerHTML = '<tr><td colspan="5" class="text-center">No hay turnos disponibles</td></tr>';
+            return;
         }
+
+        turnos.forEach(t => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${new Date(t.fecha).toLocaleDateString('es-AR')}</td>
+                <td>${t.hora}</td>
+                <td>${t.ocupado ? 'Ocupado' : 'Libre'}</td>
+                <td>—</td>
+                <td>—</td>
+            `;
+            tabla.appendChild(tr);
+        });
+    } catch (err) {
+        console.error(err);
+        tabla.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Error al cargar los turnos</td></tr>';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', cargarTurnosDisponibles);
+
+// Llamar la función al iniciar
+cargarTurnosDisponibles();
+
+async function cargarTurnosProximos(userId) {
+    try {
+        console.log("Cargando próximas atenciones para usuario:", userId);
+        const res = await getProximasAtenciones(userId);
+        if (!res.ok) throw new Error(`Error al cargar turnos del cliente (status ${res.status})`);
+
+        const data = await res.json();
+        console.log("Turnos del cliente:", data);
+
+        // Adaptar formato al que usa el dashboard
+        Turno = data.map(t => ({
+            id: t.codAtencion,
+            fecha: t.disponibilidad?.fecha?.split('T')[0] || '',
+            hora: t.disponibilidad?.hora?.substring(0, 5) || '',
+            estado: 'pendiente',
+            id_mascota: t.mascota?.codMascota || null,
+            id_cliente: t.mascota?.cliente?.codCliente || null,
+            id_tipo_atencion: t.tipoAtencion?.codTipoA || null,
+            nombreMascota: t.mascota?.nombre || '—',
+            nombreAtencion: t.tipoAtencion?.atencion || '—',
+            nombreCliente: t.mascota?.cliente
+                ? `${t.mascota.cliente.nombre} ${t.mascota.cliente.apellido}`
+                : '—'
+        }));
+
+        console.log("Turno adaptado:", Turno);
+    } catch (err) {
+        console.error("Error en cargarTurnosProximos:", err);
+        Turno = [];
+    }
+}
+
+// ===== Perfil menu =====
+function setupPerfilMenu() {
+    const btn = $('#btnPerfil');
+    const menu = $('#menuPerfil');
+    if (!btn || !menu) return;
+
+    btn.addEventListener('click', () => menu.classList.toggle('show'));
+    document.addEventListener('click', e => {
+        if (!menu.contains(e.target) && !btn.contains(e.target)) menu.classList.remove('show');
     });
 
-    // Cerrar sesión
-    const btnCerrar = document.getElementById('btnCerrarSesion');
-    if (btnCerrar) {
-        btnCerrar.addEventListener('click', () => {
-            sessionStorage.removeItem('dogtorUser');
-            window.location.href = '../Html/index.html';
-        });
-    }
+    const logout = $('#btnLogout');
+    if (logout) logout.addEventListener('click', () => {
+        sessionStorage.removeItem('dogtorUser');
+        window.location.href = '../Html/index.html';
+    });
+}
 
-    // Editar perfil (placeholder)
-    const btnEditar = document.getElementById('btnEditarPerfil');
-    if (btnEditar) {
-        btnEditar.addEventListener('click', () => {
-            alert('Función "Editar perfil" en desarrollo.');
-        });
-    }
-
-    // Cambiar clave (placeholder)
-    const btnClave = document.getElementById('btnCambiarClave');
-    if (btnClave) {
-        btnClave.addEventListener('click', () => {
-            alert('Función "Cambiar contraseña" en desarrollo.');
-        });
-    }
-})();
-
+// ===== Arranque =====
+initDashboard();

@@ -1,183 +1,183 @@
-(function () {
-    // ====== Utilidades ======
-    const $ = (s) => document.querySelector(s);
-    const $$ = (s) => document.querySelectorAll(s);
-    const norm = (s) => (s || '').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+// clientes.js
+import { getMascotaByClienteId, getTiposMascota } from './api.js';
 
+// ===== Variables globales =====
+let Mascotas = [];
+let TipoMascota = [];
 
-    if (typeof setUserBadgeFromSession === 'function') setUserBadgeFromSession();
+// ===== Variables para filtros =====
+let tipoActivo = '';
+let nombreBusqueda = '';
 
-    //Imagenes y tamaños de las mascotas
-    const defaultsPorNombre = {
-        'Luna': { tamano: 'chico', foto: 'https://images.unsplash.com/photo-1517849845537-4d257902454a?w=600&q=80' },
-        'Rocky': { tamano: 'grande', foto: 'https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=600&q=80' },
-        'Mila': { tamano: 'mediano', foto: 'https://p4.wallpaperbetter.com/wallpaper/177/95/581/pitbull-dog-animals-glasses-wallpaper-preview.jpg' },
-    };
+// ===== Helpers DOM =====
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
 
-    // Estudios de las mascotas prueba
-    const Estudios = {
-        1: [{ fecha: '2025-10-05', tipo: 'Radiografía tórax' }, { fecha: '2025-08-22', tipo: 'Control general' }],
-        2: [{ fecha: '2025-09-28', tipo: 'Vacunación antirrábica' }],
-        3: [{ fecha: '2025-10-12', tipo: 'Hemograma' }, { fecha: '2025-07-02', tipo: 'Control general' }]
-    };
+// ===== Imagen default según tipo =====
+function imagenPorTipo(tipoNombre) {
+    switch ((tipoNombre || '').toLowerCase()) {
+        case 'gato':
+            return '../Assets/gato.png';
+        case 'perro':
+            return '../Assets/perro.png';
+        case 'roedor':
+            return '../Assets/roedor.png';
+        case 'ave':
+            return '../Assets/ave.png';
+        default:
+            return '../Assets/mascota.png'; // genérico
+    }
+}
 
-    const mascotasExt = Mascota.map(m => {
-        const def = defaultsPorNombre[m.nombre] || {};
-        return {
-            ...m,
-            tamano: def.tamano || 'mediano',
-            foto: def.foto || 'https://images.unsplash.com/photo-1552053831-71594a27632d?w=600&q=80'
-        };
+// ===== Filtrado combinado =====
+function filtrarMascotasCombinado() {
+    const tarjetas = document.querySelectorAll('.card-mascota');
+    tarjetas.forEach(t => {
+        const nombre = t.querySelector('.card-title')?.textContent.toLowerCase() || '';
+        const tipo = t.dataset.tipo || '';
+
+        const cumpleTipo = !tipoActivo || tipo === tipoActivo;
+        const cumpleNombre = !nombreBusqueda || nombre.includes(nombreBusqueda);
+
+        t.style.display = cumpleTipo && cumpleNombre ? '' : 'none';
+    });
+}
+
+// ===== Inicializar búsqueda =====
+function initBusqueda() {
+    const input = $('#q');
+    const clearBtn = $('#clearQ');
+    if (!input) return;
+
+    input.addEventListener('input', () => {
+        nombreBusqueda = input.value.toLowerCase();
+        filtrarMascotasCombinado();
     });
 
-    function ultimoEstudio(id_mascota) {
-        const arr = Estudios[id_mascota] || [];
-        if (!arr.length) return '—';
-        const ultimo = [...arr].sort((a, b) => (b.fecha).localeCompare(a.fecha))[0];
-        return `${ultimo.fecha} · ${ultimo.tipo}`;
+    if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+            input.value = '';
+            nombreBusqueda = '';
+            filtrarMascotasCombinado();
+        });
     }
+}
 
+// ===== Render filtros por tipo =====
+function renderFiltroTipoMascota() {
+    const cont = $('#filtroTipoMascota');
+    if (!cont) return;
 
+    cont.innerHTML = '';
+
+    const btnTodos = document.createElement('button');
+    btnTodos.className = 'btn btn-outline-info';
+    btnTodos.textContent = 'Todos';
+    btnTodos.dataset.tipo = '';
+    cont.appendChild(btnTodos);
+
+    TipoMascota.forEach(t => {
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-outline-info';
+        btn.textContent = t.nombre;
+        btn.dataset.tipo = t.codTipoMascota;
+        cont.appendChild(btn);
+    });
+
+    const buttons = cont.querySelectorAll('button');
+    if (buttons.length) buttons[0].classList.add('active');
+
+    buttons.forEach(b => {
+        b.addEventListener('click', () => {
+            buttons.forEach(x => x.classList.remove('active'));
+            b.classList.add('active');
+            tipoActivo = b.dataset.tipo; // guardamos tipo seleccionado
+            filtrarMascotasCombinado();  // filtramos combinando nombre y tipo
+        });
+    });
+}
+
+// ===== Render mascotas =====
+function renderMascotas() {
     const grid = $('#gridMascotas');
+    if (!grid) return;
+
+    grid.innerHTML = '';
+
+    Mascotas.forEach(m => {
+        const col = document.createElement('div');
+        col.className = 'col-6 col-md-4 card-mascota';
+        col.dataset.tipo = m.tipo?.codTipoMascota || '';
+
+        const imgSrc = imagenPorTipo(m.tipo?.nombre);
+
+        col.innerHTML = `
+            <div class="card h-100 shadow-sm border-0 rounded-3 overflow-hidden">
+                <div class="ratio" style="--bs-aspect-ratio: 70%; background-color:#f8f9fa; display:flex; align-items:center; justify-content:center;">
+                    <img src="${imgSrc}" 
+                         class="card-img-top w-100 h-100" 
+                         alt="${m.tipo?.nombre || 'Mascota'}" 
+                         style="object-fit: contain; width: 100%; height: 100%; padding: 0.5rem;">
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title mb-1">${m.nombre}</h5>
+                    <p class="card-text mb-1 text-secondary small">Tipo: ${m.tipo?.nombre || '—'}</p>
+                    <p class="card-text mb-1 text-secondary small">Edad: ${m.edad || '—'}</p>
+                    <p class="card-text small text-muted">
+                        Dueño: ${m.cliente?.nombre || '—'} ${m.cliente?.apellido || ''}
+                    </p>
+                </div>
+            </div>
+        `;
+
+        grid.appendChild(col);
+    });
+
     const count = $('#count');
-    const qInput = $('#q');
-    const btnClear = $('#clearQ');
-    const sizeBtns = $$('.btn-group [data-size]');
+    if (count) count.textContent = Mascotas.length;
+}
 
-    let filtros = { q: '', size: '' };
-
-    function render(lista) {
-        grid.innerHTML = '';
-        lista.forEach((m, idx) => {
-            const cliente = Cliente.find(c => c.id_cliente === m.id_cliente);
-            const cliNombre = cliente ? `${cliente.nombre} ${cliente.apellido}` : '—';
-            const cliTel = cliente?.telefono || '—';
-            const cliMail = cliente?.email || '—';
-            const collId = `pet-${m.id_mascota}-${idx}`;
-
-            const col = document.createElement('div');
-            col.className = 'col-12 col-sm-6 col-lg-4';
-
-            col.innerHTML = `
-        <div class="card pet-card h-100">
-          <button class="pet-card-btn text-start" type="button" data-bs-toggle="collapse" data-bs-target="#${collId}" aria-expanded="false" aria-controls="${collId}">
-            <div class="pet-cover">
-              <img src="${m.foto}" alt="${m.nombre}" loading="lazy" />
-            </div>
-            <div class="card-body">
-              <div class="d-flex justify-content-between align-items-center mb-1">
-                <h5 class="mb-0">${m.nombre}</h5>
-                <span class="badge text-bg-secondary text-uppercase">${m.tamano}</span>
-              </div>
-              <div class="text-secondary small">${nombreCliente(m.id_cliente)}</div>
-            </div>
-          </button>
-
-          <div id="${collId}" class="collapse">
-            <div class="card-body border-top small">
-              <div class="mb-1"><i class="bi bi-person"></i> <strong>Tutor:</strong> ${cliNombre}</div>
-              <div class="mb-1"><i class="bi bi-telephone"></i> <strong>Tel:</strong> ${cliTel}</div>
-              <div class="mb-1"><i class="bi bi-envelope"></i> <strong>Mail:</strong> ${cliMail}</div>
-              <div class="mb-1"><i class="bi bi-clipboard2-pulse"></i> <strong>Último estudio:</strong> ${ultimoEstudio(m.id_mascota)}</div>
-            </div>
-          </div>
-        </div>
-      `;
-            grid.appendChild(col);
-        });
-
-        count.textContent = `${lista.length}`;
+// ===== Cargar tipos de mascota =====
+async function cargarTiposMascota() {
+    try {
+        const res = await getTiposMascota();
+        if (!res.ok) throw new Error('Error cargando tipos de mascota');
+        TipoMascota = await res.json();
+        renderFiltroTipoMascota();
+    } catch (err) {
+        console.error(err);
+        TipoMascota = [];
     }
+}
 
-    function aplicarFiltros() {
-        const q = norm(filtros.q);
-        const size = filtros.size;
-
-        let lista = [...mascotasExt];
-
-        if (q) {
-            lista = lista.filter(m => norm(m.nombre).includes(q));
-        }
-        if (size) {
-            lista = lista.filter(m => m.tamano === size);
-        }
-
-        // Orden alfabético por nombre de mascota
-        lista.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
-
-        render(lista);
+// ===== Cargar mascotas del cliente =====
+async function cargarMascotas(userId) {
+    try {
+        const res = await getMascotaByClienteId(userId);
+        if (!res.ok) throw new Error('Error al cargar mascotas');
+        Mascotas = await res.json();
+        renderMascotas();
+    } catch (err) {
+        console.error(err);
+        Mascotas = [];
     }
+}
 
-    // ====== Eventos ======
-    qInput.addEventListener('input', () => {
-        filtros.q = qInput.value;
-        aplicarFiltros();
-    });
-
-    btnClear.addEventListener('click', () => {
-        qInput.value = '';
-        filtros.q = '';
-        aplicarFiltros();
-        qInput.focus();
-    });
-
-    sizeBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            // marcar activo
-            sizeBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-
-            filtros.size = btn.getAttribute('data-size') || '';
-            aplicarFiltros();
-        });
-    });
-
-    // init: “Todos” activo
-    sizeBtns[0].classList.add('active');
-    aplicarFiltros();
-})();
-
-// === PERFIL: menú desplegable ===
-(function () {
-    const btnPerfil = document.getElementById('btnPerfil');
-    const menu = document.getElementById('menuPerfil');
-
-    if (!btnPerfil || !menu) return;
-
-    btnPerfil.addEventListener('click', (e) => {
-        e.stopPropagation();
-        menu.classList.toggle('d-none');
-    });
-
-    document.addEventListener('click', () => {
-        if (!menu.classList.contains('d-none')) {
-            menu.classList.add('d-none');
-        }
-    });
-
-    // Cerrar sesión
-    const btnCerrar = document.getElementById('btnCerrarSesion');
-    if (btnCerrar) {
-        btnCerrar.addEventListener('click', () => {
-            sessionStorage.removeItem('dogtorUser');
-            window.location.href = '../Html/index.html';
-        });
+// ===== Inicialización =====
+async function initClientes() {
+    const raw = sessionStorage.getItem('dogtorUser');
+    if (!raw) { 
+        window.location.href = './index.html'; 
+        return; 
     }
+    const user = JSON.parse(raw);
 
-    // Editar perfil (placeholder)
-    const btnEditar = document.getElementById('btnEditarPerfil');
-    if (btnEditar) {
-        btnEditar.addEventListener('click', () => {
-            alert('Función "Editar perfil" en desarrollo.');
-        });
-    }
+    await Promise.all([
+        cargarTiposMascota(),
+        cargarMascotas(user.id)
+    ]);
 
-    // Cambiar clave (placeholder)
-    const btnClave = document.getElementById('btnCambiarClave');
-    if (btnClave) {
-        btnClave.addEventListener('click', () => {
-            alert('Función "Cambiar contraseña" en desarrollo.');
-        });
-    }
-})();
+    initBusqueda();
+}
 
+document.addEventListener('DOMContentLoaded', initClientes);

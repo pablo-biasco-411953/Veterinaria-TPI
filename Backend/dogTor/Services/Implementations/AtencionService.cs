@@ -64,6 +64,16 @@ namespace dogTor.Services.Implementations
                 .Select(a => new DtoAtencion(a))
                 .ToList();
         }
+        public async Task<List<DtoAtencion>> GetAtencionesByClienteIdAsync(int clienteId)
+        {
+            List<Atencion> atencionesModel = await _repository.GetByClienteId(clienteId);
+
+            if (atencionesModel == null)
+                return new List<DtoAtencion>();
+
+            return atencionesModel.Select(a => new DtoAtencion(a)).ToList();
+        }
+
 
         public async Task<List<DtoTipoAtencion>> GetTiposAtencionAsync()
         {

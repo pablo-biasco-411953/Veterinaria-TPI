@@ -1,37 +1,51 @@
 // js/login.js
+import { loginUser } from './api.js';
+
 (function () {
     const form = document.getElementById('loginForm');
     if (!form) return;
 
-    //Credenciales de prueba
-    const TEST_USER = {
-        email: 'demo@dogtor.com',
-        pass: '1234'
-    };
-
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        const email = form.elements['email']?.value?.trim();
-        const pass = form.elements['password']?.value ?? '';
+        const dni = form.elements['email']?.value?.trim(); 
+        const password = form.elements['password']?.value ?? '';
 
-        // Validación básica
-        if (!email || !pass) {
-            alert('Completá email y contraseña.');
+        if (!dni || !password) {
+            alert('Completá DNI y contraseña.');
             return;
         }
 
-        // Verifica credenciales
-        const ok = email.toLowerCase() === TEST_USER.email.toLowerCase() && pass === TEST_USER.pass;
+        try {
+            const response = await loginUser({ username: dni, password });
+            console.log("La res",response)
+            if (response.ok) {
+            const data = await response.json();
+            console.log("LA ATAAA: ", data)
 
-        if (ok) {
-            // Guarda sesión temporal
-            sessionStorage.setItem('dogtorUser', JSON.stringify({ email }));
+            const user = data.user; // <-- aquí está tu usuario
 
+            sessionStorage.setItem('dogtorUser', JSON.stringify({
+                id: user.id,          
+                nombre: user.nombre,
+                apellido: user.apellido,
+                dni: user.dni,
+                token: data.token // token sigue en la raíz
+            }));
+
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('userDni', dni);
 
             window.location.href = './dashboard.html';
-        } else {
-            alert('Credenciales inválidas (demo). Usá demo@dogtor.com / 1234');
+            }else if (response.status === 401) {
+                alert('Usuario o contraseña incorrectos.');
+            } else {
+                const err = await response.json();
+                alert(err?.Message || 'Error al iniciar sesión.');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Error de conexión con el servidor.');
         }
     });
 })();
