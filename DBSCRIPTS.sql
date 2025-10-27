@@ -1,5 +1,6 @@
 -- 1. CREACIÓN DE LA BASE DE DATOS (si no existe)
-IF NOT EXISTS(SELECT * FROM sys.databases WHERE name = 'dogtor')
+IF NOT EXISTS(SELECT * FROM sys.databases WHERE name = '
+')
 BEGIN
     CREATE DATABASE dogtor;
 END

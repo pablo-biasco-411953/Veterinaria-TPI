@@ -585,7 +585,7 @@ async function guardarTurno(e) {
     const codDisponibilidad = document.getElementById('tCodDisponibilidad')?.value || document.getElementById('tHora')?.value; 
     const codMascota = $('#tMascota').value;
     const codTipoAtencion = $('#tAtencion').value;
-    const estado = $('#tEstado').value;
+    //const estado = $('#tEstado').value;
 
     // 3. Validación de campos críticos
     if (!codMascota || !codTipoAtencion || !codDisponibilidad) {
@@ -602,7 +602,6 @@ async function guardarTurno(e) {
         codVeterinario: codVeterinario,
         // ❌ Eliminamos codDisponibilidad de aquí, ya que el backend lo espera en la URL, no en el body.
         // codDisponibilidad: parseInt(codDisponibilidad), 
-        nombreEstado: estado
     };
     
     // Deshabilitar botón y mostrar carga

@@ -25,7 +25,7 @@ namespace dogTor.Controllers
 
         [HttpPost("register")]
         public async Task<IActionResult> CrearUsuario([FromBody] DtoVeterinario usuarioDto)
-        {
+            {
             if (usuarioDto == null)
             {
                 return BadRequest("Datos inválidos");

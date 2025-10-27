@@ -1,11 +1,11 @@
 ﻿-- 1. CREACIÓN DE LA BASE DE DATOS (si no existe)
-IF NOT EXISTS(SELECT * FROM sys.databases WHERE name = 'dogtor2')
+IF NOT EXISTS(SELECT * FROM sys.databases WHERE name = 'dogtor3')
 BEGIN
-    CREATE DATABASE dogtor2;
+    CREATE DATABASE dogtor3;
 END
 GO
 
-USE dogtor2;
+USE dogtor3;
 GO
 
 ------------------------------------------------------------------
@@ -178,7 +178,7 @@ ALTER TABLE [dbo].[DETALLE_ATENCION] WITH CHECK ADD FOREIGN KEY([cod_tipoA])
 REFERENCES [dbo].[TIPO_ATENCION] ([cod_tipoA])
 GO
 
-USE dogtor2;
+USE dogtor3;
 GO
 
 ------------------------------------------------------------------
