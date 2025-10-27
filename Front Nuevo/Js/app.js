@@ -148,7 +148,7 @@ function setUserBadgeFromSession() {
 }
 
 // ===== KPIs =====
-function renderKPIs() {
+async function renderKPIs() {
     const raw = sessionStorage.getItem('dogtorUser');
     if (!raw) return;
     const user = JSON.parse(raw);
@@ -162,10 +162,20 @@ function renderKPIs() {
     const turnosCliente = Turno.filter(t => t.id_cliente === userId);
     $('#kpiTurnosHoy').textContent = turnosCliente.length.toString();
 
-    // 🕒 Disponibilidad actual
-    const horasTomadas = new Set(turnosCliente.map(t => t.hora));
-    const libres = Disponibilidad.filter(d => !d.ocupado && !horasTomadas.has(d.hora)).length;
-    $('#kpiDisponibles').textContent = libres.toString();
+    // 🕒 Cantidad de turnos libres globales (traídos desde la API)
+    try {
+        const res = await getTurnosDisponibles();
+        if (res.ok) {
+            const turnos = await res.json();
+            const libres = turnos.filter(t => !t.ocupado).length;
+            $('#kpiDisponibles').textContent = libres.toString();
+        } else {
+            $('#kpiDisponibles').textContent = '0';
+        }
+    } catch (err) {
+        console.error('Error cargando turnos libres:', err);
+        $('#kpiDisponibles').textContent = '0';
+    }
 
     // 💰 Facturación simulada (puede ser 0 si el backend no lo da)
     const total = turnosCliente.reduce((acc, t) => acc + precioAtencion(t.id_tipo_atencion), 0);
@@ -420,7 +430,6 @@ async function cargarDisponibilidad() {
 
 async function cargarTurnosDisponibles() {
     const tabla = document.getElementById('tablaDisponibilidad');
-
     if (!tabla) return console.error("No se encontró el tbody con id 'tablaDisponibilidad'");
 
     try {
@@ -428,31 +437,44 @@ async function cargarTurnosDisponibles() {
         if (!res.ok) throw new Error(`Error ${res.status}`);
 
         const turnos = await res.json();
-        console.log("turnos disponibles:", turnos);
-
         tabla.innerHTML = ''; // limpiar tabla
 
         if (!turnos || !turnos.length) {
-            tabla.innerHTML = '<tr><td colspan="5" class="text-center">No hay turnos disponibles</td></tr>';
+            tabla.innerHTML = '<tr><td colspan="4" class="text-center">No hay turnos disponibles</td></tr>';
             return;
         }
 
         turnos.forEach(t => {
             const tr = document.createElement('tr');
+
             tr.innerHTML = `
                 <td>${new Date(t.fecha).toLocaleDateString('es-AR')}</td>
                 <td>${t.hora}</td>
-                <td>${t.ocupado ? 'Ocupado' : 'Libre'}</td>
-                <td>—</td>
-                <td>—</td>
+                <td><span class="badge rounded-pill ${t.ocupado ? 'text-bg-danger' : 'text-bg-success'}">
+                    ${t.ocupado ? 'Ocupado' : 'Libre'}
+                </span></td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary" ${t.ocupado ? 'disabled' : ''} data-turno-id="${t.id || ''}">
+                        Tomar turno
+                    </button>
+                </td>
             `;
+
+            // Evento del botón
+            tr.querySelector('button')?.addEventListener('click', () => {
+                console.log('Tomando turno id:', t.id);
+                // Aquí llamás a la API para reservar el turno
+                // tomarTurno(t.id);
+            });
+
             tabla.appendChild(tr);
         });
     } catch (err) {
         console.error(err);
-        tabla.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Error al cargar los turnos</td></tr>';
+        tabla.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Error al cargar los turnos</td></tr>';
     }
 }
+
 
 document.addEventListener('DOMContentLoaded', cargarTurnosDisponibles);
 

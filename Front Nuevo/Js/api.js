@@ -74,8 +74,8 @@ export async function getProximasAtenciones(userId) {
     return fetch(`${API_URL}/Turnos/AtencionesxCliente/${userId}`);
 }
 
-export async function getAtencionById(id) {
-    return fetch(`${API_URL}/Atencion/${id}`);
+export async function getAtencionByClienteId(id) {
+    return fetch(`${API_URL}/Turnos/AtencionesxCliente/${id}`);
 }
 
 export async function getTurnosDisponibles() {
