@@ -17,11 +17,15 @@ public partial class Atencion
 
     public int CodMascota { get; set; }
 
+    public int? CodVeterinario { get; set; }
+
     public virtual Disponibilidad CodDisponibilidadNavigation { get; set; }
 
     public virtual Mascotum CodMascotaNavigation { get; set; }
 
     public virtual TipoAtencion CodTipoANavigation { get; set; }
+
+    public virtual Veterinario CodVeterinarioNavigation { get; set; }
 
     public virtual ICollection<DetalleAtencion> DetalleAtencions { get; set; } = new List<DetalleAtencion>();
 }

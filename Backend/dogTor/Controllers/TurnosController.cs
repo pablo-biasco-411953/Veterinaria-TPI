@@ -21,17 +21,26 @@ namespace dogTor.Controllers
 
         // POST /api/turnos
         // Crear un nuevo turno / atención
-        [HttpPost]
-        public async Task<IActionResult> RegistrarTurno([FromBody] DtoAtencion atencionDto)
+       [HttpPost("insertar/{codDisponibilidad}")] // 💡 RUTA ALINEADA CON EL JS
+        public async Task<IActionResult> RegistrarTurno(int codDisponibilidad, [FromBody] DtoAtencion atencionDto) // Capturamos los datos de la atención del cuerpo
         {
             if (atencionDto == null)
             {
                 return BadRequest("Datos inválidos.");
             }
-
+    
             try
             {
-                var nuevoTurno = await _atencionService.RegistrarAtencionAsync(atencionDto);
+                // 💡 Asignamos el CodDisponibilidad al DTO antes de enviarlo al servicio
+                // NOTA: Tu DTO Atencion DEBE tener una propiedad para CodDisponibilidad
+                // o tu servicio debe ser modificado para aceptar ambos parámetros separados.
+
+                // OPCIÓN A: Si el servicio acepta ambos parámetros:
+                var nuevoTurno = await _atencionService.RegistrarAtencionAsync(atencionDto, codDisponibilidad);
+
+                // OPCIÓN B: Si solo usas el DTO, debes asegurarte de que el DTO
+                // que viene del frontend ya contenga o pueda recibir el CodDisponibilidad
+                // var nuevoTurno = await _atencionService.RegistrarAtencionAsync(atencionDto); 
 
                 if (nuevoTurno == null)
                 {
@@ -46,9 +55,10 @@ namespace dogTor.Controllers
             }
             catch (InvalidOperationException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                // Esto captura la excepción del repositorio si el slot ya estaba reservado (CodEstado != 1)
+                return BadRequest(new { message = ex.Message }); 
             }
-            catch
+            catch (Exception)
             {
                 return StatusCode(500, "Error interno al procesar el turno.");
             }
@@ -116,6 +126,35 @@ namespace dogTor.Controllers
             }
         }
 
+        [HttpGet("horas-libres")]
+        public async Task<IActionResult> GetHorasDisponibles([FromQuery] string fecha)
+        {
+            // 1. Validación y Conversión de la fecha
+            if (string.IsNullOrEmpty(fecha) || !DateTime.TryParse(fecha, out DateTime fechaDT))
+            {
+                return BadRequest("El formato de fecha es inválido o no fue proporcionado.");
+            }
+
+            try
+            {
+                // 2. Llamada al servicio
+                var disponibilidad = await _atencionService.GetDisponibilidadPorFechaAsync(fechaDT);
+
+                if (disponibilidad == null || disponibilidad.Count == 0)
+                {
+                    // Devuelve 404 si no hay resultados para una mejor experiencia de usuario en el frontend
+                    return NotFound(new { message = "No hay horarios libres para esta fecha." });
+                }
+
+                // 3. Devolución de los DTOs
+                return Ok(disponibilidad);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error interno al recuperar las horas disponibles." });
+            }
+        }
+
         // GET /api/turnos/tipos
         // Obtener los tipos de atención
         [HttpGet("tipos")]
@@ -137,5 +176,32 @@ namespace dogTor.Controllers
                 return StatusCode(500, "Error interno al recuperar los tipos de atención.");
             }
         }
+        [HttpGet("AtencionesxVeterinario/{veterinarioId}")]
+        public async Task<IActionResult> GetAtencionesByVeterinarioId(int veterinarioId)
+        {
+            // ⚠️ NOTA DE SEGURIDAD: En un entorno de producción, este método debería 
+            // verificar que el 'veterinarioId' en la URL coincida con el ID del 
+            // veterinario que está logueado (obtenido del token JWT) para evitar
+            // que un veterinario vea los turnos de otro.
+
+            try
+            {
+                // Asumimos que IAtencionService tiene un método GetAtencionesByVeterinarioIdAsync
+                var atenciones = await _atencionService.GetAtencionesByVeterinarioIdAsync(veterinarioId);
+
+                if (atenciones == null || atenciones.Count == 0)
+                {
+                    return NotFound($"No se encontraron atenciones asignadas al veterinario con ID {veterinarioId}.");
+                }
+
+                return Ok(atenciones);
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Error interno al recuperar las atenciones del veterinario.");
+            }
+        }
+
+    
     }
 }

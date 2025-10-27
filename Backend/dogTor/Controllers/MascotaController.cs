@@ -53,16 +53,16 @@ namespace dogTor.Controllers
 
         // GET /api/mascota/cliente/{userId}
         // Obtener todas las mascotas de un cliente
-        [HttpGet("cliente/{userId}")]
-        public async Task<IActionResult> GetMascotasByCliente(int userId)
+        [HttpGet]
+        public async Task<IActionResult> GetMascotas()
         {
             try
             {
-                var mascotas = await _mascotaService.GetAllByUserIdAsync(userId);
+                var mascotas = await _mascotaService.GetAll();
 
                if (mascotas == null || mascotas.Count == 0)
                 {
-                    return NotFound($"No se encontraron mascotas para el cliente con ID {userId}.");
+                    return NotFound($"No se encontraron mascotas.");
                 }
 
                 return Ok(mascotas);
@@ -70,6 +70,31 @@ namespace dogTor.Controllers
             catch
             {
                 return StatusCode(500, "Error interno al recuperar las mascotas.");
+            }
+        }
+
+        [HttpGet("cliente/{codCliente}")]
+        public async Task<IActionResult> GetMascotasByCliente(int codCliente)
+        {
+            try
+            {
+                var mascotas = await _mascotaService.GetMascotasByClienteIdAsync(codCliente);
+
+                if (mascotas == null || mascotas.Count == 0)
+                {
+                    return NotFound($"No se encontraron mascotas para el cliente con ID {codCliente}.");
+                }
+
+                return Ok(mascotas);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                // Si quieres manejar la excepción específica de la mascota por ID, puedes hacerlo aquí
+                return NotFound(new { message = ex.Message });
+            }
+            catch
+            {
+                return StatusCode(500, "Error interno al recuperar las mascotas por cliente.");
             }
         }
 

@@ -13,7 +13,9 @@ public partial class Disponibilidad
 
     public TimeOnly Hora { get; set; }
 
-    public int Ocupada { get; set; }
+    public int CodEstado { get; set; }
 
     public virtual ICollection<Atencion> Atencions { get; set; } = new List<Atencion>();
+
+    public virtual EstadoAtencion CodEstadoNavigation { get; set; }
 }

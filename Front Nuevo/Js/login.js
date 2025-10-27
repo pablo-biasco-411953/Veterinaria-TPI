@@ -8,36 +8,43 @@ import { loginUser } from './api.js';
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        const dni = form.elements['email']?.value?.trim(); 
+        // 1. OBTENEMOS LAS CREDENCIALES
+        // El input se llama 'email' y ahora lo usamos como 'username' para el login (email del veterinario).
+        const email = form.elements['email']?.value?.trim(); 
         const password = form.elements['password']?.value ?? '';
 
-        if (!dni || !password) {
-            alert('Completá DNI y contraseña.');
+        if (!email || !password) {
+            alert('Completá email y contraseña.');
             return;
         }
 
         try {
-            const response = await loginUser({ username: dni, password });
+            // 2. LLAMADA A LA API
+            // El 'username' para la API ahora es el email
+            const response = await loginUser({ username: email, password }); 
             console.log("La res",response)
+            
             if (response.ok) {
-            const data = await response.json();
-            console.log("LA ATAAA: ", data)
+                const data = await response.json();
+                console.log("LA ATAAA: ", data)
 
-            const user = data.user; // <-- aquí está tu usuario
+                const user = data.user; // <-- Ahora este es el DtoVeterinario
 
-            sessionStorage.setItem('dogtorUser', JSON.stringify({
-                id: user.id,          
-                nombre: user.nombre,
-                apellido: user.apellido,
-                dni: user.dni,
-                token: data.token // token sigue en la raíz
-            }));
+                // 3. ALMACENAMIENTO DE SESIÓN (Actualizado para Veterinario)
+                sessionStorage.setItem('dogtorUser', JSON.stringify({
+                    id: user.id, // codVeterinario
+                    nombre: user.nombre,
+                    apellido: user.apellido,
+                    matricula: user.matricula, // 💡 CAMBIADO: DNI por MATRICULA
+                    email: user.email,         // 💡 AGREGADO: Email
+                    token: data.token 
+                }));
 
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('userDni', dni);
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('userEmail', email); // 💡 CAMBIADO: userDni por userEmail
 
-            window.location.href = './dashboard.html';
-            }else if (response.status === 401) {
+                window.location.href = './dashboard.html';
+            } else if (response.status === 401) {
                 alert('Usuario o contraseña incorrectos.');
             } else {
                 const err = await response.json();

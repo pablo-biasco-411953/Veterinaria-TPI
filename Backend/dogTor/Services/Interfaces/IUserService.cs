@@ -5,9 +5,7 @@ namespace dogTor.Services.Interfaces
 {
     public interface IUserService
     {
-        Task<DtoCliente> RegisterUserAsync(DtoCliente newClientDto);
-
-        Task<DtoCliente> LoginAsync(DtoCredencialesLogin credentials);
-
+        Task<DtoVeterinario> RegisterVeterinarioAsync(DtoVeterinario newVeterinarioDto);
+        Task<DtoVeterinario> LoginAsync(DtoCredencialesLogin credentials);
     }
 }

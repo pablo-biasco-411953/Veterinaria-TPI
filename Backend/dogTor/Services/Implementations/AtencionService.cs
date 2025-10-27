@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System;
 using dogTor.Repository;
+using Veterinaria6.Repository;
 
 namespace dogTor.Services.Implementations
 {
@@ -21,32 +22,28 @@ namespace dogTor.Services.Implementations
             _repository = repository;
         }
 
-        public async Task<DtoAtencion> RegistrarAtencionAsync(DtoAtencion nuevaAtencionDto)
+        public async Task<DtoAtencion> RegistrarAtencionAsync(DtoAtencion nuevaAtencionDto, int codDisponibilidad)
         {
-            // 1. Validaciones de Negocio (Filtro Rápido)
-            // Asegura que el DTO tenga un ID de disponibilidad válido para evitar NullReferenceExceptions.
-            if (nuevaAtencionDto.Disponibilidad?.CodDisponibilidad == null || nuevaAtencionDto.Disponibilidad.CodDisponibilidad <= 0)
+            // 1. Validation
+            if (codDisponibilidad <= 0)
             {
                 throw new ArgumentException("Debe seleccionar un código de disponibilidad válido.");
             }
 
             // 2. Mapeo DTO -> Model
             Atencion atencionModel = nuevaAtencionDto.ConvertToModel();
+            atencionModel.CodDisponibilidad = codDisponibilidad; // Assign the FK value
 
-            // 3. Obtener el Codigo de Disponibilidad para el repositorio (Ahora sabemos que no es null)
-            int codDisponibilidad = nuevaAtencionDto.Disponibilidad.CodDisponibilidad;
-
-            // 4. Guardar en la DB
-            // El Repositorio maneja la transacción y la validación de ocupación (Ocupada == 0)
+            // 3. Call Repository's Insert
+            // The Repository handles the transaction and the state change (codDisponibilidad is the trigger).
             bool success = await _repository.Insert(atencionModel, codDisponibilidad);
 
             if (!success)
             {
-                // Este throw ocurrirá si el Repositorio devuelve false (tras un Rollback)
                 throw new Exception("Error desconocido al guardar la atención y reservar el turno.");
             }
 
-            // 5. Mapeo Model -> DTO para devolver el resultado (con el CodAtencion y las navegaciones actualizadas)
+            // 4. Return DTO
             return new DtoAtencion(atencionModel);
         }
 
@@ -91,6 +88,29 @@ namespace dogTor.Services.Implementations
             return disponibilidadModel
                 .Select(d => new DtoDisponibilidad(d))
                 .ToList();
+        }
+
+        public Task<bool> Insert(Atencion atencion, int codDisponibilidad)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<List<DtoAtencion>> GetAtencionesByVeterinarioIdAsync(int veterinarioId)
+        {
+            var atencionModels = await _repository.GetByVeterinarioId(veterinarioId);
+
+            if (atencionModels == null) return new List<DtoAtencion>();
+
+            return atencionModels.Select(a => new DtoAtencion(a)).ToList();
+        }
+
+        public async Task<List<DtoDisponibilidad>> GetDisponibilidadPorFechaAsync(DateTime fechaSolicitada)
+        {
+            var disponibilidadModels = await _repository.GetDisponibilidadFechaHora(fechaSolicitada);
+
+            if (disponibilidadModels == null) return new List<DtoDisponibilidad>();
+
+            return disponibilidadModels.Select(d => new DtoDisponibilidad(d)).ToList();
         }
     }
 }

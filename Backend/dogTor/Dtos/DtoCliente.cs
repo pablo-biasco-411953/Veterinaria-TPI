@@ -10,7 +10,6 @@ namespace dogTor.Dtos
         public string? Apellido { get; set; }
         public string? Telefono { get; set; }
         public int? Dni { get; set; }
-        public string? Password { get; set; }
 
         public DtoCliente() { }
 
@@ -21,7 +20,6 @@ namespace dogTor.Dtos
             Apellido = Tcliente.Apellido;
             Telefono = Tcliente.Telefono;
             Dni = Tcliente.Dni;
-            Password = null; 
         }
 
         public Cliente ConvertToModel()
@@ -34,7 +32,6 @@ namespace dogTor.Dtos
                 Nombre = Nombre ?? string.Empty,
                 Apellido = Apellido ?? string.Empty,
                 Telefono = Telefono ?? string.Empty,
-                Password = Password
             };
 
             if (clienteModel.Dni == 0)

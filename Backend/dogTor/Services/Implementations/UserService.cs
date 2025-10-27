@@ -1,4 +1,5 @@
-﻿using BCrypt.Net;
+﻿// VeterinarioService.cs
+using BCrypt.Net;
 using dogTor.Dtos;
 using dogTor.Models;
 using dogTor.Repository;
@@ -8,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace dogTor.Services.Implementations
 {
+    // Usamos IUserRepository para la autenticación del "usuario" (Veterinario)
     public class UserService : IUserService
     {
         private readonly IUserRepository _userRepository;
@@ -17,41 +19,57 @@ namespace dogTor.Services.Implementations
             _userRepository = userRepository;
         }
 
-        public async Task<DtoCliente> RegisterUserAsync(DtoCliente newClientDto)
+        public async Task<DtoVeterinario> RegisterVeterinarioAsync(DtoVeterinario newVeterinarioDto)
         {
-            // Validamos que el usuario no esté registrado antes
-            if (await _userRepository.GetUserByUsernameAsync(newClientDto.Dni.Value) != null)
+            // Validamos que el email (username) no esté registrado
+            if (await _userRepository.GetUserByUsernameAsync(newVeterinarioDto.Email) != null)
             {
-                throw new InvalidOperationException("El nombre de usuario ya está registrado.");
+                throw new InvalidOperationException("El email ya está registrado.");
             }
 
-            // Mapeo DTO a Model
-            Cliente clienteModel = newClientDto.ConvertToModel();
+            Veterinario veterinarioModel = new Veterinario
+            {
+                Nombre = newVeterinarioDto.Nombre ?? string.Empty,
+                Apellido = newVeterinarioDto.Apellido ?? string.Empty,
+                Email = newVeterinarioDto.Email ?? string.Empty,
+                Matricula = newVeterinarioDto.Matricula ?? string.Empty
+            };
 
-            // Hasheo la Contraseña 
-            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(newClientDto.Password);
-            clienteModel.Password = hashedPassword;
+            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(newVeterinarioDto.Password);
+            veterinarioModel.Password = hashedPassword;
+            await _userRepository.CreateUserAsync(veterinarioModel);
 
-            await _userRepository.CreateUserAsync(clienteModel); 
-
-            DtoCliente createdDto = new DtoCliente(clienteModel);
-            createdDto.Password = null; 
-            return createdDto;
+            DtoVeterinario veterinarioCreado = new DtoVeterinario(veterinarioModel);
+            // No es necesario: createdDto.Password = null; ya que DtoVeterinario no tiene propiedad Password.
+            return veterinarioCreado;
         }
 
-        public async Task<DtoCliente> LoginAsync(DtoCredencialesLogin credentials)
-        {
-            // Busco el usuario
-            Cliente userModel = await _userRepository.GetUserByUsernameAsync(credentials.Username);
+        // ---------------------------------------------------
+        // AUTENTICACIÓN (LOGIN)
+        // ---------------------------------------------------
 
-            // Verifico existencia y contraseña
+        public async Task<DtoVeterinario> LoginAsync(DtoCredencialesLogin credentials)
+        {
+            // Busco el usuario (Veterinario) por el Email (Username)
+            Veterinario userModel = await _userRepository.GetUserByUsernameAsync(credentials.Username);
+
+            // 1. Verifico la existencia del usuario
             if (userModel == null)
             {
                 throw new UnauthorizedAccessException("Credenciales de acceso inválidas.");
             }
 
-            DtoCliente loggedInUserDto = new DtoCliente(userModel);
-            loggedInUserDto.Password = null;
+            // 2. Verifico la contraseña
+            // Usamos BCrypt.Verify para comparar el password plano con el hash almacenado
+            bool isPasswordCorrect = BCrypt.Net.BCrypt.Verify(credentials.Password, userModel.Password);
+
+            if (!isPasswordCorrect)
+            {
+                throw new UnauthorizedAccessException("Credenciales de acceso inválidas.");
+            }
+
+            // Credenciales válidas: Mapeo a DTO y lo devuelvo (sin password)
+            DtoVeterinario loggedInUserDto = new DtoVeterinario(userModel);
             return loggedInUserDto;
         }
     }

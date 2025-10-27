@@ -39,11 +39,11 @@ namespace dogTor.Repository
             return await _context.SaveChangesAsync() > 0;
         }
 
-        // GET: Todas las mascotas de un cliente (no eliminadas)
-        public async Task<List<Mascotum>> GetAll(int userId)
+        // GET: Todas las mascotas (no eliminadas)
+        public async Task<List<Mascotum>> GetAll()
         {
             return await _context.Mascota
-                .Where(m => !m.Eliminado && m.CodCliente == userId)
+                .Where(m => !m.Eliminado)
                 .Include(m => m.CodTipoNavigation)
                 .Include(m => m.CodClienteNavigation)
                 .ToListAsync();
@@ -77,5 +77,16 @@ namespace dogTor.Repository
 
             return await _context.SaveChangesAsync() > 0;
         }
+        public async Task<List<Mascotum>> GetByClienteId(int clienteDni)
+        {
+            return await _context.Mascota
+          .Where(m => !m.Eliminado)
+          .Where(m => m.CodClienteNavigation.Dni == clienteDni)
+          .Include(m => m.CodTipoNavigation)
+          .Include(m => m.CodClienteNavigation)
+          .ToListAsync();
+        }
+
     }
+
 }

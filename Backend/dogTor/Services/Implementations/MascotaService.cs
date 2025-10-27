@@ -41,10 +41,9 @@ namespace dogTor.Services.Implementations
             return new DtoMascota(mascotaModel);
         }
 
-        public async Task<List<DtoMascota>> GetAllByUserIdAsync(int userId)
+        public async Task<List<DtoMascota>> GetAll()
         {
-            // 1. Acceso a Datos: Obtener los Models por ID de usuario
-            List<Mascotum> mascotasModel = await _mascotaRepository.GetAll(userId);
+            List<Mascotum> mascotasModel = await _mascotaRepository.GetAll();
 
             // 2. Mapeo Model -> DTO de la colección
             // Mapeamos la lista de Models a una lista de DTOs
@@ -75,6 +74,20 @@ namespace dogTor.Services.Implementations
             // 2. Mapeo Model -> DTO
             return tiposModel
                 .Select(t => new DtoTipoMascota(t))
+                .ToList();
+        }
+        public async Task<List<DtoMascota>> GetMascotasByClienteIdAsync(int clienteId)
+        {
+            List<Mascotum> mascotasModel = await _mascotaRepository.GetByClienteId(clienteId);
+
+            if (mascotasModel == null)
+            {
+                return new List<DtoMascota>();
+            }
+
+            // 2. Mapeo Model -> DTO de la colección
+            return mascotasModel
+                .Select(m => new DtoMascota(m))
                 .ToList();
         }
     }

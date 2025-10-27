@@ -24,7 +24,7 @@ namespace dogTor.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> CrearUsuario([FromBody] DtoCliente usuarioDto)
+        public async Task<IActionResult> CrearUsuario([FromBody] DtoVeterinario usuarioDto)
         {
             if (usuarioDto == null)
             {
@@ -32,8 +32,8 @@ namespace dogTor.Controllers
             }
             try
             {
-                DtoCliente nuevoUsuario = await _userService.RegisterUserAsync(usuarioDto);
-                return Ok(new { Message = "Usuario creado con éxito", Usuario = nuevoUsuario });
+                DtoVeterinario nuevoUsuario = await _userService.RegisterVeterinarioAsync(usuarioDto);
+                return Ok(new { Message = "Veterinario creado con éxito", Usuario = nuevoUsuario });
             }
             catch (InvalidOperationException ex)
             {
@@ -45,7 +45,7 @@ namespace dogTor.Controllers
             }
             catch
             {
-                return StatusCode(500, "Error interno al crear usuario");
+                return StatusCode(500, "Error interno al crear veterinario");
             }
         }
 
@@ -57,19 +57,27 @@ namespace dogTor.Controllers
 
             try
             {
-                DtoCliente user = await _userService.LoginAsync(credentials);
+                // 1. Authenticate the user (Veterinario)
+                DtoVeterinario user = await _userService.LoginAsync(credentials);
 
-                var token = GenerateJwtToken(user.Dni ?? 0, user.CodCliente.Value);
+                // 2. Generate the token
+                // Use CodVeterinario and Email (or Matricula, depending on your JWT claims needs)
+                // ⚠️ Assuming your GenerateJwtToken takes the user ID and a unique claim (like Email or Matricula).
+                // If your original method expected DNI, you must update the implementation of GenerateJwtToken.
+                var token = GenerateJwtToken(user.CodVeterinario.Value, user.Email);
 
+                // 3. Return the response
                 return Ok(new
                 {
                     Token = token,
                     User = new
                     {
-                        Id = user.CodCliente,
+                        Id = user.CodVeterinario,
                         Nombre = user.Nombre,
                         Apellido = user.Apellido,
-                        Dni = user.Dni
+                        // ❌ DNI no existe en DtoVeterinario. Usar Matricula o Email.
+                        Matricula = user.Matricula, // Usar Matricula o Email si es necesario en el front-end
+                        Email = user.Email
                     }
                 });
             }
@@ -77,21 +85,23 @@ namespace dogTor.Controllers
             {
                 return Unauthorized(new { Message = "Usuario o contraseña incorrectos" });
             }
-            catch
+            catch (Exception ex) // Captura específica de Exception para mejor manejo de errores
             {
+                // Log the exception (recommended)
+                // Console.error(ex.Message); 
                 return StatusCode(500, "Error interno durante el login");
             }
         }
 
-        private string GenerateJwtToken(int username, int userId)
+        private string GenerateJwtToken(int codVeterinario, string email)
         {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"]));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var claims = new[]
             {
-                new Claim(JwtRegisteredClaimNames.Sub, username.ToString()),
-                new Claim("userId", userId.ToString()),
+                new Claim(JwtRegisteredClaimNames.Sub, email),
+                new Claim("id", codVeterinario.ToString()),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 

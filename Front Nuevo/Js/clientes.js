@@ -1,13 +1,16 @@
 // clientes.js
-import { getMascotaByClienteId, getTiposMascota } from './api.js';
+import { getAllMascotas, getTiposMascota } from './api.js'; 
+// Asumo que getMascotaByClienteId no es necesario ya que usamos getAllMascotas + filtro JS
 
 // ===== Variables globales =====
-let Mascotas = [];
-let TipoMascota = [];
+let Mascotas = [];          // Lista de mascotas actualmente renderizadas (la lista filtrada)
+let MascotasCargadas = [];  // COPIA DE LA DATA ORIGINAL (para filtrar)
+let TipoMascota = [];       // Catálogo de tipos
 
 // ===== Variables para filtros =====
 let tipoActivo = '';
 let nombreBusqueda = '';
+let clienteBusqueda = ''; // Búsqueda por Cliente/Dueño (DNI o Nombre/Apellido)
 
 // ===== Helpers DOM =====
 const $ = s => document.querySelector(s);
@@ -29,75 +32,121 @@ function imagenPorTipo(tipoNombre) {
     }
 }
 
-// ===== Filtrado combinado =====
+// ===== Filtrado combinado (COMPLETO) =====
 function filtrarMascotasCombinado() {
-    const tarjetas = document.querySelectorAll('.card-mascota');
-    tarjetas.forEach(t => {
-        const nombre = t.querySelector('.card-title')?.textContent.toLowerCase() || '';
-        const tipo = t.dataset.tipo || '';
+    // 1. Usamos la copia original como base
+    let mascotasFiltradas = MascotasCargadas; 
 
-        const cumpleTipo = !tipoActivo || tipo === tipoActivo;
-        const cumpleNombre = !nombreBusqueda || nombre.includes(nombreBusqueda);
+    // 2. Filtrar por Nombre de Mascota
+    if (nombreBusqueda) {
+        const query = nombreBusqueda.toLowerCase();
+        mascotasFiltradas = mascotasFiltradas.filter(m => 
+            m.nombre.toLowerCase().includes(query)
+        );
+    }
+    
+    // 3. Filtrar por Tipo de Mascota
+    if (tipoActivo) {
+        mascotasFiltradas = mascotasFiltradas.filter(m => 
+            String(m.tipo?.codTipoMascota) === tipoActivo
+        );
+    }
 
-        t.style.display = cumpleTipo && cumpleNombre ? '' : 'none';
-    });
+    // 4. Filtrar por Cliente (Nombre, Apellido o DNI)
+    if (clienteBusqueda) {
+        const query = clienteBusqueda.toLowerCase();
+        mascotasFiltradas = mascotasFiltradas.filter(m => {
+            const cliente = m.cliente;
+            if (!cliente) return false;
+            
+            const dniStr = String(cliente.dni);
+            const nombreCompleto = `${cliente.nombre} ${cliente.apellido}`.toLowerCase();
+
+            return dniStr.includes(query) || nombreCompleto.includes(query);
+        });
+    }
+
+    Mascotas = mascotasFiltradas; 
+    renderMascotas();
 }
 
-// ===== Inicializar búsqueda =====
+// ===== Inicializar búsqueda (COMPLETO) =====
 function initBusqueda() {
-    const input = $('#q');
-    const clearBtn = $('#clearQ');
-    if (!input) return;
-
-    input.addEventListener('input', () => {
-        nombreBusqueda = input.value.toLowerCase();
-        filtrarMascotasCombinado();
-    });
-
-    if (clearBtn) {
-        clearBtn.addEventListener('click', () => {
-            input.value = '';
-            nombreBusqueda = '';
+    // Búsqueda por Mascota (Existente)
+    const inputMascota = $('#q');
+    const clearMascotaBtn = $('#clearQ');
+    if (inputMascota) {
+        inputMascota.addEventListener('input', () => {
+            nombreBusqueda = inputMascota.value.toLowerCase().trim();
             filtrarMascotasCombinado();
         });
+        if (clearMascotaBtn) {
+            clearMascotaBtn.addEventListener('click', () => {
+                inputMascota.value = '';
+                nombreBusqueda = '';
+                filtrarMascotasCombinado();
+            });
+        }
+    }
+    
+    // Búsqueda por Cliente (Dueño)
+    const inputCliente = $('#qCliente');
+    const clearClienteBtn = $('#clearQCliente');
+    if (inputCliente) {
+        inputCliente.addEventListener('input', () => {
+            clienteBusqueda = inputCliente.value.toLowerCase().trim();
+            filtrarMascotasCombinado();
+        });
+        if (clearClienteBtn) {
+            clearClienteBtn.addEventListener('click', () => {
+                inputCliente.value = '';
+                clienteBusqueda = '';
+                filtrarMascotasCombinado();
+            });
+        }
     }
 }
 
-// ===== Render filtros por tipo =====
+
+// ===== Render filtros por tipo (RE-IMPLEMENTADO) =====
 function renderFiltroTipoMascota() {
     const cont = $('#filtroTipoMascota');
     if (!cont) return;
 
     cont.innerHTML = '';
 
+    // Botón "Todos"
     const btnTodos = document.createElement('button');
     btnTodos.className = 'btn btn-outline-info';
     btnTodos.textContent = 'Todos';
     btnTodos.dataset.tipo = '';
     cont.appendChild(btnTodos);
 
+    // Botones dinámicos por cada tipo
     TipoMascota.forEach(t => {
         const btn = document.createElement('button');
         btn.className = 'btn btn-outline-info';
-        btn.textContent = t.nombre;
-        btn.dataset.tipo = t.codTipoMascota;
+        btn.textContent = t.nombre;         
+        btn.dataset.tipo = String(t.codTipoMascota); // Lo guardamos como string para comparar
         cont.appendChild(btn);
     });
 
     const buttons = cont.querySelectorAll('button');
-    if (buttons.length) buttons[0].classList.add('active');
+    // Si hay botones, activa 'Todos' al inicio
+    if (buttons.length) buttons[0].classList.add('active'); 
 
+    // Eventos de filtrado por tipo
     buttons.forEach(b => {
         b.addEventListener('click', () => {
             buttons.forEach(x => x.classList.remove('active'));
             b.classList.add('active');
-            tipoActivo = b.dataset.tipo; // guardamos tipo seleccionado
-            filtrarMascotasCombinado();  // filtramos combinando nombre y tipo
+            tipoActivo = b.dataset.tipo; // guardamos codTipoMascota
+            filtrarMascotasCombinado();  // filtramos
         });
     });
 }
 
-// ===== Render mascotas =====
+// ===== Render mascotas (existente) =====
 function renderMascotas() {
     const grid = $('#gridMascotas');
     if (!grid) return;
@@ -107,6 +156,7 @@ function renderMascotas() {
     Mascotas.forEach(m => {
         const col = document.createElement('div');
         col.className = 'col-6 col-md-4 card-mascota';
+        col.dataset.clienteId = m.cliente?.codCliente || ''; 
         col.dataset.tipo = m.tipo?.codTipoMascota || '';
 
         const imgSrc = imagenPorTipo(m.tipo?.nombre);
@@ -137,7 +187,7 @@ function renderMascotas() {
     if (count) count.textContent = Mascotas.length;
 }
 
-// ===== Cargar tipos de mascota =====
+// ===== Cargar tipos de mascota (Existente) =====
 async function cargarTiposMascota() {
     try {
         const res = await getTiposMascota();
@@ -145,21 +195,26 @@ async function cargarTiposMascota() {
         TipoMascota = await res.json();
         renderFiltroTipoMascota();
     } catch (err) {
-        console.error(err);
+        console.error("Error cargando tipos de mascota:", err);
         TipoMascota = [];
     }
 }
 
-// ===== Cargar mascotas del cliente =====
-async function cargarMascotas(userId) {
+// ===== Cargar mascotas (Existente) =====
+async function cargarMascotas() {
     try {
-        const res = await getMascotaByClienteId(userId);
+        const res = await getAllMascotas();
         if (!res.ok) throw new Error('Error al cargar mascotas');
-        Mascotas = await res.json();
+        
+        const data = await res.json();
+        MascotasCargadas = data; 
+        Mascotas = data; 
+        
         renderMascotas();
     } catch (err) {
-        console.error(err);
+        console.error("Error cargando mascotas:", err);
         Mascotas = [];
+        MascotasCargadas = [];
     }
 }
 
@@ -174,7 +229,7 @@ async function initClientes() {
 
     await Promise.all([
         cargarTiposMascota(),
-        cargarMascotas(user.id)
+        cargarMascotas()
     ]);
 
     initBusqueda();

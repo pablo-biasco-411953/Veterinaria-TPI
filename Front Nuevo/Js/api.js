@@ -22,19 +22,17 @@ export async function getUserByUsername(username) {
 }
 
 // MASCOTA
-export async function getAllMascotas(userId) {
-    return fetch(`${API_URL}/Mascota/${userId}`);
+export async function getAllMascotas() {
+    return fetch(`${API_URL}/Mascota`);
 }
 
 export async function getMascotaById(id) {
     return fetch(`${API_URL}/Mascota/id/${id}`);
 }
 
-export async function getMascotaByClienteId(userId) {
-    return fetch(`${API_URL}/Mascota/cliente/${userId}`);
+export async function getMascotaByClienteId(clienteId) {
+    return fetch(`${API_URL}/Mascota/cliente/${clienteId}`);
 }
-
-
 
 export async function createMascota(mascotaData) {
     return fetch(`${API_URL}/Mascota`, {
@@ -69,11 +67,6 @@ export async function getAllAtenciones() {
     return fetch(`${API_URL}/Turnos`);
 }
 
-export async function getProximasAtenciones(userId) {
-    console.log(userId)
-    return fetch(`${API_URL}/Turnos/AtencionesxCliente/${userId}`);
-}
-
 export async function getAtencionByClienteId(id) {
     return fetch(`${API_URL}/Turnos/AtencionesxCliente/${id}`);
 }
@@ -82,11 +75,11 @@ export async function getTurnosDisponibles() {
     return fetch(`${API_URL}/Turnos/disponibilidad/`);
 }
 
-export async function insertAtencion(atencionData, codDisponibilidad) {
-    return fetch(`${API_URL}/Atencion/${codDisponibilidad}`, {
+export async function createAtencion(atencionData, codDisponibilidad) {
+    return fetch(`${API_URL}/Turnos/insertar/${codDisponibilidad}`, { 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(atencionData)
+        body: JSON.stringify(atencionData) 
     });
 }
 
@@ -97,12 +90,12 @@ export async function deleteAtencion(id) {
 }
 
 export async function getTiposAtencion() {
-    return fetch(`${API_URL}/Atencion/Tipos`);
+    return fetch(`${API_URL}/Turnos/Tipos`);
 }
 
 // DISPONIBILIDAD
-export async function getDisponibilidadFecha() {
-    return fetch(`${API_URL}/Atencion/Disponibilidad/Fecha`);
+export async function getDisponibilidad() {
+    return fetch(`${API_URL}/Turnos/disponibilidad`);
 }
 
 export async function getDisponibilidadHora() {

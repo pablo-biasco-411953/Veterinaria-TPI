@@ -17,7 +17,5 @@ public partial class Cliente
 
     public int Dni { get; set; }
 
-    public string Password { get; set; }
-
     public virtual ICollection<Mascotum> Mascota { get; set; } = new List<Mascotum>();
 }

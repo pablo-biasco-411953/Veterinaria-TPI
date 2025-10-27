@@ -32,6 +32,10 @@
          "ObjectType": 0
       },
       {
+         "Name": "[dbo].[ESTADO_ATENCION]",
+         "ObjectType": 0
+      },
+      {
          "Name": "[dbo].[MASCOTA]",
          "ObjectType": 0
       },
@@ -41,6 +45,10 @@
       },
       {
          "Name": "[dbo].[TIPO_MASCOTA]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[VETERINARIO]",
          "ObjectType": 0
       }
    ],

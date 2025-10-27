@@ -154,36 +154,105 @@
       </section>
 
       <!-- Disponibilidad de hoy -->
-      <section class="card mt-3">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <span> Turnos disponibles</span>
-          <a href="./turnos.html" class="btn btn-sm btn-outline-secondary"><i class="bi bi-plus-lg"></i> Tomar turno</a>
-        </div>
-        <div class="table-responsive">
-          <table class="table align-middle mb-0">
+<section class="card mt-3">
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
             <thead>
-              <tr>
-                <th>Fecha</th>
-                <th>Hora</th>
-                <th>Estado</th>
-              </tr>
+                <tr>
+                    <th class="w-auto">Fecha</th> 
+                    <th class="w-auto">Hora</th>
+                    <th class="w-auto">Estado</th>
+                    <th class="w-auto">Acción</th> 
+                </tr>
             </thead>
             <tbody id="tablaDisponibilidad">
-              <!-- filas por JS -->
-            </tbody>
-          </table>
-        </div>
-      </section>
+                </tbody>
+        </table>
+    </div>
+</section>
 
       <footer class="py-4 text-center text-secondary small">
         © 2025 Dogtor — Clínica Veterinaria Inteligente
       </footer>
     </main>
   </div>
+  <div class="modal fade" id="modalTurno" tabindex="-1" aria-labelledby="modalTurnoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <form id="formTurno" class="modal-content bg-dark text-white border border-info">
+            <div class="modal-header border-bottom-0">
+                <h5 class="modal-title page-title" id="modalTurnoLabel" style="font-family: 'Orbitron', sans-serif; font-size: 1.25rem;">
+                    <i class="bi bi-plus-lg me-2 text-info"></i> REGISTRAR NUEVO TURNO
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                
+                <div id="bloqueExistente">
+                    <div class="row g-2">
+                        <div class="col-12">
+                            <label class="form-label text-info">DNI del Tutor</label>
+                            <div class="input-group">
+                                <input id="tTutorDni" class="form-control bg-secondary-subtle text-white border-info" type="text" placeholder="Buscar DNI del tutor" required>
+                                <button id="btnBuscarCliente" class="btn btn-info text-dark" type="button"><i class="bi bi-search"></i></button>
+                            </div>
+                            <div class="form-text text-secondary" id="tTutorDniStatus">Ingrese el DNI para buscar las mascotas.</div>
+                        </div>
 
+                        <div class="col-12">
+                            <label class="form-label text-info">Mascota</label>
+                            <select id="tMascota" class="form-select bg-secondary-subtle text-white border-info" disabled></select>
+                        </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label text-info">Tutor Asignado</label>
+                            <input id="tTutor" class="form-control bg-dark border-secondary" type="text" disabled>
+                        </div>
+                    </div>
+                    <hr class="my-3 border-secondary">
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label text-info">Fecha</label>
+                        <input id="tFecha" class="form-control bg-secondary-subtle text-white border-info" type="date">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-info">Hora</label>
+                        <select id="tHora" class="form-select bg-secondary-subtle text-white border-info"></select>
+                        <div class="form-text text-secondary">Sólo horarios libres.</div>
+                        <input type="hidden" id="tCodDisponibilidad">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-info">Tipo de atención</label>
+                        <select id="tAtencion" class="form-select bg-secondary-subtle text-white border-info"></select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-info">Estado</label>
+                        <select id="tEstado" class="form-select bg-secondary-subtle text-white border-info">
+                            <option value="pendiente">Pendiente</option>
+                            <option value="confirmado">Confirmado</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12">
+                        <div id="tAlert" class="alert alert-danger d-none mb-0"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer border-top-0">
+                <button class="btn btn-outline-danger" type="button" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-outline-success" type="submit">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+    </div>
   <!-- JS (Chart.js antes que app.js) -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+ <div class="modal fade" id="modalTurno" tabindex="-1" aria-labelledby="modalTurnoLabel" aria-hidden="true">
+        </div>
   <script type="module" src="../Js/app.js"></script>
 </body>
 

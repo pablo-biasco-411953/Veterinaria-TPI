@@ -13,19 +13,22 @@ namespace dogTor.Repository
             _context = context;
         }
 
-        // CREATE: Agregamos nuevo cliente
-        public async Task<bool> CreateUserAsync(Cliente nuevoCliente)
+        // CREATE: Agregamos nuevo veterinario (User)
+        public async Task<bool> CreateUserAsync(Veterinario nuevoVeterinario)
         {
-            await _context.Clientes.AddAsync(nuevoCliente);
+            // ⚠️ Nota: El password debe estar hasheado ANTES de llamar a este método.
+            await _context.Veterinario.AddAsync(nuevoVeterinario);
             return await _context.SaveChangesAsync() > 0;
         }
 
-        // GET: Buscamos cliente por username
-        public async Task<Cliente?> GetUserByUsernameAsync(int username)
+        // GET: Buscamos veterinario por username (Email)
+        public async Task<Veterinario?> GetUserByUsernameAsync(string username)
         {
-            var clienteBuscado = await _context.Clientes
-                .FirstOrDefaultAsync(c => c.Dni == username);
-            return clienteBuscado;
+            // Ahora buscamos en la tabla 'Veterinario' usando el 'Email' como identificador
+            var veterinarioBuscado = await _context.Veterinario
+                .FirstOrDefaultAsync(v => v.Email == username);
+
+            return veterinarioBuscado;
         }
     }
 }
