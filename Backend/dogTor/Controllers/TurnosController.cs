@@ -21,26 +21,22 @@ namespace dogTor.Controllers
 
         // POST /api/turnos
         // Crear un nuevo turno / atención
-       [HttpPost("insertar/{codDisponibilidad}")] // 💡 RUTA ALINEADA CON EL JS
-        public async Task<IActionResult> RegistrarTurno(int codDisponibilidad, [FromBody] DtoAtencion atencionDto) // Capturamos los datos de la atención del cuerpo
+        [HttpPost("insertar/{codDisponibilidad}")]
+        public async Task<IActionResult> RegistrarTurno(int codDisponibilidad, [FromBody] DtoAtencion atencionDto)
         {
             if (atencionDto == null)
             {
                 return BadRequest("Datos inválidos.");
             }
-    
+
+            // ⚠️ NOTA: Asumimos que el DTO que llega del frontend es PLANO y contiene
+            // todos los FKs (CodMascota, CodTipoA, CodVeterinario).
+
             try
             {
-                // 💡 Asignamos el CodDisponibilidad al DTO antes de enviarlo al servicio
-                // NOTA: Tu DTO Atencion DEBE tener una propiedad para CodDisponibilidad
-                // o tu servicio debe ser modificado para aceptar ambos parámetros separados.
-
-                // OPCIÓN A: Si el servicio acepta ambos parámetros:
+                // El servicio maneja la creación de la factura detallada (DetalleAtencions)
+                // y la validación del CodDisponibilidad.
                 var nuevoTurno = await _atencionService.RegistrarAtencionAsync(atencionDto, codDisponibilidad);
-
-                // OPCIÓN B: Si solo usas el DTO, debes asegurarte de que el DTO
-                // que viene del frontend ya contenga o pueda recibir el CodDisponibilidad
-                // var nuevoTurno = await _atencionService.RegistrarAtencionAsync(atencionDto); 
 
                 if (nuevoTurno == null)
                 {
@@ -55,12 +51,13 @@ namespace dogTor.Controllers
             }
             catch (InvalidOperationException ex)
             {
-                // Esto captura la excepción del repositorio si el slot ya estaba reservado (CodEstado != 1)
-                return BadRequest(new { message = ex.Message }); 
+                // Esto captura la excepción del repositorio si el slot ya estaba reservado
+                return BadRequest(new { message = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(500, "Error interno al procesar el turno.");
+                // Devolver una respuesta consistente con el resto del proyecto
+                return StatusCode(500, new { message = "Error interno al procesar el turno: " + ex.Message });
             }
         }
 

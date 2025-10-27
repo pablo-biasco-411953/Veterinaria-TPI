@@ -11,7 +11,12 @@ let Tipo_Atencion = [];
 let Disponibilidad = [];
 let Turno = [];
 let TipoMascota = []; 
-
+const SWAL_THEME = {
+    background: '#1a202c', 
+    color: '#BFD4EA', 
+    confirmButtonColor: '#3498db',
+    customClass: { title: 'text-info' } 
+};
 const hoy = new Date();
 const yyyy_mm_dd = hoy.toISOString().slice(0, 10);
 
@@ -475,15 +480,38 @@ async function cargarTiposAtencion() {
 }
 
 async function cargarDisponibilidad() {
-    try {
-        const res = await getDisponibilidad(); // Asumo que trae todos los slots de disponibilidad
-        if (!res.ok) throw new Error('Error al cargar disponibilidad');
-        Disponibilidad = await res.json();
-        console.log(Disponibilidad)
-    } catch (err) {
-        console.error("Error cargando disponibilidad:", err);
-        Disponibilidad = [];
-    }
+    try {
+        const res = await getDisponibilidad();
+        
+        // 💡 1. Manejar el 404 (Not Found) como un resultado VÁLIDO (sin data)
+        if (res.status === 404) {
+            Disponibilidad = [];
+            console.warn("No se encontraron slots de disponibilidad en el servidor (código 404).");
+            return; // Salir sin lanzar error ni alerta crítica
+        }
+
+        // 2. Manejar cualquier otro error HTTP (500, 401, etc.)
+        if (!res.ok) {
+            // Si no es OK y no es 404, es un error real del servidor.
+            throw new Error(`Error ${res.status}: Fallo al cargar la agenda.`);
+        }
+        
+        // 3. Éxito (Código 200)
+        Disponibilidad = await res.json();
+        console.log("Disponibilidad cargada:", Disponibilidad);
+
+    } catch (err) {
+        console.error("Error cargando disponibilidad:", err);
+        
+        // 🚨 Mostrar alerta crítica solo para errores graves de conexión/servidor
+        Swal.fire({
+            title: 'Error de Conexión',
+            text: 'No se pudo obtener la agenda de turnos. Revise el estado del servicio.',
+            icon: 'error',
+            ...SWAL_THEME
+        });
+        Disponibilidad = [];
+    }
 }
 
 async function cargarTurnosDisponibles() {
@@ -588,28 +616,30 @@ async function guardarTurno(e) {
         // 🚀 CORRECCIÓN CLAVE: Pasar el codDisponibilidad como SEGUNDO argumento para la URL
         const res = await createAtencion(insertTurnoData, codDisponibilidad); 
         
-        if (res.ok) {
-            alertBox.classList.add('alert-success', 'text-dark');
-            alertBox.textContent = '¡Turno guardado con éxito!';
-            alertBox.classList.remove('d-none');
+       if (res.ok) {
             
-            // 5. Éxito: Ocultar modal y recargar la dashboard
-            const modalElement = document.getElementById('modalTurno');
-            const modal = bootstrap.Modal.getInstance(modalElement);
-            
-            if (modal) {
-                setTimeout(() => {
-                    modal.hide();
-                    // Recargar datos y renderizar todos los componentes
-                    cargarDatos(codVeterinario).then(() => {
-                        renderKPIs();
-                        renderChart();
-                        renderProximos();
-                        renderDisponibilidad();
-                    });
-                }, 1000); // Esperar 1 segundo para mostrar el mensaje de éxito
-            }
-
+            // 🚀 NUEVA LÓGICA: SWEETALERT2 CON ESTILO OSCURO
+            Swal.fire({
+                title: '¡Turno Insertado!',
+                html: 'El slot ha sido reservado con éxito en la agenda.',
+                icon: 'success', // Muestra el check de éxito
+                background: '#1a202c', // Fondo oscuro (adaptar a tu CSS)
+                color: '#BFD4EA', // Color del texto claro
+                timer: 3500, // Duración de 3.5 segundos (3500ms)
+                timerProgressBar: true,
+                showConfirmButton: false,
+                customClass: {
+                    title: 'swal2-title-custom' // Si quieres usar la fuente Orbitron, definir la clase en app.css
+                }
+            }).then(() => {
+                // 5. Ocultar modal (si sigue abierto) y recargar la dashboard
+                const modalElement = document.getElementById('modalTurno');
+                const modal = bootstrap.Modal.getInstance(modalElement);
+                if (modal) modal.hide();
+                
+                // Recargar datos para actualizar la tabla y los KPIs
+                cargarDatos(codVeterinario); 
+            });
         } else {
             // Intenta obtener un mensaje de error detallado del cuerpo de la respuesta
             const errorText = await res.text();

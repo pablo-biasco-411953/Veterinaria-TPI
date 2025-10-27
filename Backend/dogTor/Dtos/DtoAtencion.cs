@@ -53,21 +53,21 @@ namespace dogTor.Dtos
         // Conversion for INPUT (DTO -> Model for DB save)
         public Atencion ConvertToModel()
         {
-            return new Atencion
+            //  Ajuste: Usar la navegación 'Detalles' en lugar de la lista vacía
+            var atencion = new Atencion
             {
-                // Assigning FKs directly from DTO properties
                 CodMascota = this.CodMascota,
                 CodTipoA = this.CodTipoA,
                 CodVeterinario = this.CodVeterinario,
-
-                // CodDisponibilidad is assigned by the Service/Controller, NOT the DTO
-                // CodDisponibilidad = ?, 
-
                 Importe = this.Importe.HasValue ? (decimal)this.Importe.Value : null,
 
-                // Assuming you don't send DetalleAtencions on simple registration:
-                DetalleAtencions = new List<DetalleAtencion>()
+                // 💡 CRUCIAL: Mapear la colección de DTOs de detalles a Modelos
+                DetalleAtencions = this.Detalles?
+                    .Select(d => d.ConvertToModel())
+                    .ToList() ?? new List<DetalleAtencion>()
             };
+
+            return atencion;
         }
     }
 }

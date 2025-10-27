@@ -18,5 +18,6 @@ namespace dogTor.Repository
         Task Delete(int id);
         Task<List<Atencion>> GetByVeterinarioId(int veterinarioId);
         Task<List<Disponibilidad>> GetDisponibilidadFechaHora(DateTime fechaSolicitada);
+        Task<TipoAtencion?> GetTipoAtencionPrecio(int codTipoA);
     }
 }

@@ -35,7 +35,7 @@ public partial class veterinariaContext : DbContext
     {
         modelBuilder.Entity<Atencion>(entity =>
         {
-            entity.HasKey(e => e.CodAtencion).HasName("PK__ATENCION__6AC5F2D0F7094DDA");
+            entity.HasKey(e => e.CodAtencion).HasName("PK__ATENCION__6AC5F2D0619A498A");
 
             entity.ToTable("ATENCION");
 
@@ -70,11 +70,11 @@ public partial class veterinariaContext : DbContext
 
         modelBuilder.Entity<Cliente>(entity =>
         {
-            entity.HasKey(e => e.CodCliente).HasName("PK__CLIENTE__08ED61F351D2190D");
+            entity.HasKey(e => e.CodCliente).HasName("PK__CLIENTE__08ED61F35B43F331");
 
             entity.ToTable("CLIENTE");
 
-            entity.HasIndex(e => e.Dni, "UQ__CLIENTE__D87608A7B8201408").IsUnique();
+            entity.HasIndex(e => e.Dni, "UQ__CLIENTE__D87608A7E205546F").IsUnique();
 
             entity.Property(e => e.CodCliente).HasColumnName("cod_cliente");
             entity.Property(e => e.Apellido)
@@ -97,17 +97,21 @@ public partial class veterinariaContext : DbContext
 
         modelBuilder.Entity<DetalleAtencion>(entity =>
         {
-            entity.HasKey(e => e.CodDetalle).HasName("PK__DETALLE___03E666AEA6318AA9");
+            entity.HasKey(e => e.CodDetalle).HasName("PK__DETALLE___03E666AE4241F102");
 
             entity.ToTable("DETALLE_ATENCION");
 
             entity.Property(e => e.CodDetalle).HasColumnName("cod_detalle");
+            entity.Property(e => e.Cantidad).HasColumnName("cantidad");
             entity.Property(e => e.CodAtencion).HasColumnName("cod_atencion");
             entity.Property(e => e.CodTipoA).HasColumnName("cod_tipoA");
             entity.Property(e => e.Observaciones)
                 .HasMaxLength(250)
                 .IsUnicode(false)
                 .HasColumnName("observaciones");
+            entity.Property(e => e.PrecioUnitario)
+                .HasColumnType("decimal(10, 2)")
+                .HasColumnName("precio_unitario");
 
             entity.HasOne(d => d.CodAtencionNavigation).WithMany(p => p.DetalleAtencions)
                 .HasForeignKey(d => d.CodAtencion)
@@ -122,7 +126,7 @@ public partial class veterinariaContext : DbContext
 
         modelBuilder.Entity<Disponibilidad>(entity =>
         {
-            entity.HasKey(e => e.CodDisponibilidad).HasName("PK__DISPONIB__2B790269F377DE12");
+            entity.HasKey(e => e.CodDisponibilidad).HasName("PK__DISPONIB__2B790269D824CC35");
 
             entity.ToTable("DISPONIBILIDAD");
 
@@ -141,7 +145,7 @@ public partial class veterinariaContext : DbContext
 
         modelBuilder.Entity<EstadoAtencion>(entity =>
         {
-            entity.HasKey(e => e.CodEstado).HasName("PK__ESTADO_A__D37A6AC59DC73DAF");
+            entity.HasKey(e => e.CodEstado).HasName("PK__ESTADO_A__D37A6AC51B92D080");
 
             entity.ToTable("ESTADO_ATENCION");
 
@@ -155,7 +159,7 @@ public partial class veterinariaContext : DbContext
 
         modelBuilder.Entity<Mascotum>(entity =>
         {
-            entity.HasKey(e => e.CodMascota).HasName("PK__MASCOTA__6BC4D21D1D8B1A0E");
+            entity.HasKey(e => e.CodMascota).HasName("PK__MASCOTA__6BC4D21D40002BC5");
 
             entity.ToTable("MASCOTA");
 
@@ -185,7 +189,7 @@ public partial class veterinariaContext : DbContext
 
         modelBuilder.Entity<TipoAtencion>(entity =>
         {
-            entity.HasKey(e => e.CodTipoA).HasName("PK__TIPO_ATE__A85295C9F24087CE");
+            entity.HasKey(e => e.CodTipoA).HasName("PK__TIPO_ATE__A85295C98F53FC1E");
 
             entity.ToTable("TIPO_ATENCION");
 
@@ -195,11 +199,14 @@ public partial class veterinariaContext : DbContext
                 .HasMaxLength(50)
                 .IsUnicode(false)
                 .HasColumnName("descripcion");
+            entity.Property(e => e.PrecioBase)
+                .HasColumnType("decimal(10, 2)")
+                .HasColumnName("precio_base");
         });
 
         modelBuilder.Entity<TipoMascotum>(entity =>
         {
-            entity.HasKey(e => e.CodTipo).HasName("PK__TIPO_MAS__7C06900DBE0A8FC0");
+            entity.HasKey(e => e.CodTipo).HasName("PK__TIPO_MAS__7C06900D4DA18949");
 
             entity.ToTable("TIPO_MASCOTA");
 
@@ -213,11 +220,11 @@ public partial class veterinariaContext : DbContext
 
         modelBuilder.Entity<Veterinario>(entity =>
         {
-            entity.HasKey(e => e.CodVeterinario).HasName("PK__VETERINA__58528A85D6A30D3D");
+            entity.HasKey(e => e.CodVeterinario).HasName("PK__VETERINA__58528A853FB71A0C");
 
             entity.ToTable("VETERINARIO");
 
-            entity.HasIndex(e => e.Email, "UQ__VETERINA__AB6E6164819CF80F").IsUnique();
+            entity.HasIndex(e => e.Email, "UQ__VETERINA__AB6E6164090E9A36").IsUnique();
 
             entity.Property(e => e.CodVeterinario).HasColumnName("cod_veterinario");
             entity.Property(e => e.Apellido)

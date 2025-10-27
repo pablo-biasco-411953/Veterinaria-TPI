@@ -32,10 +32,36 @@ namespace dogTor.Services.Implementations
 
             // 2. Mapeo DTO -> Model
             Atencion atencionModel = nuevaAtencionDto.ConvertToModel();
-            atencionModel.CodDisponibilidad = codDisponibilidad; // Assign the FK value
+            atencionModel.CodDisponibilidad = codDisponibilidad;
+
+            // 💡 PASO CRÍTICO A AGREGAR: Llenar DetalleAtencions con Precio y Cantidad
+
+            // 2a. Obtener el precio base del catálogo (Se asume un método de consulta en el Repositorio)
+            // ⚠️ REQUERIMIENTO: Necesitas un método en el repositorio que busque el precio por CodTipoA.
+            // Ejemplo (Asumimos que el repositorio tiene GetTipoAtencionPrecio(int codTipoA)):
+            var tipoAtencion = await _repository.GetTipoAtencionPrecio(atencionModel.CodTipoA);
+            decimal precioUnitario = tipoAtencion.PrecioBase;
+
+            // TEMPORAL: Usamos un precio fijo/placeholder ya que la consulta real es compleja.
+
+            // 2b. Crear y adjuntar el DetalleAtencion al modelo principal
+            var detalle = new DetalleAtencion
+            {
+                CodTipoA = atencionModel.CodTipoA, // FK al tipo de servicio
+                PrecioUnitario = precioUnitario,
+                Cantidad = 1, // Asumimos una cantidad de 1 para la reserva inicial
+                Observaciones = "Reserva de turno."
+            };
+
+            // Inicializar la colección y agregar el detalle (si no fue inicializada por ConvertToModel)
+            if (atencionModel.DetalleAtencions == null)
+            {
+                atencionModel.DetalleAtencions = new List<DetalleAtencion>();
+            }
+            atencionModel.DetalleAtencions.Add(detalle);
 
             // 3. Call Repository's Insert
-            // The Repository handles the transaction and the state change (codDisponibilidad is the trigger).
+            // El Repositorio calculará el Importe Total usando esta colección.
             bool success = await _repository.Insert(atencionModel, codDisponibilidad);
 
             if (!success)
@@ -44,9 +70,11 @@ namespace dogTor.Services.Implementations
             }
 
             // 4. Return DTO
+            // NOTA: Para que el DTO devuelto tenga los detalles cargados,
+            // el Repositorio DEBE cargar el modelo con el detalle después del Insert (Post-select)
+            // o el DTO debe crearse a partir de un objeto completo.
             return new DtoAtencion(atencionModel);
         }
-
 
         public async Task<List<DtoAtencion>> GetAllAtencionesAsync()
         {

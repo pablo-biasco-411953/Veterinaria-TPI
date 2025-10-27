@@ -13,6 +13,10 @@ public partial class DetalleAtencion
 
     public int CodTipoA { get; set; }
 
+    public decimal PrecioUnitario { get; set; }
+
+    public int Cantidad { get; set; }
+
     public string Observaciones { get; set; }
 
     public virtual Atencion CodAtencionNavigation { get; set; }
