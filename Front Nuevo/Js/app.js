@@ -328,7 +328,7 @@ function renderChart() {
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false,
+            maintainAspectRatio: true,
             plugins: {
                 legend: { position: 'top', labels: { color: '#BFD4EA' } },
                 tooltip: {
