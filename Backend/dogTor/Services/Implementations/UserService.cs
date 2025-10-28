@@ -37,11 +37,11 @@ namespace dogTor.Services.Implementations
                 Matricula = newVeterinarioDto.Matricula ?? string.Empty
             };
 
-            if(veterinarioModel.Matricula == newVeterinarioDto.Matricula)
-            {
-                throw new Exception("La matrícula de este veterinario ya existe en el sistema.");
+            //if(veterinarioModel.Matricula == newVeterinarioDto.Matricula)
+            //{
+            //    throw new Exception("La matrícula de este veterinario ya existe en el sistema.");
 
-            }
+            //}
             string hashedPassword = BCrypt.Net.BCrypt.HashPassword(newVeterinarioDto.Password);
             veterinarioModel.Password = hashedPassword;
             await _userRepository.CreateUserAsync(veterinarioModel);

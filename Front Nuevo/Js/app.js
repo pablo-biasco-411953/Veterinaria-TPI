@@ -826,7 +826,6 @@ async function cargarTurnosVeterinario() {
         if (!res.ok) throw new Error(`Error al cargar turnos del veterinario (status ${res.status})`);
 
         const data = await res.json();
-        // Transformamos al formato interno de Turno
        Turno = data.map(t => ({
     id: t.codAtencion,
     fecha: t.disponibilidadNavigation?.fecha?.split('T')[0] || '',
@@ -891,7 +890,7 @@ async function cargarTurnosProximos() {
 }
 
 async function guardarTurno(e) {
-    e.preventDefault(); // Evita el envío tradicional del formulario
+    e.preventDefault(); 
 
     const form = e.target;
     const btnGuardar = form.querySelector('button[type="submit"]');
@@ -902,7 +901,7 @@ async function guardarTurno(e) {
     const user = rawUser ? JSON.parse(rawUser) : null;
     const codVeterinario = user?.id;
 
-    alertBox.classList.add('d-none'); // Ocultar alerta inicial
+    alertBox.classList.add('d-none');
 
     if (!codVeterinario) {
         alertBox.textContent = 'Error: No se pudo identificar al veterinario (cierre y vuelva a iniciar sesión).';
@@ -911,7 +910,6 @@ async function guardarTurno(e) {
     }
 
     // 2. Obtener datos del formulario
-    // 💡 Aquí extraemos el CodDisponibilidad del campo oculto o select.
     const codDisponibilidad = document.getElementById('tCodDisponibilidad')?.value || document.getElementById('tHora')?.value; 
     const codMascota = $('#tMascota').value;
     const codTipoAtencion = $('#tAtencion').value;
@@ -930,8 +928,6 @@ async function guardarTurno(e) {
         codMascota: parseInt(codMascota),
         CodTipoA: parseInt(codTipoAtencion),
         codVeterinario: codVeterinario,
-        // ❌ Eliminamos codDisponibilidad de aquí, ya que el backend lo espera en la URL, no en el body.
-        // codDisponibilidad: parseInt(codDisponibilidad), 
     };
     
     // Deshabilitar botón y mostrar carga
@@ -942,23 +938,21 @@ async function guardarTurno(e) {
 
     // 4. Llamada a la API
     try {
-        // 🚀 CORRECCIÓN CLAVE: Pasar el codDisponibilidad como SEGUNDO argumento para la URL
         const res = await createAtencion(insertTurnoData, codDisponibilidad); 
         
        if (res.ok) {
             
-            // 🚀 NUEVA LÓGICA: SWEETALERT2 CON ESTILO OSCURO
             Swal.fire({
                 title: '¡Turno Insertado!',
                 html: 'El slot ha sido reservado con éxito en la agenda.',
-                icon: 'success', // Muestra el check de éxito
-                background: '#1a202c', // Fondo oscuro (adaptar a tu CSS)
+                icon: 'success', 
+                background: '#1a202c',
                 color: '#BFD4EA', // Color del texto claro
                 timer: 3500, // Duración de 3.5 segundos (3500ms)
                 timerProgressBar: true,
                 showConfirmButton: false,
                 customClass: {
-                    title: 'swal2-title-custom' // Si quieres usar la fuente Orbitron, definir la clase en app.css
+                    title: 'swal2-title-custom' 
                 }
             }).then(() => {
                 // 5. Ocultar modal (si sigue abierto) y recargar la dashboard
@@ -1080,11 +1074,13 @@ function setearIniciales() {
     const badge = $('#avatar') || $('#btnPerfil');
     if (!badge) return;
 
+
     const raw = sessionStorage.getItem('dogtorUser');
     let initials = 'US';
     if (raw) {
         try {
             const u = JSON.parse(raw);
+            console.log(u)
             const email = (u.email || '').trim();
             if (email) {
                 const namePart = email.split('@')[0];
@@ -1116,7 +1112,6 @@ function cargarHorasDisponiblesPorFecha() {
             d.fecha.startsWith(fechaSeleccionada) && 
             d.estado?.nombre?.toLowerCase() === 'libre'
         )
-        // Opcional: Ordenar por hora (aunque la API debería traerlos ordenados)
         .sort((a, b) => a.hora.localeCompare(b.hora)); 
 
     // 2. Poblar el Select de Hora
@@ -1129,7 +1124,6 @@ function cargarHorasDisponiblesPorFecha() {
             const opt = document.createElement('option');
             const horaString = d.hora.substring(0, 5); 
             
-            // 💡 IMPORTANTE: Guardamos el CodDisponibilidad como el valor de la opción
             opt.value = d.codDisponibilidad; 
             opt.textContent = horaString;
             selectHora.appendChild(opt);

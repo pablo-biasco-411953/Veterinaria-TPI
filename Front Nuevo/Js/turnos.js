@@ -152,7 +152,7 @@ function filtrarTurnos() {
     });
 
     Turnos = turnosFiltrados;
-    currentPage = 1; // reinicia página al filtrar
+    currentPage = 1; 
     renderTurnosPaginado(Turnos);
     document.getElementById('totalTurnos').textContent = `${Turnos.length} turnos encontrados `;
 }
@@ -171,9 +171,7 @@ function setupFiltros() {
     $('#btnLimpiar')?.addEventListener('click', limpiarFiltros);
 }
 
-// ----------------------------------------------------------------------
-// FUNCIONES DE CARGA Y POBLACIÓN DE SELECTS
-// ----------------------------------------------------------------------
+
 async function cargarDisponibilidad() {
     try {
         const res = await getDisponibilidad();
@@ -243,9 +241,7 @@ function cargarHorasDisponiblesPorFecha() {
     }
 }
 
-// ----------------------------------------------------------------------
-// FORMULARIO NUEVO TURNO
-// ----------------------------------------------------------------------
+
 async function guardarTurno(e) {
     e.preventDefault();
     const form = e.target;
@@ -364,9 +360,6 @@ function setupBusquedaDinamica() {
     $('#tFecha')?.addEventListener('change', cargarHorasDisponiblesPorFecha);
 }
 
-// ----------------------------------------------------------------------
-// RENDER TABLA PRINCIPAL
-// ----------------------------------------------------------------------
 function renderTurnos(lista) {
     const tbody = $('#tablaTurnos');
     if (!tbody) return;
@@ -398,9 +391,7 @@ function renderTurnos(lista) {
     });
 }
 
-// ----------------------------------------------------------------------
-// INICIALIZACIÓN
-// ----------------------------------------------------------------------
+
 async function initTurnosPage(userId) {
     await cargarDisponibilidad();
     await cargarCatalogosModal();
@@ -472,9 +463,7 @@ function setupPerfilMenu() {
     });
 }
 
-// ==================================================================
-// Inicialización automática
-// ==================================================================
+
 document.addEventListener('DOMContentLoaded', () => {
     setupPerfilMenu();
 

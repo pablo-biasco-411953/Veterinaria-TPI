@@ -7,7 +7,6 @@ const SWAL_THEME = {
     customClass: { title: 'text-info' }
 };
 
-// ===== Función de alertas globales =====
 function showAlert(message, isSuccess = false) {
     Swal.fire({
         icon: isSuccess ? 'success' : 'error',
@@ -21,7 +20,6 @@ function showAlert(message, isSuccess = false) {
     });
 }
 
-// ===== Validación de cada campo =====
 function validateField(name, value = '', compareValue = '') {
     value = value.trim();
     compareValue = compareValue.trim();
@@ -61,7 +59,7 @@ function validateField(name, value = '', compareValue = '') {
             break;
     }
 
-    return ''; // Sin errores
+    return ''; 
 }
 
 (function () {
@@ -70,7 +68,6 @@ function validateField(name, value = '', compareValue = '') {
 
     const fields = ['nombre', 'apellido', 'matricula', 'email', 'password', 'passwordConfirm'];
 
-    // ===== Prefijo automático para matrícula =====
     const inputMatricula = form.elements['matricula'];
     if (inputMatricula) {
         inputMatricula.value = 'MP-';
@@ -81,12 +78,10 @@ function validateField(name, value = '', compareValue = '') {
         });
     }
 
-    // ===== Validación en vivo al perder foco =====
     fields.forEach(name => {
         const input = form.elements[name];
         if (!input) return;
 
-        // Crear span para mensajes de error si no existe
         let errorSpan = input.nextElementSibling;
         if (!errorSpan || !errorSpan.classList.contains('invalid-feedback')) {
             errorSpan = document.createElement('div');
@@ -111,7 +106,6 @@ function validateField(name, value = '', compareValue = '') {
             }
         });
 
-        // Borrar error al escribir
         input.addEventListener('input', () => {
             input.classList.remove('is-invalid');
             input.classList.remove('is-valid');
@@ -120,7 +114,6 @@ function validateField(name, value = '', compareValue = '') {
         });
     });
 
-    // ===== Envío del formulario =====
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const btnSubmit = form.querySelector('button[type="submit"]');
@@ -136,7 +129,6 @@ function validateField(name, value = '', compareValue = '') {
             passwordConfirm: form.elements['passwordConfirm'].value
         };
 
-        // Validación final antes de enviar
         for (const field of fields) {
             const compareValue = field === 'passwordConfirm' ? userData.password : '';
             const error = validateField(field, userData[field], compareValue);
@@ -181,7 +173,6 @@ function validateField(name, value = '', compareValue = '') {
         showAlert(data?.Message || 'El email ya está registrado.');
 
     } else {
-        // Mostrar mensaje detallado si el backend lo envía
         const errorMsg = data?.detail 
             ? `Error al registrar: ${data.detail}` 
             : (data?.Message || 'Error al registrar.');
