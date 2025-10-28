@@ -10,6 +10,11 @@ let Mascota = []; 
 let Tipo_Atencion = [];
 let Disponibilidad = [];
 let Turno = [];
+let turnosHoy = [];
+
+const ITEMS_POR_PAGINA_TURNOS = 6; 
+let paginaActualTurnos = 1;
+
 let TipoMascota = []; 
 const SWAL_THEME = {
     background: '#1a202c', 
@@ -70,7 +75,103 @@ function formatFecha(fecha) {
 }
 
 
+function renderProximosPaginados() {
+    const lista = document.getElementById("listaProximos");
+    lista.innerHTML = "";
 
+    if (!turnosHoy || turnosHoy.length === 0) {
+        lista.innerHTML = '<div class="list-group-item text-muted">No hay turnos próximos hoy</div>';
+        return;
+    }
+
+    // 1️⃣ Calcular total de páginas
+    totalPaginasTurnos = Math.ceil(turnosHoy.length / ITEMS_POR_PAGINA_TURNOS);
+    const inicio = (paginaActualTurnos - 1) * ITEMS_POR_PAGINA_TURNOS;
+    const fin = inicio + ITEMS_POR_PAGINA_TURNOS;
+    const turnosPagina = turnosHoy.slice(inicio, fin);
+
+    // 2️⃣ Renderizar items
+    const colorEstado = (estado) => {
+        switch(estado.toLowerCase()) {
+            case 'reservado': return 'warning';
+            case 'confirmado': return 'success';
+            case 'cancelado': return 'danger';
+            default: return 'secondary';
+        }
+    };
+
+    turnosPagina.forEach(turno => {
+        const item = document.createElement("div");
+        item.className = "list-group-item d-flex justify-content-between align-items-center";
+        item.innerHTML = `
+            <div>
+                <strong>${turno.nombreMascota}</strong> (${turno.nombreCliente})
+                <div class="text-secondary small">${turno.fecha} ${turno.hora}</div>
+            </div>
+            <span class="badge bg-${colorEstado(turno.estado)} text-dark rounded-pill">${turno.estado}</span>
+        `;
+        lista.appendChild(item);
+    });
+
+    // 3️⃣ Renderizar botones de paginación
+    renderPaginacionTurnos();
+}
+
+function renderPaginacionTurnos() {
+    // Elimina paginación anterior
+    document.getElementById('proximosPaginacion')?.remove();
+
+    if (totalPaginasTurnos <= 1) return;
+
+    const nav = document.createElement('nav');
+    nav.id = 'proximosPaginacion';
+    nav.className = 'mt-2 d-flex justify-content-center';
+
+    const ul = document.createElement('ul');
+    ul.className = 'pagination';
+
+    // Botón anterior
+    ul.innerHTML += `
+        <li class="page-item ${paginaActualTurnos === 1 ? 'disabled' : ''}">
+            <a class="page-link" href="#" data-page="${paginaActualTurnos - 1}">Anterior</a>
+        </li>
+    `;
+
+    // Botones de páginas
+    let startPage = Math.max(1, paginaActualTurnos - 2);
+    let endPage = Math.min(totalPaginasTurnos, startPage + 4);
+    if (endPage - startPage < 4) startPage = Math.max(1, endPage - 4);
+
+    for (let i = startPage; i <= endPage; i++) {
+        ul.innerHTML += `
+            <li class="page-item ${i === paginaActualTurnos ? 'active' : ''}">
+                <a class="page-link" href="#" data-page="${i}">${i}</a>
+            </li>
+        `;
+    }
+
+    // Botón siguiente
+    ul.innerHTML += `
+        <li class="page-item ${paginaActualTurnos === totalPaginasTurnos ? 'disabled' : ''}">
+            <a class="page-link" href="#" data-page="${paginaActualTurnos + 1}">Siguiente</a>
+        </li>
+    `;
+
+    nav.appendChild(ul);
+    document.getElementById("listaProximos").insertAdjacentElement('afterend', nav);
+
+    // Listeners
+    nav.querySelectorAll('.page-link').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const newPage = parseInt(e.target.dataset.page);
+            if (newPage > 0 && newPage <= totalPaginasTurnos && newPage !== paginaActualTurnos) {
+                paginaActualTurnos = newPage;
+                renderProximosPaginados();
+            }
+        });
+    });
+}
 function generateColors(count) {
     // Usamos tus colores de Bootstrap para la coherencia visual
     const baseColors = ['#0DCAF0', '#198754', '#FFC107', '#DC3545', '#6F42C1', '#20C997']; 
@@ -704,7 +805,7 @@ async function cargarTurnosDisponibles() {
     try {
         const res = await getTurnosDisponibles();
         if (!res.ok) throw new Error(`Error ${res.status}`);
-        
+        turnosHoy = turnosDisponibles
         const turnosDisponibles = await res.json(); 
         console.log("Turnos disponibles (para KPI):", turnosDisponibles.length);
     } catch (err) {
@@ -958,6 +1059,9 @@ function initDashboard() {
         renderChart();
         cargarTurnosVeterinario()
         renderProximos();
+        paginaActualTurnos = 1; // reset página
+        renderProximosPaginados();
+
         setupPerfilMenu();
         renderDisponibilidad();
         setupPerfilMenu();

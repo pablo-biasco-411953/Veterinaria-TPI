@@ -18,11 +18,23 @@ namespace dogTor.Repository
         // CREATE: Agregar nueva mascota
         public async Task<bool> Create(Mascotum mascota)
         {
-            mascota.Eliminado = false;
+            try
+            {
+                mascota.Eliminado = false;
 
-            await _context.Mascota.AddAsync(mascota);
+                await _context.Mascota.AddAsync(mascota);
 
-            return await _context.SaveChangesAsync() > 0;
+                return await _context.SaveChangesAsync() > 0;
+            }
+            catch (Exception ex)
+            {
+                // Log del error completo en consola para depuración
+                Console.WriteLine("Error al insertar Mascota:");
+                Console.WriteLine(ex.ToString());
+
+                // Re-lanzar la excepción para que llegue al servicio/controlador
+                throw;
+            }
         }
 
         // DELETE: Eliminar mascota (marcar como eliminado)

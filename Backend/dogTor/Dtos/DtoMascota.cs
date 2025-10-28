@@ -1,47 +1,53 @@
 ﻿using dogTor.Models;
+using System;
 
 namespace dogTor.Dtos
 {
     public class DtoMascota
     {
         public int? CodMascota { get; set; }
-
         public string? Nombre { get; set; }
-
-        public int? edad { get; set; }
-
-        public DtoCliente? cliente { get; set; }
+        public int? Edad { get; set; }
+        public int? CodCliente { get; set; }
+        public DtoCliente? Cliente { get; set; }
+        public int? CodTipo { get; set; }
 
         public DtoTipoMascota? Tipo { get; set; }
         public bool Activo { get; set; } = true;
 
         public DtoMascota() { }
-        public DtoMascota(Mascotum Tmascota)
+
+        // Constructor para mapear desde modelo
+        public DtoMascota(Mascotum mascota)
         {
-            this.CodMascota = Tmascota.CodMascota;
-            this.Nombre = Tmascota.Nombre;
-            this.edad = Tmascota.Edad;
-            this.cliente = Tmascota.CodClienteNavigation != null ? new DtoCliente(Tmascota.CodClienteNavigation) : null;
-            this.Tipo = Tmascota.CodTipoNavigation != null ? new DtoTipoMascota(Tmascota.CodTipoNavigation) : null;
-            this.Activo = !Tmascota.Eliminado;
+            CodMascota = mascota.CodMascota;
+            Nombre = mascota.Nombre;
+            Edad = mascota.Edad;
+            CodCliente = mascota.CodCliente;
+            Cliente = mascota.CodClienteNavigation != null ? new DtoCliente(mascota.CodClienteNavigation) : null;
+            Tipo = mascota.CodTipoNavigation != null ? new DtoTipoMascota(mascota.CodTipoNavigation) : null;
+            Activo = !mascota.Eliminado;
         }
 
+        // Convertir DTO a modelo
         public Mascotum ConvertToModel()
         {
-            Mascotum mascotaModel = new Mascotum
+            if (CodCliente == null || CodCliente == 0)
+                throw new ArgumentException("Debe especificar el código del cliente (dueño) para registrar la mascota.");
+
+            if (CodTipo == null || CodTipo == 0)
+                throw new ArgumentException("Debe especificar el tipo de mascota.");
+
+            return new Mascotum
             {
-                CodMascota = this.CodMascota ?? 0,
-                Nombre = this.Nombre ?? string.Empty,
-                Edad = this.edad ?? 0,
-                CodCliente = this.cliente?.CodCliente ?? 0,
-                CodTipo = this.Tipo?.CodTipoMascota ?? 0,
-                Eliminado = !this.Activo
+                CodMascota = CodMascota ?? 0,
+                Nombre = Nombre ?? string.Empty,
+                Edad = Edad ?? 0,
+                CodCliente = CodCliente.Value,
+                CodTipo = CodTipo.Value,
+                Eliminado = !Activo
             };
-            if (this.CodMascota == null || this.CodMascota == 0)
-            {
-                mascotaModel.Eliminado = false;
-            }
-            return mascotaModel;
         }
+
     }
 }

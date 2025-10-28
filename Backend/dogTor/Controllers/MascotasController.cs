@@ -11,11 +11,11 @@ namespace dogTor.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class MascotaController : ControllerBase
+    public class MascotasController : ControllerBase
     {
         private readonly IMascotaService _mascotaService;
 
-        public MascotaController(IMascotaService mascotaService)
+        public MascotasController(IMascotaService mascotaService)
         {
             _mascotaService = mascotaService;
         }
@@ -26,18 +26,14 @@ namespace dogTor.Controllers
         public async Task<IActionResult> RegistrarMascota([FromBody] DtoMascota mascotaDto)
         {
             if (mascotaDto == null)
-            {
-                return BadRequest("Datos inválidos.");
-            }
+                return BadRequest(new { message = "Datos inválidos." });
 
             try
             {
                 var nuevaMascota = await _mascotaService.CreateMascotaAsync(mascotaDto);
 
                 if (nuevaMascota == null)
-                {
-                    return StatusCode(500, "No se pudo registrar la mascota.");
-                }
+                    return StatusCode(500, new { message = "No se pudo registrar la mascota." });
 
                 return StatusCode(201, nuevaMascota);
             }
@@ -45,11 +41,12 @@ namespace dogTor.Controllers
             {
                 return BadRequest(new { message = ex.Message });
             }
-            catch
+            catch (Exception ex)
             {
-                return StatusCode(500, "Error interno al registrar la mascota.");
+                return StatusCode(500, new { message = "Error interno al registrar la mascota." });
             }
         }
+
 
         // GET /api/mascota/cliente/{userId}
         // Obtener todas las mascotas de un cliente

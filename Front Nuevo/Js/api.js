@@ -23,27 +23,30 @@ export async function getUserByUsername(username) {
 
 // MASCOTA
 export async function getAllMascotas() {
-    return fetch(`${API_URL}/Mascota`);
+    return fetch(`${API_URL}/Mascotas`);
 }
 
 export async function getMascotaById(id) {
-    return fetch(`${API_URL}/Mascota/id/${id}`);
+    return fetch(`${API_URL}/Mascotas/id/${id}`);
 }
 
 export async function getMascotaByClienteId(clienteId) {
-    return fetch(`${API_URL}/Mascota/cliente/${clienteId}`);
+    return fetch(`${API_URL}/Mascotas/cliente/${clienteId}`);
 }
 
-export async function createMascota(mascotaData) {
-    return fetch(`${API_URL}/Mascota`, {
+// api.js
+export async function createMascota(mascota) {
+    return fetch(`${API_URL}/mascotas`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(mascotaData)
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(mascota)
     });
 }
 
 export async function updateMascota(id, mascotaData) {
-    return fetch(`${API_URL}/Mascota/${id}`, {
+    return fetch(`${API_URL}/Mascotas/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(mascotaData)
@@ -51,13 +54,13 @@ export async function updateMascota(id, mascotaData) {
 }
 
 export async function deleteMascota(id) {
-    return fetch(`${API_URL}/Mascota/${id}`, {
+    return fetch(`${API_URL}/Mascotas/${id}`, {
         method: 'DELETE'
     });
 }
 
 export async function getTiposMascota() {
-    return fetch(`${API_URL}/Mascota/Tipos`);
+    return fetch(`${API_URL}/Mascotas/Tipos`);
 }
 
 
@@ -65,6 +68,12 @@ export async function getTiposMascota() {
 
 export async function getAllAtenciones() {
     return fetch(`${API_URL}/Turnos`);
+}
+
+// Dashboard
+export async function getTopServiciosReservados() { 
+    const token = localStorage.getItem('token');
+    return fetch(`${API_URL}/Dashboard/GetTopServiciosReservados`);
 }
 
 export async function getAtencionByClienteId(id) {
@@ -104,18 +113,28 @@ export async function getDisponibilidad() {
     return fetch(`${API_URL}/Turnos/disponibilidad`);
 }
 
+
+
 export async function getDisponibilidadHora() {
     return fetch(`${API_URL}/Atencion/Disponibilidad/Hora`);
 }
 
-// Dashboard
-export async function getTopServiciosReservados() { 
-    const token = localStorage.getItem('token');
-    return fetch(`${API_URL}/Dashboard/GetTopServiciosReservados`, {
+// CLIENTES
+export async function getAllClientes() {
+    return fetch(`${API_URL}/Clientes`);
+}
+
+export async function getClientesByDNI(dni) {
+    return fetch(`${API_URL}/Clientes/${dni}`, {
         method: 'GET',
-        headers: {
-            'Accept': 'application/json',
-            'Authorization': token ? `Bearer ${token}` : ''
-        }
+        headers: { 'Accept': 'application/json' }
     });
+}
+
+export async function createCliente(cliente) {
+  return fetch(`${API_URL}/Clientes`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(cliente)
+  });
 }

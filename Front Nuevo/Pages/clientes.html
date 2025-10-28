@@ -177,32 +177,29 @@
         </div>
 
         <!-- Bloque Mascota -->
-        <div id="bloqueMascota" class="d-none">
-          <div class="row g-3">
-            <div class="col-6">
-              <label class="form-label text-info">Nombre de la mascota</label>
-              <input id="rMascotaNombre" class="form-control bg-secondary-subtle text-white border-info" type="text" required>
-            </div>
-            <div class="col-6">
-              <label class="form-label text-info">Edad</label>
-              <input id="rMascotaEdad" class="form-control bg-secondary-subtle text-white border-info" type="number" min="0">
-            </div>
-            <div class="col-6">
-              <label class="form-label text-info">Tipo de mascota</label>
-              <select id="rMascotaTipo" class="form-select bg-secondary-subtle text-white border-info" required></select>
-            </div>
-            <div class="col-6">
-              <label class="form-label text-info">DNI del tutor</label>
-              <input id="rTutorDni" class="form-control bg-dark border-secondary" type="text" disabled>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer border-top-0">
-        <button class="btn btn-outline-danger" type="button" data-bs-dismiss="modal">Cancelar</button>
-        <button class="btn btn-success" type="submit">Guardar</button>
-      </div>
-    </form>
+        <!-- Bloque Mascota -->
+<div id="bloqueMascota" class="d-none">
+  <div class="row g-3">
+    <div class="col-6">
+      <label class="form-label text-info">Nombre de la mascota</label>
+      <input id="rMascotaNombre" class="form-control bg-secondary-subtle text-white border-info" type="text" required>
+    </div>
+    <div class="col-6">
+      <label class="form-label text-info">Edad</label>
+      <input id="rMascotaEdad" class="form-control bg-secondary-subtle text-white border-info" type="number" min="0">
+    </div>
+    <div class="col-6">
+      <label class="form-label text-info">Tipo de mascota</label>
+      <select id="rMascotaTipo" class="form-select bg-secondary-subtle text-white border-info" required></select>
+    </div>
+    <div class="col-6">
+      <label class="form-label text-info">DNI del tutor</label>
+      <input id="rTutorDni" class="form-control bg-dark border-secondary" type="text" disabled>
+    </div>
+    <div class="col-12">
+      <label class="form-label text-info">Dueño (Nombre y Apellido)</label>
+      <input id="rTutorNombre" class="form-control bg-dark border-secondary" type="text" disabled>
+    </div>
   </div>
 </div>
       <div class="modal-footer border-top-0">
@@ -212,6 +209,12 @@
     </form>
   </div>
 </div>
+   
+    </form>
+  </div>
+</div>
+<div id="gridMascotas" class="row g-3"></div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
        <script type="module" src="../Js/app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
