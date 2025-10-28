@@ -16,34 +16,34 @@ namespace dogTor.Repositories.Implementations
 
         public async Task<List<DtoServicioReservado>> GetTopServicioReservadoList()
         {
+            // Fecha de hoy y hace 6 meses
+            var fechaHoy = DateTime.Today;
+            var fecha6Meses = fechaHoy.AddMonths(-6);
+
             // Usamos el DbSet de Atencion. El CodTipoA define el servicio.
             var topServicios = await _context.Atencions
-                // El método Include es clave para que EF sepa cómo acceder al Nombre/Descripción del servicio.
                 .Include(a => a.CodTipoANavigation)
-
-                // 1. Agrupamos por el ID del servicio Y su descripción para contar cuántas veces aparece cada uno.
-                // Agrupar por la descripción es crucial para que se incluya en el resultado.
+                .Include(a => a.CodDisponibilidadNavigation) // necesario para filtrar por fecha
+                                                             // Filtramos solo los turnos de los últimos 6 meses
+                .Where(a => a.CodDisponibilidadNavigation.Fecha >= fecha6Meses &&
+                            a.CodDisponibilidadNavigation.Fecha <= fechaHoy)
+                // Agrupamos por el ID del servicio y su nombre
                 .GroupBy(a => new
                 {
                     a.CodTipoA,
-                    NombreServicio = a.CodTipoANavigation.Descripcion // Usamos la propiedad Description del modelo TipoAtencion
+                    NombreServicio = a.CodTipoANavigation.Descripcion
                 })
-
-                // 2. Proyectamos el resultado a nuestro DTO (o a un tipo anónimo intermedio)
-                .Select(g => new DtoServicioReservado 
+                // Proyectamos a DTO
+                .Select(g => new DtoServicioReservado
                 {
                     CodTipoA = g.Key.CodTipoA,
                     NombreServicio = g.Key.NombreServicio,
-                    TotalReservas = g.Count() // El total de atenciones en el grupo
+                    TotalReservas = g.Count()
                 })
-
-                // 3. Ordenamos de forma descendente (el más reservado primero)
+                // Orden descendente por total de reservas
                 .OrderByDescending(r => r.TotalReservas)
-
-                // 4. Aplicamos el límite del Top 6
+                // Tomamos solo el Top 6
                 .Take(6)
-
-                // 5. Ejecutamos la consulta y la convertimos a lista
                 .ToListAsync();
 
             return topServicios;

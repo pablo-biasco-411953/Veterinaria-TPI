@@ -19,12 +19,14 @@ namespace dogTor.Services.Implementations
             _userRepository = userRepository;
         }
 
-        public async Task<DtoVeterinario> RegisterVeterinarioAsync(DtoVeterinario newVeterinarioDto)
+        public async Task<DtoVeterinario?> RegisterVeterinarioAsync(DtoVeterinario newVeterinarioDto)
         {
             // Validamos que el email (username) no esté registrado
-            if (await _userRepository.GetUserByUsernameAsync(newVeterinarioDto.Email) != null)
+            var existingUser = await _userRepository.GetUserByUsernameAsync(newVeterinarioDto.Email);
+            if (existingUser != null)
             {
-                throw new InvalidOperationException("El email ya está registrado.");
+                // Devuelve null si ya existe, sin lanzar excepción
+                return null;
             }
 
             Veterinario veterinarioModel = new Veterinario
@@ -35,14 +37,18 @@ namespace dogTor.Services.Implementations
                 Matricula = newVeterinarioDto.Matricula ?? string.Empty
             };
 
+            if(veterinarioModel.Matricula == newVeterinarioDto.Matricula)
+            {
+                throw new Exception("La matrícula de este veterinario ya existe en el sistema.");
+
+            }
             string hashedPassword = BCrypt.Net.BCrypt.HashPassword(newVeterinarioDto.Password);
             veterinarioModel.Password = hashedPassword;
             await _userRepository.CreateUserAsync(veterinarioModel);
 
-            DtoVeterinario veterinarioCreado = new DtoVeterinario(veterinarioModel);
-            // No es necesario: createdDto.Password = null; ya que DtoVeterinario no tiene propiedad Password.
-            return veterinarioCreado;
+            return new DtoVeterinario(veterinarioModel);
         }
+
 
         // ---------------------------------------------------
         // AUTENTICACIÓN (LOGIN)

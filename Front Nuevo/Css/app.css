@@ -139,11 +139,30 @@ body::before {
   text-transform: uppercase;
   user-select: none;
 }
-
+.pagination .page-item.active .page-link {
+    background-color: var(--bs-info); /* O el color que use para el azul brillante */
+    border-color: var(--bs-info);
+    color: var(--bs-dark); /* Color oscuro para el texto */
+}
 .card {
   background: linear-gradient(180deg, rgba(14, 22, 40, .96), rgba(14, 22, 40, .90));
   border: 1px solid var(--stroke);
   border-radius: 16px
+}
+
+.avatar-initials {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    min-height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.9rem;
+    background-color: #0d6efd; /* ejemplo */
+    color: #fff;
 }
 
 .card-header {

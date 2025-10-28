@@ -17,7 +17,7 @@ namespace dogTor.Controllers
         }
 
 
-        [HttpGet("mondongo")]
+        [HttpGet("GetTopServiciosReservados")]
         public async Task<IActionResult> GetTiposMascota()
         {
             try

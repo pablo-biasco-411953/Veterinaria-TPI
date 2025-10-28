@@ -93,6 +93,12 @@ export async function getTiposAtencion() {
     return fetch(`${API_URL}/Turnos/Tipos`);
 }
 
+// TURNOS x VETERINARIO
+export async function getTurnosByVeterinarioId(veterinarioId) {
+    return fetch(`${API_URL}/Turnos/AtencionesxVeterinario/${veterinarioId}`);
+}
+
+
 // DISPONIBILIDAD
 export async function getDisponibilidad() {
     return fetch(`${API_URL}/Turnos/disponibilidad`);
@@ -100,4 +106,16 @@ export async function getDisponibilidad() {
 
 export async function getDisponibilidadHora() {
     return fetch(`${API_URL}/Atencion/Disponibilidad/Hora`);
+}
+
+// Dashboard
+export async function getTopServiciosReservados() { 
+    const token = localStorage.getItem('token');
+    return fetch(`${API_URL}/Dashboard/GetTopServiciosReservados`, {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json',
+            'Authorization': token ? `Bearer ${token}` : ''
+        }
+    });
 }

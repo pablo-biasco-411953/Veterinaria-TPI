@@ -25,27 +25,30 @@ namespace dogTor.Controllers
 
         [HttpPost("register")]
         public async Task<IActionResult> CrearUsuario([FromBody] DtoVeterinario usuarioDto)
-            {
+        {
             if (usuarioDto == null)
-            {
-                return BadRequest("Datos inválidos");
-            }
+                return BadRequest(new { Message = "Datos inválidos" });
+
             try
             {
-                DtoVeterinario nuevoUsuario = await _userService.RegisterVeterinarioAsync(usuarioDto);
+                var nuevoUsuario = await _userService.RegisterVeterinarioAsync(usuarioDto);
+
+                if (nuevoUsuario == null)
+                {
+                    // Email ya registrado → 409 Conflict
+                    return Conflict(new { Message = "El email ya está registrado." });
+                }
+
                 return Ok(new { Message = "Veterinario creado con éxito", Usuario = nuevoUsuario });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Conflict(new { Message = ex.Message });
             }
             catch (ArgumentException ex)
             {
                 return BadRequest(new { Message = ex.Message });
             }
-            catch
+            catch (Exception ex)
             {
-                return StatusCode(500, "Error interno al crear veterinario");
+                Console.Error.WriteLine(ex);
+                return StatusCode(500, new { Message = "Error interno al crear veterinario", Detail = ex.Message });
             }
         }
 

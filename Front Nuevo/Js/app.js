@@ -2,7 +2,7 @@ import { 
     // Asegúrate de que getMascotaByClienteId esté bien importado y funcione con el codCliente.
     getMascotaByClienteId, getTiposMascota, getAllAtenciones, getTiposAtencion, 
     getDisponibilidad, getTurnosDisponibles,
-    getAllMascotas,createAtencion
+    getAllMascotas,createAtencion,getTurnosByVeterinarioId, getTopServiciosReservados
 } from './api.js';
 
 // ===== Variables globales =====
@@ -17,13 +17,29 @@ const SWAL_THEME = {
     confirmButtonColor: '#3498db',
     customClass: { title: 'text-info' } 
 };
+let chartTopServiciosInstance = null;
+const ITEMS_POR_PAGINA = 10;
+let paginaActual = 1;
+let totalPaginas = 0;
 const hoy = new Date();
 const yyyy_mm_dd = hoy.toISOString().slice(0, 10);
 
 // ===== Helpers DOM =====
 const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
+const btnPerfil = document.getElementById('btnPerfil');
+const menuPerfil = document.getElementById('menuPerfil');
 
+btnPerfil.addEventListener('click', () => {
+    menuPerfil.classList.toggle('d-none');
+});
+
+// Opcional: cerrar al hacer clic fuera
+document.addEventListener('click', (e) => {
+    if (!btnPerfil.contains(e.target) && !menuPerfil.contains(e.target)) {
+        menuPerfil.classList.add('d-none');
+    }
+});
 // ===== Helpers de datos =====
 function nombreCliente(id) {
     // Busca el cliente/dueño en la lista de turnos (más simple si el objeto Turno ya está cargado)
@@ -53,6 +69,103 @@ function formatFecha(fecha) {
     return f.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
+
+
+function generateColors(count) {
+    // Usamos tus colores de Bootstrap para la coherencia visual
+    const baseColors = ['#0DCAF0', '#198754', '#FFC107', '#DC3545', '#6F42C1', '#20C997']; 
+    // Si tienes más de 6 servicios, cicla los colores
+    return Array.from({ length: count }, (_, i) => baseColors[i % baseColors.length]);
+}
+
+async function renderTopServiciosChart() {
+    const canvas = document.getElementById('chartTopServicios'); 
+    if (!canvas || typeof Chart === 'undefined') return;
+
+    if (chartTopServiciosInstance) {
+        chartTopServiciosInstance.destroy();
+    }
+
+    let topServicios = [];
+    try {
+        const response = await getTopServiciosReservados(); 
+        if (response.ok) {
+            topServicios = await response.json();
+            console.log("La data", topServicios)
+        } else {
+            console.error(`Error ${response.status} al cargar el Top Servicios.`);
+            return;
+        }
+    } catch (error) {
+        console.error("Error al obtener el Top Servicios:", error);
+        return;
+    }
+
+    if (topServicios.length === 0) {
+        canvas.replaceWith(document.createElement('p')).textContent = 'No hay datos para mostrar';
+        return;
+    }
+
+    const labels = topServicios.map(s => s.nombreServicio);
+    const data = topServicios.map(s => s.totalReservas);
+    const colors = generateColors(labels.length);
+
+    chartTopServiciosInstance = new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Total de Reservas',
+                data: data,
+                backgroundColor: colors
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                title: {
+                    display: true,
+                    text: 'Top servicios más reservados',
+                    color: '#BFD4EA'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.label || '';
+                            if (label) label += ': ';
+                            const value = context.parsed.y;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((value / total) * 100).toFixed(1) + '%';
+                            return `${label}${value} (${percentage})`;
+                        }
+                    }
+                }
+            },
+            animation: {
+                duration: 1500,
+                easing: 'easeInOutBounce',
+                onProgress: function() {
+                    const totalActual = chartTopServiciosInstance.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                    const totalEl = document.getElementById('chartTotal');
+                    if (totalEl) totalEl.textContent = `Total reservas: ${totalActual}`;
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { precision: 0 }
+                }
+            }
+        }
+    });
+
+    // Inicializamos el total al cargar
+    const totalReservas = data.reduce((a, b) => a + b, 0);
+    const totalEl = document.getElementById('chartTotal');
+    if (totalEl) totalEl.textContent = `Total reservas: ${totalReservas}`;
+}
 
 
 // 💡 FUNCIÓN ESTADO: Mapea el nombre del estado a una clase de Bootstrap (con texto negro)
@@ -367,69 +480,143 @@ function renderChart() {
         totalSpan.textContent = `Total mensual: ${tot}`;
     }
 }
+function renderProximos(Turno) {
+    const lista = document.getElementById("listaProximos");
+    lista.innerHTML = ""; // limpiar lista
+    if (!Turno || Turno.length === 0) {
+        lista.innerHTML = '<div class="list-group-item text-muted">No hay turnos próximos</div>';
+        return;
+    }
 
-// ===== Próximos turnos (ACTUALIZADO) =====
-function renderProximos() {
-    const cont = $('#listaProximos');
-    if (!cont) return;
-    
-    cont.innerHTML = '';
+    const colorEstado = (estado) => {
+        switch(estado) {
+            case 'Reservado': return 'warning';
+            case 'Confirmado': return 'success';
+            case 'Cancelado': return 'danger';
+            default: return 'secondary';
+        }
+    };
 
-    if (!Turno.length) {
-        cont.innerHTML = '<div class="list-group-item text-center text-secondary">No hay próximos turnos</div>';
-        return;
-    }
+    Turno.forEach(turno => {
+        const item = document.createElement("div");
+        item.className = "list-group-item d-flex justify-content-between align-items-center";
+        item.innerHTML = `
+            <div>
+                <strong>${turno.nombreMascota}</strong> (${turno.nombreCliente})
+                <div class="text-secondary small">${turno.fecha} ${turno.hora}</div>
+            </div>
+            <span class="badge bg-${colorEstado(turno.estado)} text-dark rounded-pill">${turno.estado}</span>
+        `;
+        lista.appendChild(item);
+    });
+}
+// ===== Función de Paginación =====
+function renderPaginacion(container) {
+    
+    // 1. CORRECCIÓN CLAVE: Remover paginación anterior (si existe)
+    // Buscamos el elemento por su ID y lo eliminamos.
+    document.getElementById('disponibilidadPaginacion')?.remove();
 
-    const prox = Turno
-        .filter(t => t.fecha >= yyyy_mm_dd)
-        .sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora))
-        .slice(0, 5);
+    if (totalPaginas <= 1) return;
 
-    prox.forEach(t => {
-        const estadoNombre = t.estado || 'Desconocido';
-        const li = document.createElement('a');
-        
-        li.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
-        li.innerHTML = `
-            <div>
-                <div class="fw-semibold">${t.nombreMascota} — ${t.nombreAtencion}</div>
-                <small class="text-secondary">${t.fecha} ${t.hora} • ${t.nombreCliente}</small>
-            </div>
-            <span class="badge rounded-pill ${badgeEstado(estadoNombre)}">${estadoNombre}</span>
-        `;
-        cont.appendChild(li);
-    });
+    const nav = document.createElement('nav');
+    // 2. CENTRADO: Correcto. justify-content-center centra el ul en el nav.
+    nav.className = 'mt-3 d-flex justify-content-center'; 
+    
+    nav.setAttribute('aria-label', 'Paginación de disponibilidad');
+    nav.id = 'disponibilidadPaginacion';
+    nav.className = 'mt-3 d-flex justify-content-center'; // Centrar la paginación
+
+    const ul = document.createElement('ul');
+    ul.className = 'pagination';
+
+    // Botón Anterior
+    ul.innerHTML += `
+        <li class="page-item ${paginaActual === 1 ? 'disabled' : ''}">
+            <a class="page-link" href="#" data-page="${paginaActual - 1}">Anterior</a>
+        </li>
+    `;
+
+    // Botones de Páginas (solo un rango de 5)
+    let startPage = Math.max(1, paginaActual - 2);
+    let endPage = Math.min(totalPaginas, startPage + 4);
+    if (endPage - startPage < 4) startPage = Math.max(1, endPage - 4);
+
+    for (let i = startPage; i <= endPage; i++) {
+        ul.innerHTML += `
+            <li class="page-item ${i === paginaActual ? 'active' : ''}">
+                <a class="page-link" href="#" data-page="${i}">${i}</a>
+            </li>
+        `;
+    }
+
+    // Botón Siguiente
+    ul.innerHTML += `
+        <li class="page-item ${paginaActual === totalPaginas ? 'disabled' : ''}">
+            <a class="page-link" href="#" data-page="${paginaActual + 1}">Siguiente</a>
+        </li>
+    `;
+
+    nav.appendChild(ul);
+    
+    // El 'container' que se pasa a la función es el div con la clase .table-responsive
+    // Insertamos la navegación *después* de ese contenedor.
+    container.insertAdjacentElement('afterend', nav); 
+
+    // Añadir Listeners (sin cambios)
+    nav.querySelectorAll('.page-link').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const newPage = parseInt(e.target.dataset.page);
+
+            if (newPage > 0 && newPage <= totalPaginas && newPage !== paginaActual) {
+                paginaActual = newPage;
+                renderDisponibilidad(); // Re-renderizar la tabla y la paginación
+            }
+        });
+    });
 }
 
-// ===== Tabla Disponibilidad (MODIFICADO) =====
 function renderDisponibilidad() {
     const tbody = $('#tablaDisponibilidad');
-    // Si el elemento no existe (ej: estamos en otra página), salimos.
-    if (!tbody) return console.error("No se encontró el tbody con id 'tablaDisponibilidad'");
+    const tablaContainer = tbody?.closest('.table-responsive'); // Encontrar el contenedor de la tabla
+    
+    if (!tbody || !tablaContainer) return console.error("No se encontró el tbody con id 'tablaDisponibilidad'");
     
     tbody.innerHTML = ''; // Limpiamos el cuerpo de la tabla
 
-    // 1. Filtrar por slots de HOY y ordenar por HORA
-    Disponibilidad
+    // 1. Filtrar solo los slots de HOY
+    const slotsHoy = Disponibilidad
         .filter(d => d.fecha?.split('T')[0] === yyyy_mm_dd)
-        .sort((a, b) => a.hora.localeCompare(b.hora))
-        .forEach(d => {
-            // El estado viene del DTO
+        .sort((a, b) => a.hora.localeCompare(b.hora));
+        
+    // 2. Calcular paginación
+    totalPaginas = Math.ceil(slotsHoy.length / ITEMS_POR_PAGINA);
+    
+    const inicio = (paginaActual - 1) * ITEMS_POR_PAGINA;
+    const fin = inicio + ITEMS_POR_PAGINA;
+    
+    // 3. Obtener solo los items de la página actual
+    const slotsPagina = slotsHoy.slice(inicio, fin);
+
+    if (slotsPagina.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No hay disponibilidad para el día de hoy.</td></tr>';
+    } else {
+        slotsPagina.forEach(d => {
             const estadoNombre = d.estado?.nombre || 'Libre';
-            const esLibre = estadoNombre.toLowerCase() === 'libre'; // Bandera para habilitar el botón
+            const esLibre = estadoNombre.toLowerCase() === 'libre';
             
             const tr = document.createElement('tr');
-            
             const fechaSlot = d.fecha?.split('T')[0];
             const horaSlot = d.hora.substring(0, 5);
             
-            // 💡 Generamos el HTML de la fila
+            // Usamos <td> y text-center para alinear el botón
             tr.innerHTML = `
                 <td>${formatFecha(d.fecha)}</td>
                 <td>${horaSlot}</td>
                 <td><span class="badge rounded-pill ${badgeEstado(estadoNombre)}">${estadoNombre}</span></td>
                 
-                <td class="text-center">
+                <td class="text-center w-end">
                     <button class="btn btn-sm btn-outline-info" 
                             ${!esLibre ? 'disabled' : ''} 
                             data-disponibilidad-id="${d.codDisponibilidad}">
@@ -438,22 +625,20 @@ function renderDisponibilidad() {
                 </td>
             `;
 
-            // 2. Agregamos la fila al DOM primero
             tbody.appendChild(tr);
 
-            // 3. Agregamos el event listener al botón recién insertado
+            // ... (Event Listener para el botón, no necesita cambios)
             const btnTomarTurno = tr.querySelector('button');
             if (btnTomarTurno && esLibre) {
                 btnTomarTurno.addEventListener('click', () => {
-                    // Llamamos a la función que abre el modal y precarga los datos
-                    abrirModalTurno(
-                        d.codDisponibilidad, 
-                        fechaSlot, 
-                        horaSlot
-                    );
+                    abrirModalTurno(d.codDisponibilidad, fechaSlot, horaSlot);
                 });
             }
         });
+    }
+
+    // 4. Renderizar la paginación después de la tabla
+    renderPaginacion(tablaContainer);
 }
 // ===== Funciones de Carga de Datos (No modificadas) =====
 
@@ -527,13 +712,57 @@ async function cargarTurnosDisponibles() {
     }
 }
 
+async function cargarTurnosVeterinario() {
+    const rawUser = sessionStorage.getItem('dogtorUser');
+    if (!rawUser) return;
+
+    const user = JSON.parse(rawUser);
+    const codVeterinario = user.id;
+
+    try {
+        const res = await getTurnosByVeterinarioId(codVeterinario);
+
+        if (!res.ok) throw new Error(`Error al cargar turnos del veterinario (status ${res.status})`);
+
+        const data = await res.json();
+        // Transformamos al formato interno de Turno
+       Turno = data.map(t => ({
+    id: t.codAtencion,
+    fecha: t.disponibilidadNavigation?.fecha?.split('T')[0] || '',
+    hora: t.disponibilidadNavigation?.hora?.substring(0, 5) || '',
+    estado: t.disponibilidadNavigation?.estado?.nombre || 'Desconocido',
+    id_mascota: t.mascotaNavigation?.codMascota || null,
+    id_cliente: t.mascotaNavigation?.cliente?.codCliente || null,
+    id_tipo_atencion: t.tipoAtencionNavigation?.codTipoA || null,
+    nombreMascota: t.mascotaNavigation?.nombre || '—',
+    nombreAtencion: t.tipoAtencionNavigation?.atencion || '—',
+    importe: t.importe,
+    nombreCliente: t.mascotaNavigation?.cliente
+        ? `${t.mascotaNavigation.cliente.nombre} ${t.mascotaNavigation.cliente.apellido}`
+        : '—',
+    nombreVeterinario: t.codVeterinario ? `Veterinario ${t.codVeterinario}` : 'Sin asignar'
+}));
+
+        // Llamamos a la función que renderiza la tabla de turnos por veterinario
+        renderProximos(Turno);
+
+    } catch (err) {
+        console.error("Error en cargarTurnosVeterinario:", err);
+        Turno = [];
+    }
+}
+
+
+
 async function cargarTurnosProximos() {
     try {
         // 💡 NOTA: Reemplazar con getTurnosByVeterinarioId(user.id) en un caso real
         const res = await getAllAtenciones(); 
+        console.log(res)
         if (!res.ok) throw new Error(`Error al cargar turnos (status ${res.status})`);
 
         const data = await res.json();
+        console.log(data)
         Turno = data.map(t => ({
             id: t.codAtencion,
             fecha: t.disponibilidad?.fecha?.split('T')[0] || '',
@@ -669,31 +898,42 @@ function setupFormTurnoSubmit() {
 }
 
 function setupPerfilMenu() {
-    const btn = $('#btnPerfil');
-    const menu = $('#menuPerfil');
-    const logout = $('#btnCerrarSesion'); // Usé btnCerrarSesion en el HTML
+    const raw = sessionStorage.getItem('dogtorUser');
+    if (!raw) return;
 
-    if (!btn || !menu) return;
+    const user = JSON.parse(raw);
+    const perfilBtn = document.getElementById('btnPerfil');
+    const dropdownMenu = document.getElementById('menuPerfil');
 
-    btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        menu.classList.toggle('show');
-    });
-    
-    document.addEventListener('click', e => {
-        if (!menu.contains(e.target) && !btn.contains(e.target)) menu.classList.remove('show');
-    });
+    if (!perfilBtn || !dropdownMenu) return;
 
-    if (logout) logout.addEventListener('click', () => {
-        sessionStorage.removeItem('dogtorUser');
-        localStorage.removeItem('token');
-        localStorage.removeItem('userEmail');
-        window.location.href = '../Html/index.html';
-    });
+    // Iniciales
+    const iniciales = `${(user.nombre?.[0] || 'U')}${(user.apellido?.[0] || 'S')}`.toUpperCase();
+    perfilBtn.textContent = iniciales;
+
+    // Toggle menú
+    perfilBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dropdownMenu.classList.toggle('show');
+    });
+
+    // Cerrar al hacer click afuera
+    document.addEventListener('click', (e) => {
+        if (!dropdownMenu.contains(e.target) && !perfilBtn.contains(e.target)) {
+            dropdownMenu.classList.remove('show');
+        }
+    });
+
+    // Cerrar sesión
+    const btnCerrarSesion = document.getElementById('btnCerrarSesion');
+    btnCerrarSesion?.addEventListener('click', (e) => {
+        e.preventDefault();
+        sessionStorage.removeItem('dogtorUser');
+        localStorage.removeItem('token');
+        localStorage.removeItem('userEmail');
+        window.location.href = '../Pages/index.html';
+    });
 }
-
-
-// ===== Inicialización General =====
 
 async function cargarDatos(userId) {
     await Promise.all([
@@ -705,20 +945,26 @@ async function cargarDatos(userId) {
     ]);
 }
 
+
+
 function initDashboard() {
     const raw = sessionStorage.getItem('dogtorUser');
-    if (!raw) { window.location.href = '../Html/index.html'; return; }
+    if (!raw) { window.location.href = '../Pages/index.html'; return; }
     const user = JSON.parse(raw);
     
     cargarDatos(user.id).then(() => {
         setearIniciales();
         renderKPIs();
         renderChart();
+        cargarTurnosVeterinario()
         renderProximos();
+        setupPerfilMenu();
         renderDisponibilidad();
         setupPerfilMenu();
-        setupFormTurnoSubmit()
+        setupFormTurnoSubmit();
+        cargarTurnosVeterinario();
         setupBusquedaDinamica(); // 💡 Inicializar la lógica de búsqueda por DNI
+        renderTopServiciosChart();
     }).catch(err => {
         console.error("Error fatal en initDashboard:", err);
     });
