@@ -60,16 +60,11 @@ namespace dogTor.Controllers
 
             try
             {
-                // 1. Authenticate the user (Veterinario)
                 DtoVeterinario user = await _userService.LoginAsync(credentials);
 
-                // 2. Generate the token
-                // Use CodVeterinario and Email (or Matricula, depending on your JWT claims needs)
-                // ⚠️ Assuming your GenerateJwtToken takes the user ID and a unique claim (like Email or Matricula).
-                // If your original method expected DNI, you must update the implementation of GenerateJwtToken.
+          
                 var token = GenerateJwtToken(user.CodVeterinario.Value, user.Email);
 
-                // 3. Return the response
                 return Ok(new
                 {
                     Token = token,
@@ -78,8 +73,7 @@ namespace dogTor.Controllers
                         Id = user.CodVeterinario,
                         Nombre = user.Nombre,
                         Apellido = user.Apellido,
-                        // ❌ DNI no existe en DtoVeterinario. Usar Matricula o Email.
-                        Matricula = user.Matricula, // Usar Matricula o Email si es necesario en el front-end
+                        Matricula = user.Matricula,
                         Email = user.Email
                     }
                 });
@@ -88,10 +82,8 @@ namespace dogTor.Controllers
             {
                 return Unauthorized(new { Message = "Usuario o contraseña incorrectos" });
             }
-            catch (Exception ex) // Captura específica de Exception para mejor manejo de errores
+            catch (Exception ex) 
             {
-                // Log the exception (recommended)
-                // Console.error(ex.Message); 
                 return StatusCode(500, "Error interno durante el login");
             }
         }

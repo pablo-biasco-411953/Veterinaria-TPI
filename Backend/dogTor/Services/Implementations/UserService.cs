@@ -25,7 +25,7 @@ namespace dogTor.Services.Implementations
             var existingUser = await _userRepository.GetUserByUsernameAsync(newVeterinarioDto.Email);
             if (existingUser != null)
             {
-                // Devuelve null si ya existe, sin lanzar excepción
+                // Devuelve null si ya existe
                 return null;
             }
 
@@ -50,9 +50,7 @@ namespace dogTor.Services.Implementations
         }
 
 
-        // ---------------------------------------------------
         // AUTENTICACIÓN (LOGIN)
-        // ---------------------------------------------------
 
         public async Task<DtoVeterinario> LoginAsync(DtoCredencialesLogin credentials)
         {

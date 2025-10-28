@@ -1,6 +1,11 @@
 // js/login.js
 import { loginUser } from './api.js';
-
+const SWAL_THEME = {
+    background: '#1a202c', 
+    color: '#BFD4EA', 
+    confirmButtonColor: '#3498db',
+    customClass: { title: 'text-info' } 
+};
 (function () {
     const form = document.getElementById('loginForm');
     if (!form) return;
@@ -13,18 +18,20 @@ import { loginUser } from './api.js';
         const password = form.elements['password']?.value ?? '';
 
         if (!email || !password) {
-            alert('Completá email y contraseña.');
-            return;
+        Swal.fire({
+            title: 'Datos inválidos!',
+            text: 'Ingresá el email y la contraseña',
+            icon: 'error',
+            ...SWAL_THEME
+        });            
+        return;
         }
 
         try {
             // 2. LLAMADA A LA API
             const response = await loginUser({ username: email, password }); 
-            console.log("La res",response)
-            
             if (response.ok) {
                 const data = await response.json();
-                console.log("LA ATAAA: ", data)
 
                 const user = data.user; 
 

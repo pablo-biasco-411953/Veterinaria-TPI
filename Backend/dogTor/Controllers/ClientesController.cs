@@ -15,9 +15,7 @@ namespace dogTor.Controllers
             _clienteService = clienteService;
         }
 
-        // ============================
         // GET: api/Clientes
-        // ============================
         [HttpGet]
         public async Task<ActionResult<List<DtoCliente>>> GetAll()
         {
@@ -28,9 +26,7 @@ namespace dogTor.Controllers
             return Ok(clientes);
         }
 
-        // ============================
         // GET: api/Clientes/{dni}
-        // ============================
         [HttpGet("{dni:int}")]
         public async Task<ActionResult<List<DtoCliente>>> GetByDni(int dni)
         {
@@ -44,9 +40,7 @@ namespace dogTor.Controllers
             return Ok(cliente);
         }
 
-        // ============================
         // POST: api/Clientes
-        // ============================
         [HttpPost]
         public async Task<ActionResult> CreateCliente([FromBody] DtoCliente nuevoCliente)
         {
