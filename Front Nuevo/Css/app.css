@@ -148,6 +148,11 @@ body::before {
     border: 1px solid #0dcaf0;
     border-radius: 0.25rem;
     background-color: #f8f9fa;
+    display: none; /* por defecto oculto */
+}
+
+#previewMascota.visible {
+    display: block; /* se muestra cuando tenga imagen */
 }
 .list-group-item {
     display: flex;

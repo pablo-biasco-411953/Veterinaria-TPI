@@ -45,29 +45,7 @@ document.addEventListener('click', (e) => {
         menuPerfil.classList.add('d-none');
     }
 });
-// ===== Helpers de datos =====
-function nombreCliente(id) {
-    // Busca el cliente/dueño en la lista de turnos (más simple si el objeto Turno ya está cargado)
-    const t = Turno.find(x => x.id_cliente === id); 
-    if (!t || !t.nombreCliente) return '—';
-    return t.nombreCliente;
-}
 
-function nombreMascota(id) {
-    const t = Turno.find(x => x.id_mascota === id);
-    return t ? t.nombreMascota : '—';
-}
-
-function nombreAtencion(id) {
-    const t = Tipo_Atencion.find(x => x.codTipoA === id); 
-    // Asumo que en el backend tienes 'atencion' y no 'descripcion' en el DTO para el tipo de atención
-    return t ? t.atencion : '—'; 
-}
-
-function precioAtencion(id) {
-    const t = Tipo_Atencion.find(x => x.codTipoA === id);
-    return t ? t.precio : 0; 
-}
 
 function formatFecha(fecha) {
     const f = new Date(fecha);
@@ -288,7 +266,7 @@ function badgeEstado(estadoNombre) {
     }
 }
 
-// ===== Lógica del Modal de Turnos (DNI y Mascota) =====
+//  Lógica del Modal de Turnos (DNI y Mascota)
 
 async function poblarSelectMascotasPorCliente(codCliente) {
     const selectMascota = $('#tMascota');
@@ -306,7 +284,7 @@ async function poblarSelectMascotasPorCliente(codCliente) {
     }
 
     try {
-        // Llama a la API con el CodCliente obtenido del DNI (asumido)
+        // Llama a la API con el CodCliente obtenido del DNI 
         const res = await getMascotaByClienteId(codCliente); 
 
         if (res.ok) {
@@ -321,7 +299,7 @@ async function poblarSelectMascotasPorCliente(codCliente) {
             mascotasCliente.forEach(m => {
                 const opt = document.createElement('option');
                 opt.value = m.codMascota;
-                opt.textContent = m.nombre; // Asumo 'nombre' de la mascota
+                opt.textContent = m.nombre;
                 selectMascota.appendChild(opt);
             });
 
@@ -362,7 +340,6 @@ function setupBusquedaDinamica() {
     
     btnBuscar.addEventListener('click', () => {
         const dniValue = inputDni.value.trim();
-        // ⚠️ Usamos el DNI como si fuera el CodCliente según nuestra simplificación
         const codCliente = parseInt(dniValue); 
         
         if (!isNaN(codCliente) && codCliente > 0) {
@@ -380,8 +357,8 @@ function poblarSelectTiposAtencion(tipos) {
     select.innerHTML = '<option value="">Seleccione tipo de atención</option>';
     tipos.forEach(t => {
         const opt = document.createElement('option');
-        opt.value = t.codTipoA;      // ✅ Propiedad correcta del JSON del backend
-        opt.textContent = t.atencion;  // ✅ Propiedad correcta del JSON del backend
+        opt.value = t.codTipoA;      
+        opt.textContent = t.atencion;
         select.appendChild(opt);
     });
 }
@@ -403,17 +380,17 @@ function abrirModalTurno(codDisponibilidad, fecha, hora) {
     // 1. DESHABILITAR Y ASIGNAR FECHA
     if (inputFecha) {
         inputFecha.value = fecha;
-        inputFecha.disabled = true; // 💡 ¡DESHABILITADO AQUÍ!
+        inputFecha.disabled = true; 
     }
     
-    // 2. Limpiar y pre-cargar el select de Hora (también deshabilitado)
+    // 2. Limpiar y pre-cargar el select de Hora 
     if (selectHora) {
         selectHora.innerHTML = '';
         const opt = document.createElement('option');
         opt.value = hora;
         opt.textContent = hora;
         selectHora.appendChild(opt);
-        selectHora.disabled = true; // El select de hora también debe estar deshabilitado
+        selectHora.disabled = true; 
     }
     
     // 3. Guardar el codDisponibilidad
@@ -640,10 +617,9 @@ function renderProximos(Turno) {
     lista.appendChild(item);
 });
 }
-// ===== Función de Paginación =====
+//  Función de Paginación 
 function renderPaginacion(container) {
     
-    // 1. CORRECCIÓN CLAVE: Remover paginación anterior (si existe)
     // Buscamos el elemento por su ID y lo eliminamos.
     document.getElementById('disponibilidadPaginacion')?.remove();
 
@@ -689,11 +665,9 @@ function renderPaginacion(container) {
 
     nav.appendChild(ul);
     
-    // El 'container' que se pasa a la función es el div con la clase .table-responsive
-    // Insertamos la navegación *después* de ese contenedor.
     container.insertAdjacentElement('afterend', nav); 
 
-    // Añadir Listeners (sin cambios)
+    // Añadir Listeners 
     nav.querySelectorAll('.page-link').forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
@@ -701,7 +675,7 @@ function renderPaginacion(container) {
 
             if (newPage > 0 && newPage <= totalPaginas && newPage !== paginaActual) {
                 paginaActual = newPage;
-                renderDisponibilidad(); // Re-renderizar la tabla y la paginación
+                renderDisponibilidad();
             }
         });
     });
@@ -709,11 +683,11 @@ function renderPaginacion(container) {
 
 function renderDisponibilidad() {
     const tbody = $('#tablaDisponibilidad');
-    const tablaContainer = tbody?.closest('.table-responsive'); // Encontrar el contenedor de la tabla
+    const tablaContainer = tbody?.closest('.table-responsive'); 
     
     if (!tbody || !tablaContainer) return console.error("No se encontró el tbody con id 'tablaDisponibilidad'");
     
-    tbody.innerHTML = ''; // Limpiamos el cuerpo de la tabla
+    tbody.innerHTML = ''; 
 
     // 1. Filtrar solo los slots de HOY
     const slotsHoy = Disponibilidad
@@ -757,7 +731,6 @@ function renderDisponibilidad() {
 
             tbody.appendChild(tr);
 
-            // ... (Event Listener para el botón, no necesita cambios)
             const btnTomarTurno = tr.querySelector('button');
             if (btnTomarTurno && esLibre) {
                 btnTomarTurno.addEventListener('click', () => {
@@ -770,7 +743,7 @@ function renderDisponibilidad() {
     // 4. Renderizar la paginación después de la tabla
     renderPaginacion(tablaContainer);
 }
-// ===== Funciones de Carga de Datos (No modificadas) =====
+//  Funciones de Carga de Datos
 
 async function cargarMascotas() {
     try {
@@ -798,14 +771,12 @@ async function cargarDisponibilidad() {
     try {
         const res = await getDisponibilidad();
         
-        // 💡 1. Manejar el 404 (Not Found) como un resultado VÁLIDO (sin data)
         if (res.status === 404) {
             Disponibilidad = [];
             console.warn("No se encontraron slots de disponibilidad en el servidor (código 404).");
-            return; // Salir sin lanzar error ni alerta crítica
+            return; 
         }
 
-        // 2. Manejar cualquier otro error HTTP (500, 401, etc.)
         if (!res.ok) {
             // Si no es OK y no es 404, es un error real del servidor.
             throw new Error(`Error ${res.status}: Fallo al cargar la agenda.`);
@@ -818,7 +789,7 @@ async function cargarDisponibilidad() {
     } catch (err) {
         console.error("Error cargando disponibilidad:", err);
         
-        // 🚨 Mostrar alerta crítica solo para errores graves de conexión/servidor
+        // Mostrar alerta crítica solo para errores graves de conexión/servidor
         Swal.fire({
             title: 'Error de Conexión',
             text: 'No se pudo obtener la agenda de turnos. Revise el estado del servicio.',
@@ -830,7 +801,6 @@ async function cargarDisponibilidad() {
 }
 
 async function cargarTurnosDisponibles() {
-    // Lo mantengo por si se usa en KPIs futuros.
     try {
         const res = await getTurnosDisponibles();
         if (!res.ok) throw new Error(`Error ${res.status}`);
@@ -884,7 +854,6 @@ async function cargarTurnosVeterinario() {
 
 async function cargarTurnosProximos() {
     try {
-        // 💡 NOTA: Reemplazar con getTurnosByVeterinarioId(user.id) en un caso real
         const res = await getAllAtenciones(); 
         console.log(res)
         if (!res.ok) throw new Error(`Error al cargar turnos (status ${res.status})`);
@@ -896,7 +865,6 @@ async function cargarTurnosProximos() {
             fecha: t.disponibilidad?.fecha?.split('T')[0] || '',
             hora: t.disponibilidad?.hora?.substring(0, 5) || '',
             
-            // 💡 Asumo que el nombre del estado viene de una de estas dos rutas
             estado: t.disponibilidad?.codEstadoNavigation?.nombre || t.disponibilidad?.estado?.nombre || 'Desconocido', 
             
             id_mascota: t.mascota?.codMascota || null,
@@ -975,15 +943,15 @@ async function guardarTurno(e) {
                 html: 'El slot ha sido reservado con éxito en la agenda.',
                 icon: 'success', 
                 background: '#1a202c',
-                color: '#BFD4EA', // Color del texto claro
-                timer: 3500, // Duración de 3.5 segundos (3500ms)
+                color: '#BFD4EA', 
+                timer: 2500, 
                 timerProgressBar: true,
                 showConfirmButton: false,
                 customClass: {
                     title: 'swal2-title-custom' 
                 }
             }).then(() => {
-                // 5. Ocultar modal (si sigue abierto) y recargar la dashboard
+                // 5. Ocultar modal y recargar la dashboard
                 const modalElement = document.getElementById('modalTurno');
                 const modal = bootstrap.Modal.getInstance(modalElement);
                 if (modal) modal.hide();

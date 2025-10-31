@@ -1,5 +1,5 @@
 // clientes.js
-import { getAllMascotas, getTiposMascota,createMascota,getClientesByDNI,createCliente } from './api.js';
+import { getAllMascotas, getTiposMascota, createMascota, getClientesByDNI, createCliente } from './api.js';
 
 // ===== Variables globales =====
 let Mascotas = [];          // Lista filtrada
@@ -7,6 +7,7 @@ let MascotasCargadas = [];  // Data original
 let TipoMascota = [];       // Catálogo de tipos
 let paginaActual = 1;
 const MASCOTAS_POR_PAGINA = 6;
+
 // ===== Variables filtros =====
 let tipoActivo = '';
 let nombreBusqueda = '';
@@ -129,7 +130,6 @@ function renderMascotas() {
     if (!grid) return;
     grid.innerHTML = '';
 
-    // Calcular límites
     const totalMascotas = Mascotas.length;
     const totalPaginas = Math.ceil(totalMascotas / MASCOTAS_POR_PAGINA);
     if (paginaActual > totalPaginas) paginaActual = 1;
@@ -138,15 +138,14 @@ function renderMascotas() {
     const fin = inicio + MASCOTAS_POR_PAGINA;
     const mascotasPagina = Mascotas.slice(inicio, fin);
 
-    // Renderizar tarjetas de mascotas
     mascotasPagina.forEach(m => {
         const col = document.createElement('div');
         col.className = 'col-6 col-md-4 card-mascota';
         col.dataset.clienteId = m.cliente?.codCliente || '';
         col.dataset.tipo = m.tipo?.codTipoMascota || '';
 
-    const imgSrc = m.imagenMascota || imagenPorTipo(m.tipo?.nombre);
- 
+        const imgSrc = m.imagenMascota || imagenPorTipo(m.tipo?.nombre);
+
         col.innerHTML = `
             <div class="card h-100 shadow-sm border-0 rounded-3 overflow-hidden">
                 <div class="ratio" style="--bs-aspect-ratio: 70%; background-color:#f8f9fa; display:flex; align-items:center; justify-content:center;">
@@ -163,24 +162,21 @@ function renderMascotas() {
         grid.appendChild(col);
     });
 
-    // Actualizar contador
     const count = $('#count');
     if (count) count.textContent = totalMascotas;
 
-    // Renderizar paginación
     renderPaginacion(totalPaginas);
 }
+
 function renderPaginacion(totalPaginas) {
     const footer = document.querySelector('footer');
     if (!footer) return;
 
-    // Eliminar paginación previa
     const oldPagination = document.querySelector('#paginationMascotas');
     if (oldPagination) oldPagination.remove();
 
     if (totalPaginas <= 1) return;
 
-    // Crear contenedor de paginación
     const nav = document.createElement('nav');
     nav.id = 'paginationMascotas';
     nav.className = 'mt-3 d-flex justify-content-center';
@@ -188,7 +184,6 @@ function renderPaginacion(totalPaginas) {
     const ul = document.createElement('ul');
     ul.className = 'pagination pagination-sm justify-content-center mb-0';
 
-    // Botón anterior
     const liPrev = document.createElement('li');
     liPrev.className = `page-item ${paginaActual === 1 ? 'disabled' : ''}`;
     liPrev.innerHTML = `<button class="page-link bg-dark text-info border-info">«</button>`;
@@ -200,7 +195,6 @@ function renderPaginacion(totalPaginas) {
     });
     ul.appendChild(liPrev);
 
-    // Botones numéricos
     for (let i = 1; i <= totalPaginas; i++) {
         const li = document.createElement('li');
         li.className = `page-item ${paginaActual === i ? 'active' : ''}`;
@@ -212,7 +206,6 @@ function renderPaginacion(totalPaginas) {
         ul.appendChild(li);
     }
 
-    // Botón siguiente
     const liNext = document.createElement('li');
     liNext.className = `page-item ${paginaActual === totalPaginas ? 'disabled' : ''}`;
     liNext.innerHTML = `<button class="page-link bg-dark text-info border-info">»</button>`;
@@ -273,33 +266,12 @@ function abrirModalInicio() {
     };
 }
 
-$('#formBuscarDni').onsubmit = async e => {
-    e.preventDefault();
-    const dni = $('#buscarDni').value.trim();
-    if (!dni) return;
-
-    try {
-        const resCliente = await getClientesByDNI(dni);
-        if (!resCliente.ok) throw new Error('No se encontró un dueño con ese DNI');
-        const dataCliente = await resCliente.json();
-        if (!dataCliente.length) throw new Error('No se encontró un dueño con ese DNI');
-
-        const cliente = dataCliente[0];
-        const nombreCompleto = `${cliente.nombre} ${cliente.apellido}`;
-
-        modal.hide();
-        abrirModalRegistro('mascota', dni, nombreCompleto); // <-- PASAR NOMBRE COMPLETO
-    } catch (err) {
-        Swal.fire('Error', err.message || 'No se encontró un dueño con ese DNI', 'error');
-    }
-};
-
 function abrirModalBuscarDueño() {
-    const modal = new bootstrap.Modal(document.querySelector('#modalBuscarDueño'));
+    const modal = new bootstrap.Modal($('#modalBuscarDueño'));
     modal.show();
 
-    const formBuscar = document.querySelector('#formBuscarDni');
-    const inputDni = document.querySelector('#buscarDni');
+    const formBuscar = $('#formBuscarDni');
+    const inputDni = $('#buscarDni');
 
     if (!formBuscar || !inputDni) return;
 
@@ -309,17 +281,14 @@ function abrirModalBuscarDueño() {
         if (!dni) return;
 
         try {
-            // Llamada API para buscar cliente por DNI
-            const res = await getClientesByDNI(dni); // Asegurate que getClientesByDNI está importado
+            const res = await getClientesByDNI(dni);
             if (!res.ok) throw new Error('No se encontró un dueño con ese DNI');
-
             const dataCliente = await res.json();
             if (!dataCliente.length) throw new Error('No se encontró un dueño con ese DNI');
 
             const cliente = dataCliente[0];
             modal.hide();
             abrirModalRegistro('mascota', cliente.dni, `${cliente.nombre} ${cliente.apellido}`);
-
         } catch (err) {
             console.error(err);
             Swal.fire('Error', err.message || 'Ocurrió un error al buscar el dueño', 'error');
@@ -327,15 +296,22 @@ function abrirModalBuscarDueño() {
     };
 }
 
-
 function abrirModalRegistro(modo = 'dueño', dniTutor = '', nombreTutor = '') {
-    const modal = new bootstrap.Modal($('#modalRegistro'));
+    const modalEl = $('#modalRegistro');
+    if (!modalEl) return;
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
 
     const titulo = $('#modalRegistroLabel');
     const bloqueDueño = $('#bloqueDueño');
     const bloqueMascota = $('#bloqueMascota');
+    const formRegistro = $('#formRegistro');
+
+    if (!titulo || !bloqueDueño || !bloqueMascota || !formRegistro) return;
+
     $('#rTutorDni').value = dniTutor;
     $('#rTutorNombre').value = nombreTutor || '';
+
     const inputsDueño = bloqueDueño.querySelectorAll('input');
     const inputsMascota = bloqueMascota.querySelectorAll('input, select');
 
@@ -343,20 +319,41 @@ function abrirModalRegistro(modo = 'dueño', dniTutor = '', nombreTutor = '') {
         titulo.textContent = 'Registrar Nuevo Dueño';
         bloqueDueño.classList.remove('d-none');
         bloqueMascota.classList.add('d-none');
-        $('#formRegistro').reset();
+        formRegistro.reset();
 
         inputsDueño.forEach(i => i.required = true);
         inputsMascota.forEach(i => i.required = false);
-
     } else if (modo === 'mascota') {
-        titulo.textContent = nombreTutor 
+        titulo.textContent = nombreTutor
             ? `Registrar nueva mascota para ${nombreTutor}`
             : 'Registrar Nueva Mascota';
+
         bloqueDueño.classList.add('d-none');
         bloqueMascota.classList.remove('d-none');
-        $('#rTutorDni').value = dniTutor;
+
         $('#rMascotaNombre').value = '';
         $('#rMascotaEdad').value = '';
+
+       const inputImagen = document.getElementById('rMascotaImagen');
+const preview = document.getElementById('previewMascota');
+
+inputImagen.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+            preview.src = reader.result;
+            preview.classList.add('visible'); // muestra la preview
+        };
+        reader.readAsDataURL(file);
+    } else {
+        preview.src = '';
+        preview.classList.remove('visible'); // oculta si no hay imagen
+    }
+});
+        if (preview) preview.src = '';
+        if (inputImagen) inputImagen.value = '';
+
         const selectTipo = $('#rMascotaTipo');
         if (selectTipo && TipoMascota.length) {
             selectTipo.innerHTML = TipoMascota.map(t =>
@@ -368,41 +365,40 @@ function abrirModalRegistro(modo = 'dueño', dniTutor = '', nombreTutor = '') {
         inputsMascota.forEach(i => i.required = true);
     }
 
-    modal.show();
-}
+    // 🔹 Preview de imagen
+    const inputImagen = $('#rMascotaImagen');
+    const preview = $('#previewMascota');
+    if (inputImagen) {
+        inputImagen.addEventListener('change', e => {
+            const file = e.target.files[0];
+            if (!file) {
+                if (preview) preview.src = '';
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = () => {
+                if (preview) preview.src = reader.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    }
 
-const inputImagen = $('#rMascotaImagen');
-const preview = $('#previewMascota'); // <img id="previewMascota">
-
-if (inputImagen) {
-    inputImagen.addEventListener('change', e => {
-        const file = e.target.files[0];
-        if (!file) {
-            if(preview) preview.src = '';
-            return;
-        }
-        const reader = new FileReader();
-        reader.onload = () => {
-            if(preview) preview.src = reader.result;
-        };
-        reader.readAsDataURL(file);
+    // 🔹 Reset al cerrar modal
+    modalEl.addEventListener('hidden.bs.modal', () => {
+        formRegistro.reset();
+        if (preview) preview.src = '';
+        if (inputImagen) inputImagen.value = '';
     });
 }
 
-
-const modalRegistroEl = $('#modalRegistro');
-modalRegistroEl.addEventListener('hidden.bs.modal', () => {
-    $('#formRegistro').reset();
-});
 // ===== Formulario registro =====
 $('#formRegistro').onsubmit = async e => {
     e.preventDefault();
-
     const bloqueDueño = $('#bloqueDueño');
     const bloqueMascota = $('#bloqueMascota');
 
-    // ===== Registrar dueño =====
     if (!bloqueDueño.classList.contains('d-none')) {
+        // Registrar dueño
         const nombre = $('#rNombre').value.trim();
         const apellido = $('#rApellido').value.trim();
         const dni = $('#rDni').value.trim();
@@ -414,132 +410,128 @@ $('#formRegistro').onsubmit = async e => {
         }
 
         try {
-    // Llamar API crear cliente
-    const res = await createCliente({
-        Nombre: nombre,
-        Apellido: apellido,
-        Dni: Number(dni),
-        Telefono: telefono
-    });
+            const res = await createCliente({ Nombre: nombre, Apellido: apellido, Dni: Number(dni), Telefono: telefono });
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                throw new Error(errData.detail || 'No se pudo registrar el dueño');
+            }
 
-    if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.detail || 'No se pudo registrar el dueño');
-    }
+            Swal.fire({
+                title: 'Dueño cargado con éxito',
+                text: '¿Desea añadirle una mascota?',
+                icon: 'success',
+                showCancelButton: true,
+                confirmButtonText: 'Sí',
+                cancelButtonText: 'No'
+            }).then(({ isConfirmed }) => {
+                const modalRegistro = bootstrap.Modal.getInstance($('#modalRegistro'));
+                if (modalRegistro) modalRegistro.hide();
 
-    Swal.fire({
-    title: 'Dueño cargado con éxito',
-    text: '¿Desea añadirle una mascota?',
-    icon: 'success',
-    showCancelButton: true,
-    confirmButtonText: 'Sí',
-    cancelButtonText: 'No'
-}).then(async ({ isConfirmed }) => {
-    const modalRegistro = bootstrap.Modal.getInstance(document.getElementById('modalRegistro'));
-    if (modalRegistro) modalRegistro.hide();
+                if (isConfirmed) {
+                    const nombreCompleto = `${nombre} ${apellido}`;
+                    setTimeout(() => abrirModalRegistro('mascota', dni, nombreCompleto), 300);
+                }
+            });
 
-    if (isConfirmed) {
-        const nombreCompleto = `${nombre} ${apellido}`; // 👈 armamos el nombre del cliente recién creado
+        } catch (err) {
+            console.error(err);
+            Swal.fire('Error', err.message || 'Error inesperado', 'error');
+        }
+    } else if (!bloqueMascota.classList.contains('d-none')) {
+        // Registrar mascota
+        const dniTutor = $('#rTutorDni').value.trim();
+        const nombre = $('#rMascotaNombre').value.trim();
+        const edad = $('#rMascotaEdad').value.trim();
+        const tipo = $('#rMascotaTipo').value;
+        const inputImagen = $('#rMascotaImagen');
 
-        setTimeout(async () => {
-            // 🔹 Pasamos también el nombreCompleto al abrir el modal
-            abrirModalRegistro('mascota', dni, nombreCompleto);
-
-            // Esperar a que el modal esté visible antes de llenar el campo DNI
-            setTimeout(() => {
-                const inputTutorDni = document.querySelector('#rTutorDni');
-                const inputTutorNombre = document.querySelector('#rTutorNombre');
-
-                if (inputTutorDni) inputTutorDni.value = dni;
-                if (inputTutorNombre) inputTutorNombre.value = nombreCompleto;
-
-                // Si tenés un botón para buscar tutor, podés simular el click igual:
-                const btnBuscarTutor = document.querySelector('#btnBuscarTutor');
-                if (btnBuscarTutor) btnBuscarTutor.click();
-            }, 400);
-        }, 300);
-    }
-});
-
-} catch (err) {
-    console.error(err);
-    Swal.fire({
-        icon: 'error',
-        title: 'Error al registrar el dueño',
-        text: err.message || 'Error inesperado'
-    });
-}
-    } 
- else if (!bloqueMascota.classList.contains('d-none')) {
-    const dniTutor = $('#rTutorDni').value.trim();
-    const nombre = $('#rMascotaNombre').value.trim();
-    const edad = $('#rMascotaEdad').value.trim();
-    const tipo = $('#rMascotaTipo').value;
-    const inputImagen = $('#rMascotaImagen'); // <input type="file">
-
-    if (!dniTutor || !nombre || !tipo) {
-        Swal.fire('Error', 'Complete todos los campos obligatorios', 'error');
-        return;
-    }
-
-    try {
-        // 1️⃣ Buscar cliente por DNI
-        const resCliente = await getClientesByDNI(dniTutor);
-        if (!resCliente.ok) throw new Error('No se encontró un dueño con ese DNI');
-
-        const dataCliente = await resCliente.json();
-        if (!dataCliente.length) throw new Error('No se encontró un dueño con ese DNI');
-
-        const codCliente = dataCliente[0].codCliente;
-        const cliente = dataCliente[0];
-        const nombreCompleto = `${cliente.nombre} ${cliente.apellido}`;
-
-        const nuevaMascota = {
-            Nombre: nombre,
-            Edad: Number(edad),
-            CodCliente: codCliente,
-            CodTipo: Number(tipo),
-            Activo: true
-        };
-
-        // 🔹 Tomar archivo de imagen
-        const archivoImagen = inputImagen?.files?.[0] || null;
-
-        // 🔹 Llamada API con FormData
-        const res = await createMascota(nuevaMascota, archivoImagen);
-
-        if (!res.ok) {
-            const errData = await res.json();
-            throw new Error(errData.message || 'No se pudo registrar la mascota');
+        if (!dniTutor || !nombre || !tipo) {
+            Swal.fire('Error', 'Complete todos los campos obligatorios', 'error');
+            return;
         }
 
-        Swal.fire('Éxito', 'Mascota registrada correctamente', 'success');
-        const modal = bootstrap.Modal.getInstance($('#modalRegistro'));
-        modal.hide();
-        cargarMascotas();
+        try {
+            const resCliente = await getClientesByDNI(dniTutor);
+            if (!resCliente.ok) throw new Error('No se encontró un dueño con ese DNI');
+            const dataCliente = await resCliente.json();
+            if (!dataCliente.length) throw new Error('No se encontró un dueño con ese DNI');
 
-    } catch (err) {
-        console.error(err);
-        Swal.fire('Error', err.message || 'Ocurrió un error al registrar la mascota', 'error');
+            const codCliente = dataCliente[0].codCliente;
+
+            const nuevaMascota = {
+                Nombre: nombre,
+                Edad: Number(edad),
+                CodCliente: codCliente,
+                CodTipo: Number(tipo),
+                Activo: true
+            };
+
+            const archivoImagen = inputImagen?.files?.[0] || null;
+            const res = await createMascota(nuevaMascota, archivoImagen);
+
+            if (!res.ok) {
+                const errData = await res.json();
+                throw new Error(errData.message || 'No se pudo registrar la mascota');
+            }
+
+            Swal.fire('Éxito', 'Mascota registrada correctamente', 'success');
+            const modal = bootstrap.Modal.getInstance($('#modalRegistro'));
+            if (modal) modal.hide();
+            cargarMascotas();
+        } catch (err) {
+            console.error(err);
+            Swal.fire('Error', err.message || 'Ocurrió un error al registrar la mascota', 'error');
+        }
     }
-}
 };
 
-// ===== Inicialización =====
-async function initClientes() {
+// ===== Iniciales usuario =====
+function setearIniciales() {
+    const badge = $('#avatar') || $('#btnPerfil');
+    if (!badge) return;
+
     const raw = sessionStorage.getItem('dogtorUser');
-    if (!raw) {
-        window.location.href = './index.html';
-        return;
+    let initials = 'US';
+    if (raw) {
+        try {
+            const u = JSON.parse(raw);
+            const email = (u.email || '').trim();
+            if (email) {
+                const namePart = email.split('@')[0];
+                const parts = namePart.split(/[._-]+/).filter(Boolean);
+                if (parts.length === 1) initials = parts[0].slice(0, 2);
+                else initials = (parts[0][0] || '') + (parts[1][0] || '');
+            }
+        } catch {}
     }
+    badge.textContent = initials.toUpperCase();
+}
 
-    await Promise.all([cargarTiposMascota(), cargarMascotas()]);
-    initBusqueda();
+// Inicialización 
+async function initClientes() {
+    setearIniciales();
+    const raw = sessionStorage
+    .getItem('dogtorUser');
+if (!raw) {
+window.location.href = './index.html';
+return;
+}
+await Promise.all([cargarTiposMascota(), cargarMascotas()]);
+initBusqueda();
 
-    const btnRegistrarCliente = $('#btnRegistrarCliente');
-    if (btnRegistrarCliente) {
-        btnRegistrarCliente.addEventListener('click', abrirModalInicio);
-    }
+const btnRegistrarCliente = $('#btnRegistrarCliente');
+if (btnRegistrarCliente) btnRegistrarCliente.addEventListener('click', abrirModalInicio);
+
+const btnCerrarSesion = $('#btnCerrarSesion');
+if (btnCerrarSesion) {
+    btnCerrarSesion.addEventListener('click', e => {
+        e.preventDefault();
+        sessionStorage.removeItem('dogtorUser');
+        localStorage.removeItem('token');
+        localStorage.removeItem('userEmail');
+        window.location.href = '../Pages/index.html';
+    });
+}
 }
 
 document.addEventListener('DOMContentLoaded', initClientes);
