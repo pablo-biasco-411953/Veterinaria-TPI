@@ -1044,7 +1044,8 @@ async function cargarDatos(userId) {
 
 function initDashboard() {
     const raw = sessionStorage.getItem('dogtorUser');
-    if (!raw) { window.location.href = '../Pages/index.html'; return; }
+    if (!raw) { 
+    window.location.href = '../Pages/index.html'; return; }
     const user = JSON.parse(raw);
     
     cargarDatos(user.id).then(() => {

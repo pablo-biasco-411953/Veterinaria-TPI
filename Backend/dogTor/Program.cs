@@ -28,6 +28,7 @@ builder.Services.AddScoped<IClienteRepository, ClienteRepository>();
 // Servicios
 builder.Services.AddScoped<IMascotaService, MascotaService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<EmailService>();
 
 // Configuramos JWT
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

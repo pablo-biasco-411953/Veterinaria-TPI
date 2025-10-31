@@ -93,6 +93,8 @@ CREATE TABLE [dbo].[VETERINARIO](
 	[matricula] [varchar](50) NOT NULL,
     [email] [varchar](100) NOT NULL, -- Campo para login
     [password] [varchar](150) NOT NULL, -- Hash de Password para login
+	[resetToken] [varchar](200) NULL,
+	[resetTokenExpiration] DATETIME NULL,  
 PRIMARY KEY CLUSTERED ([cod_veterinario] ASC),
 UNIQUE NONCLUSTERED ([email] ASC) -- El email debe ser único para el login
 ) ON [PRIMARY]

@@ -217,6 +217,39 @@ input:focus {
     background: #0F1A2E;
 }
 
+.password-wrapper input {
+    font-family: 'Poppins', sans-serif;
+    font-size: 16px;
+    letter-spacing: 0.15em;
+    padding-right: 2.5rem; /* deja espacio para el ojito */
+    border: 1px solid var(--stroke);
+    border-radius: 12px;
+    background-color: var(--card);
+    color: var(--text);
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.password-wrapper input::placeholder {
+    color: var(--muted);
+    opacity: 1;
+}
+.password-wrapper input.hidden-password {
+    -webkit-text-security: disc; /* Safari/Chrome */
+    -moz-text-security: disc;    /* Firefox (antiguo) */
+    text-security: disc;         /* fallback */
+}
+
+.toggle-password {
+    position: absolute;
+    right: 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+    color: var(--text);
+}
+
 .actions {
     display: flex;
     align-items: center;

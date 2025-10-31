@@ -19,5 +19,9 @@ public partial class Veterinario
 
     public string Password { get; set; }
 
+    public string ResetToken { get; set; }
+
+    public DateTime? ResetTokenExpiration { get; set; }
+
     public virtual ICollection<Atencion> Atencions { get; set; } = new List<Atencion>();
 }

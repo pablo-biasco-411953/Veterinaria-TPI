@@ -1,15 +1,14 @@
-﻿// VeterinarioService.cs
-using BCrypt.Net;
+﻿using BCrypt.Net;
 using dogTor.Dtos;
 using dogTor.Models;
 using dogTor.Repository;
 using dogTor.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Threading.Tasks;
 
 namespace dogTor.Services.Implementations
 {
-    // Usamos IUserRepository para la autenticación del "usuario" (Veterinario)
     public class UserService : IUserService
     {
         private readonly IUserRepository _userRepository;
@@ -19,62 +18,61 @@ namespace dogTor.Services.Implementations
             _userRepository = userRepository;
         }
 
+        // REGISTRO
         public async Task<DtoVeterinario?> RegisterVeterinarioAsync(DtoVeterinario newVeterinarioDto)
         {
-            // Validamos que el email (username) no esté registrado
             var existingUser = await _userRepository.GetUserByUsernameAsync(newVeterinarioDto.Email);
             if (existingUser != null)
-            {
-                // Devuelve null si ya existe
                 return null;
-            }
 
             Veterinario veterinarioModel = new Veterinario
             {
                 Nombre = newVeterinarioDto.Nombre ?? string.Empty,
                 Apellido = newVeterinarioDto.Apellido ?? string.Empty,
                 Email = newVeterinarioDto.Email ?? string.Empty,
-                Matricula = newVeterinarioDto.Matricula ?? string.Empty
+                Matricula = newVeterinarioDto.Matricula ?? string.Empty,
+                Password = BCrypt.Net.BCrypt.HashPassword(newVeterinarioDto.Password)
             };
 
-            //if(veterinarioModel.Matricula == newVeterinarioDto.Matricula)
-            //{
-            //    throw new Exception("La matrícula de este veterinario ya existe en el sistema.");
-
-            //}
-            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(newVeterinarioDto.Password);
-            veterinarioModel.Password = hashedPassword;
             await _userRepository.CreateUserAsync(veterinarioModel);
-
             return new DtoVeterinario(veterinarioModel);
         }
 
-
-        // AUTENTICACIÓN (LOGIN)
-
+        // LOGIN
         public async Task<DtoVeterinario> LoginAsync(DtoCredencialesLogin credentials)
         {
-            // Busco el usuario (Veterinario) por el Email (Username)
             Veterinario userModel = await _userRepository.GetUserByUsernameAsync(credentials.Username);
 
-            // 1. Verifico la existencia del usuario
-            if (userModel == null)
-            {
+            if (userModel == null || !BCrypt.Net.BCrypt.Verify(credentials.Password, userModel.Password))
                 throw new UnauthorizedAccessException("Credenciales de acceso inválidas.");
-            }
 
-            // 2. Verifico la contraseña
-            // Usamos BCrypt.Verify para comparar el password plano con el hash almacenado
-            bool isPasswordCorrect = BCrypt.Net.BCrypt.Verify(credentials.Password, userModel.Password);
+            return new DtoVeterinario(userModel);
+        }
 
-            if (!isPasswordCorrect)
-            {
-                throw new UnauthorizedAccessException("Credenciales de acceso inválidas.");
-            }
+        // OLVIDÉ MI CONTRASEÑA
+        public async Task<(string Token, DtoVeterinario Usuario)?> ForgotPasswordAsync(string email)
+        {
+            // Generar token y guardar en la base desde el repositorio
+            var token = await _userRepository.GeneratePasswordResetTokenAsync(email);
+            if (token == null) return null;
 
-            // Credenciales válidas: Mapeo a DTO y lo devuelvo (sin password)
-            DtoVeterinario loggedInUserDto = new DtoVeterinario(userModel);
-            return loggedInUserDto;
+            // Obtener el usuario actualizado para crear el DTO
+            var user = await _userRepository.GetUserByUsernameAsync(email);
+
+            return (token, new DtoVeterinario(user));
+        }
+
+
+
+        // RESETEAR CONTRASEÑA
+        public async Task<bool> ResetPasswordAsync(string token, string newPassword)
+        {
+            if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(newPassword))
+                return false;
+
+            // Se delega al repo, que ya hashea internamente
+            var success = await _userRepository.ResetPasswordAsync(token, newPassword);
+            return success;
         }
     }
 }

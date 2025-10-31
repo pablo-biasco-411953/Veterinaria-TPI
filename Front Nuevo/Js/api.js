@@ -138,3 +138,20 @@ export async function createCliente(cliente) {
     body: JSON.stringify(cliente)
   });
 }
+
+// RECUPERACIÓN DE CONTRASEÑA
+export async function forgotPassword(email) {
+    return fetch(`${API_URL}/User/forgot-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(email)
+    });
+}
+
+export async function resetPassword(token, nuevaContraseña) {
+    return fetch(`${API_URL}/User/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, NuevaContraseña: nuevaContraseña }) // <-- mayúscula
+    });
+}

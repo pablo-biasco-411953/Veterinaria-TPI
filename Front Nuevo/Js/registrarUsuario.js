@@ -1,4 +1,4 @@
-import { registerUser } from './api.js';
+import { registerUser, loginUser } from './api.js';
 
 const SWAL_THEME = {
     background: '#1a202c',
@@ -30,36 +30,30 @@ function validateField(name, value = '', compareValue = '') {
             if (/\d/.test(value)) return 'El nombre no puede contener números.';
             if (value.length > 50) return 'El nombre es demasiado largo.';
             break;
-
         case 'apellido':
             if (value.length < 2) return 'El apellido debe tener al menos 2 letras.';
             if (/\d/.test(value)) return 'El apellido no puede contener números.';
             if (value.length > 50) return 'El apellido es demasiado largo.';
             break;
-
         case 'matricula':
             if (!value.startsWith('MP-')) return 'La matrícula debe comenzar con "MP-".';
             const numeroMatricula = value.replace('MP-', '');
             if (numeroMatricula.length < 3 || isNaN(numeroMatricula)) return 'La matrícula debe tener al menos 3 números después de "MP-".';
             break;
-
         case 'email':
             if (!value.includes('@') || !value.includes('.')) return 'El email debe tener un formato válido (ejemplo@correo.com).';
             if (value.length < 5) return 'El email es demasiado corto.';
             break;
-
         case 'password':
             if (value.length < 8) return 'La contraseña debe tener al menos 8 caracteres.';
             if (!/[A-Z]/.test(value)) return 'La contraseña debe incluir al menos una letra mayúscula.';
             if (!/[!@#$%^&*()_\-+=]/.test(value)) return 'La contraseña debe incluir al menos un carácter especial (!@#$%^&*).';
             break;
-
         case 'passwordConfirm':
             if (value !== compareValue) return 'Las contraseñas no coinciden.';
             break;
     }
-
-    return ''; 
+    return '';
 }
 
 (function () {
@@ -129,6 +123,7 @@ function validateField(name, value = '', compareValue = '') {
             passwordConfirm: form.elements['passwordConfirm'].value
         };
 
+        // Validaciones
         for (const field of fields) {
             const compareValue = field === 'passwordConfirm' ? userData.password : '';
             const error = validateField(field, userData[field], compareValue);
@@ -154,38 +149,70 @@ function validateField(name, value = '', compareValue = '') {
             }
         }
 
-        // ===== Enviar a API =====
         try {
+            // ===== Registro =====
             const response = await registerUser(userData);
-            const data = await response.json(); 
-            console.log("la dataa",data)
-              if (response.status === 200) {
-        Swal.fire({
-            icon: 'success',
-            title: '¡Registro exitoso!',
-            timerProgressBar: true,
-            customClass: { title: 'swal2-title-custom' },
-            text: data?.Message || 'Tu cuenta fue creada correctamente. Redireccionando al login...',
-        });
-        setTimeout(() => (window.location.href = './index.html'), 4000);
+            const data = await response.json();
 
-    } else if (response.status === 409) {
-        showAlert(data?.Message || 'El email ya está registrado.');
+            if (response.ok) {
+                // ===== Login automático =====
+                try {
+                    const loginRes = await loginUser({
+                        username: userData.email, // ✅ coincide con lo que la API espera
+                        password: userData.password
+                    });
+                    const loginData = await loginRes.json();
 
-    } else {
-        const errorMsg = data?.detail 
-            ? `Error al registrar: ${data.detail}` 
-            : (data?.Message || 'Error al registrar.');
-        showAlert(errorMsg, false);
-    }
+                    if (loginRes.ok && loginData.token) {
+                     sessionStorage.setItem('dogtorUser', JSON.stringify({
+                            id: loginData.user.id,
+                            nombre: loginData.user.nombre,
+                            apellido: loginData.user.apellido,
+                            matricula: loginData.user.matricula,
+                            email: loginData.user.email,
+                            token: loginData.token
+                        }));
+                            Swal.fire({
+                            icon: 'success',
+                            title: '¡Registro y login exitoso!',
+                            text: 'Redirigiendo al dashboard...',
+                            timer: 2500,
+                            timerProgressBar: true,
+                            showConfirmButton: false
+                        });
+                        setTimeout(() => {
+                            window.location.href = './dashboard.html';
+                        }, 2500);
+                    } else {
+                        showAlert('Registro exitoso, pero falló el login automático.', false);
+                        setTimeout(() => {
+                            window.location.href = './index.html';
+                        }, 2500);
+                    }
 
-} catch (err) {
-    showAlert('Error de conexión con el servidor.', false);
+                } catch (err) {
+                    showAlert('Registro exitoso, pero falló el login automático.', false);
+                    setTimeout(() => {
+                        window.location.href = './index.html';
+                    }, 2500);
+                }
 
-} finally {
-    btnSubmit.textContent = 'Registrar';
-    btnSubmit.disabled = false;
-}
+            } else if (response.status === 409) {
+                showAlert(data?.Message || 'El email ya está registrado.');
+            } else {
+                const errorMsg = data?.detail
+                    ? `Error al registrar: ${data.detail}`
+                    : (data?.Message || 'Error al registrar.');
+                showAlert(errorMsg, false);
+            }
+
+        } catch (err) {
+            showAlert('Error de conexión con el servidor.', false);
+
+        } finally {
+            btnSubmit.textContent = 'Registrar';
+            btnSubmit.disabled = false;
+        }
     });
 
 })();

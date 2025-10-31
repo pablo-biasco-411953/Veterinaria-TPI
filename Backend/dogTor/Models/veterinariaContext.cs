@@ -252,6 +252,13 @@ public partial class veterinariaContext : DbContext
                 .HasMaxLength(150)
                 .IsUnicode(false)
                 .HasColumnName("password");
+            entity.Property(e => e.ResetToken)
+                .HasMaxLength(200)
+                .IsUnicode(false)
+                .HasColumnName("resetToken");
+            entity.Property(e => e.ResetTokenExpiration)
+                .HasColumnType("datetime")
+                .HasColumnName("resetTokenExpiration");
         });
 
         OnModelCreatingPartial(modelBuilder);
