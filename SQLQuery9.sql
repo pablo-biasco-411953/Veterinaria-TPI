@@ -108,6 +108,7 @@ CREATE TABLE [dbo].[MASCOTA](
 	[cod_cliente] [int] NOT NULL,
 	[cod_tipo] [int] NOT NULL,
 	[eliminado] [bit] NOT NULL DEFAULT 1,
+	[imagenMascota][NVARCHAR](MAX) NULL,
 PRIMARY KEY CLUSTERED ([cod_mascota] ASC)
 ) ON [PRIMARY]
 GO
