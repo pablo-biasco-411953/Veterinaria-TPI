@@ -1,0 +1,403 @@
+:root {
+  --bg-900: #0B1220;
+  --bg-800: #111A2C;
+  --card: #0E1628;
+  --stroke: #1F2A43;
+  --text: #E6EEF8;
+  --muted: #8FA0B8;
+  --accent: #00BFFF;
+  --accent-2: #3EC6FF;
+
+  /* Colores para el gráfico/leyenda */
+  --pendiente: #FFC107;
+  /* warning */
+  --confirmado: #0DCAF0;
+  /* info */
+  --atendido: #198754;
+  /* success */
+}
+
+* {
+  box-sizing: border-box
+}
+
+html,
+body {
+  height: 100%
+}
+
+body {
+  background: var(--bg-900);
+  color: var(--text);
+  font-family: "Poppins", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+/* Fondo animado */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(0deg, rgba(0, 191, 255, .18) 0 1px, transparent 1px 64px),
+    repeating-linear-gradient(90deg, rgba(62, 198, 255, .16) 0 1px, transparent 1px 64px);
+  opacity: .28;
+  filter: contrast(1.2) brightness(1.04);
+  animation: gridShift 16s linear infinite;
+}
+
+@keyframes gridShift {
+  0% {
+    background-position: 0 0, 0 0
+  }
+
+  50% {
+    background-position: 200px 120px, 120px 200px
+  }
+
+  100% {
+    background-position: 0 0, 0 0
+  }
+}
+
+/* Layout */
+.app-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  min-height: 100dvh;
+  position: relative;
+  z-index: 1;
+}
+
+.sidebar {
+  border-right: 1px solid var(--stroke);
+  background: linear-gradient(180deg, #0C1426, #0A1323);
+  padding: 18px 14px;
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+}
+
+.brand {
+  font-family: "Orbitron", sans-serif;
+  font-weight: 700;
+  letter-spacing: .08em;
+  color: #EAF2FF;
+  margin: 6px 8px 18px
+}
+
+.brand span {
+  font-size: 20px
+}
+
+.nav-link {
+  color: #9CB2CC;
+  border-radius: 12px;
+  padding: .65rem .8rem;
+  font-weight: 600
+}
+
+.nav-link:hover {
+  background: #0E172B;
+  color: white
+}
+
+.nav-link.active {
+  background: linear-gradient(90deg, rgba(0, 191, 255, .18), transparent);
+  color: #EAF6FF;
+  border: 1px solid rgba(0, 191, 255, .25)
+}
+
+.content {
+  padding: 22px 24px 12px
+}
+
+.topbar {
+  margin-bottom: 12px
+}
+
+.page-title {
+  font-family: "Orbitron", sans-serif;
+  letter-spacing: .06em;
+  font-size: 22px
+}
+
+/* Perfil con iniciales */
+.avatar-initials {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--stroke);
+  font-weight: 800;
+  font-size: .9rem;
+  letter-spacing: .02em;
+  background: linear-gradient(180deg, rgba(0, 191, 255, .20), rgba(62, 198, 255, .16));
+  color: #EAF6FF;
+  text-transform: uppercase;
+  user-select: none;
+}
+.pagination .page-item.active .page-link {
+    background-color: var(--bs-info); /* O el color que use para el azul brillante */
+    border-color: var(--bs-info);
+    color: var(--bs-dark); /* Color oscuro para el texto */
+}
+#previewMascota {
+    border: 1px solid #0dcaf0;
+    border-radius: 0.25rem;
+    background-color: #f8f9fa;
+    display: none; /* por defecto oculto */
+}
+
+#previewMascota.visible {
+    display: block; /* se muestra cuando tenga imagen */
+}
+.list-group-item {
+    display: flex;
+    align-items: center;
+    gap: 2px; /* espacio entre elementos */
+    flex-wrap: nowrap; /* que no haga salto de línea */
+    white-space: nowrap; /* evitar que el texto se corte */
+    overflow: hidden; /* corta el exceso si no entra */
+    text-overflow: ellipsis; /* agrega "..." si no cabe */
+    font-size: 5px;
+    color: black;
+}
+
+.card {
+  background: linear-gradient(180deg, rgba(14, 22, 40, .96), rgba(14, 22, 40, .90));
+  border: 1px solid var(--stroke);
+  border-radius: 16px
+}
+
+.avatar-initials {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    min-height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.9rem;
+    background-color: #0d6efd; /* ejemplo */
+    color: #fff;
+}
+
+.card-header {
+  border-bottom: 1px solid rgba(255, 255, 255, .06);
+  color: #BFD4EA
+}
+
+/* KPIs */
+.kpi .card-body {
+  display: flex;
+  gap: 12px;
+  align-items: center
+}
+
+.kpi-icon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: rgba(0, 191, 255, .12);
+  color: #7FDBFF;
+  font-size: 20px
+}
+
+.kpi-value {
+  font-size: 22px;
+  font-weight: 800
+}
+
+.kpi-label {
+  font-size: 12px;
+  color: #8FA0B8;
+  margin-top: 2px
+}
+
+/* Tabla */
+.table {
+  --bs-table-bg: transparent;
+  --bs-table-color: #E6EEF8
+}
+
+.table thead th {
+  color: #9CB2CC;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(255, 255, 255, .07)
+}
+
+.table tbody tr {
+  border-top: 1px solid rgba(255, 255, 255, .04)
+}
+
+/* Grafico */
+.chart-legend {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #9CB2CC;
+  font-size: .9rem;
+}
+
+.legend-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.legend-pendiente {
+  background: var(--pendiente)
+}
+
+.legend-confirmado {
+  background: var(--confirmado)
+}
+
+.legend-atendido {
+  background: var(--atendido)
+}
+
+.legend-total {
+  margin-left: auto;
+  color: #BFD4EA;
+  font-weight: 600
+}
+
+/* Responsivo */
+@media (max-width: 992px) {
+  .app-layout {
+    grid-template-columns: 86px 1fr
+  }
+
+  .brand span {
+    display: none
+  }
+
+  .nav-link {
+    text-align: center;
+    padding: .6rem
+  }
+
+  .nav-link i {
+    display: block;
+    font-size: 1.15rem;
+    margin-bottom: .1rem
+  }
+}
+
+.chart-box {
+  position: relative;
+  height: 300px;
+  width: 100%;
+}
+
+#chartTurnos {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/*Tarjetas de mascotas*/
+.pet-card {
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+.pet-card .pet-cover {
+  width: 100%;
+  aspect-ratio: 16/9;
+  overflow: hidden;
+  background: #0B1220;
+  border-bottom: 1px solid rgba(255, 255, 255, .06);
+}
+
+.pet-card .pet-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform .4s ease;
+}
+
+.pet-card .pet-card-btn {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  color: inherit;
+}
+
+.pet-card:hover .pet-cover img {
+  transform: scale(1.05);
+}
+
+.pet-card h5 {
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+
+/* === PERFIL === */
+.avatar-initials {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #007bff55, #00c3ff55);
+  color: #fff;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all .2s ease;
+}
+
+.avatar-initials:hover {
+  background: linear-gradient(135deg, #007bff, #00c3ff);
+}
+
+.perfil-menu {
+  position: absolute;
+  top: 120%;
+  right: 0;
+  min-width: 180px;
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  border-radius: .5rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  padding: .25rem 0;
+}
+
+.perfil-menu ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.perfil-menu .dropdown-item {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  color: #e2e8f0;
+  padding: .5rem 1rem;
+  font-size: .9rem;
+}
+
+.perfil-menu .dropdown-item:hover {
+  background-color: #334155;
+  color: #fff;
+}
+
+.dropdown-divider {
+  border-color: #475569;
+}

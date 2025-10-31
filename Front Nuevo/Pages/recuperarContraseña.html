@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DOGTOR — Recuperar Contraseña</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Poppins:wght@400;600&display=swap"
+        rel="stylesheet">
+
+    <link rel="icon" type="image/png" href="../Assets/logo2.png" />
+
+    <!-- Tus estilos generales -->
+    <link rel="stylesheet" href="../css/styles.css" />
+</head>
+
+<body>
+    <main class="auth">
+        <section class="card" role="region" aria-labelledby="brand">
+            <div class="logo-wrap">
+                <img class="logo" src="../Assets/logo2.png" alt="DOGTOR - logo" />
+            </div>
+
+            <h1 id="brand" class="brand">DOGTOR</h1>
+            <p class="tagline">Recuperar Contraseña</p>
+
+            <form id="forgotForm" class="form" autocomplete="off" novalidate>
+                <label class="field">
+                    <span>Email</span>
+                    <input type="email" id="emailForgot" placeholder="email@ejemplo.com" required />
+                </label>
+
+                <div class="actions">
+                    <button type="submit" class="btn primary">Enviar enlace</button>
+                </div>
+
+                <p id="message"></p>
+            </form>
+
+            <p class="foot">
+                <a href="./index.html" class="link">Volver al login</a>
+            </p>
+        </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script type="module" src="../js/recuperarContraseña.js"></script>
+</body>
+
+</html>
