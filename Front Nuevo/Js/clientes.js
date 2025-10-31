@@ -145,8 +145,8 @@ function renderMascotas() {
         col.dataset.clienteId = m.cliente?.codCliente || '';
         col.dataset.tipo = m.tipo?.codTipoMascota || '';
 
-        const imgSrc = imagenPorTipo(m.tipo?.nombre);
-
+    const imgSrc = m.imagenMascota || imagenPorTipo(m.tipo?.nombre);
+ 
         col.innerHTML = `
             <div class="card h-100 shadow-sm border-0 rounded-3 overflow-hidden">
                 <div class="ratio" style="--bs-aspect-ratio: 70%; background-color:#f8f9fa; display:flex; align-items:center; justify-content:center;">
@@ -371,6 +371,25 @@ function abrirModalRegistro(modo = 'dueño', dniTutor = '', nombreTutor = '') {
     modal.show();
 }
 
+const inputImagen = $('#rMascotaImagen');
+const preview = $('#previewMascota'); // <img id="previewMascota">
+
+if (inputImagen) {
+    inputImagen.addEventListener('change', e => {
+        const file = e.target.files[0];
+        if (!file) {
+            if(preview) preview.src = '';
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = () => {
+            if(preview) preview.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+
 const modalRegistroEl = $('#modalRegistro');
 modalRegistroEl.addEventListener('hidden.bs.modal', () => {
     $('#formRegistro').reset();
@@ -451,11 +470,12 @@ $('#formRegistro').onsubmit = async e => {
     });
 }
     } 
-  else if (!bloqueMascota.classList.contains('d-none')) {
+ else if (!bloqueMascota.classList.contains('d-none')) {
     const dniTutor = $('#rTutorDni').value.trim();
     const nombre = $('#rMascotaNombre').value.trim();
     const edad = $('#rMascotaEdad').value.trim();
     const tipo = $('#rMascotaTipo').value;
+    const inputImagen = $('#rMascotaImagen'); // <input type="file">
 
     if (!dniTutor || !nombre || !tipo) {
         Swal.fire('Error', 'Complete todos los campos obligatorios', 'error');
@@ -472,17 +492,21 @@ $('#formRegistro').onsubmit = async e => {
 
         const codCliente = dataCliente[0].codCliente;
         const cliente = dataCliente[0];
-        const nombreCompleto = `${cliente.nombre} ${cliente.apellido}`
-            const nuevaMascota = {
-                Nombre: nombre,
-                Edad: Number(edad),
-                CodCliente: codCliente,   // debe ser número válido
-                CodTipo: Number(tipo),    // debe ser número válido
-                Activo: true              // mapea a Eliminado=false
-            };
-        console.log('Objeto mascota a enviar:', nuevaMascota);
+        const nombreCompleto = `${cliente.nombre} ${cliente.apellido}`;
 
-        const res = await createMascota(nuevaMascota);
+        const nuevaMascota = {
+            Nombre: nombre,
+            Edad: Number(edad),
+            CodCliente: codCliente,
+            CodTipo: Number(tipo),
+            Activo: true
+        };
+
+        // 🔹 Tomar archivo de imagen
+        const archivoImagen = inputImagen?.files?.[0] || null;
+
+        // 🔹 Llamada API con FormData
+        const res = await createMascota(nuevaMascota, archivoImagen);
 
         if (!res.ok) {
             const errData = await res.json();

@@ -170,6 +170,7 @@ public partial class veterinariaContext : DbContext
             entity.Property(e => e.Eliminado)
                 .HasDefaultValue(true)
                 .HasColumnName("eliminado");
+            entity.Property(e => e.ImagenMascota).HasColumnName("imagenMascota");
             entity.Property(e => e.Nombre)
                 .IsRequired()
                 .HasMaxLength(50)

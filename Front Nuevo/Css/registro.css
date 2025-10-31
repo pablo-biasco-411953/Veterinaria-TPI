@@ -137,3 +137,23 @@ input.is-valid {
     border-radius: 16px;
   }
 }
+.password-wrapper {
+  position: relative;
+}
+
+.password-wrapper input {
+  width: 100%;
+  padding-right: 2.5rem; /* deja espacio para el botón */
+}
+
+.password-wrapper button.toggle-password {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: var(--muted);
+}

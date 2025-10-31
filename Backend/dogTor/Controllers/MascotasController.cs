@@ -1,10 +1,11 @@
 ﻿using dogTor.Dtos;
+using dogTor.Helpers;
 using dogTor.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace dogTor.Controllers
@@ -21,15 +22,26 @@ namespace dogTor.Controllers
         }
 
         // POST /api/mascota
-        // Registrar una nueva mascota
+        // Registrar una nueva mascota con imagen opcional
         [HttpPost]
-        public async Task<IActionResult> RegistrarMascota([FromBody] DtoMascota mascotaDto)
+        public async Task<IActionResult> RegistrarMascota([FromForm] DtoMascota mascotaDto, IFormFile? imagenArchivo)
         {
             if (mascotaDto == null)
                 return BadRequest(new { message = "Datos inválidos." });
 
             try
             {
+                // 1️⃣ Convertir imagen a Base64 si se envía archivo
+                if (imagenArchivo != null && imagenArchivo.Length > 0)
+                {
+                    using var ms = new MemoryStream();
+                    await imagenArchivo.CopyToAsync(ms);
+                    var bytes = ms.ToArray();
+                    var extension = Path.GetExtension(imagenArchivo.FileName).ToLower().Replace(".", "");
+                    mascotaDto.ImagenMascota = $"data:image/{extension};base64,{Convert.ToBase64String(bytes)}";
+                }
+
+                // 2️⃣ Crear mascota
                 var nuevaMascota = await _mascotaService.CreateMascotaAsync(mascotaDto);
 
                 if (nuevaMascota == null)
@@ -47,9 +59,7 @@ namespace dogTor.Controllers
             }
         }
 
-
-        // GET /api/mascota/cliente/{userId}
-        // Obtener todas las mascotas de un cliente
+        // GET /api/mascota
         [HttpGet]
         public async Task<IActionResult> GetMascotas()
         {
@@ -57,10 +67,8 @@ namespace dogTor.Controllers
             {
                 var mascotas = await _mascotaService.GetAll();
 
-               if (mascotas == null || mascotas.Count == 0)
-                {
-                    return NotFound($"No se encontraron mascotas.");
-                }
+                if (mascotas == null || mascotas.Count == 0)
+                    return NotFound("No se encontraron mascotas.");
 
                 return Ok(mascotas);
             }
@@ -78,15 +86,12 @@ namespace dogTor.Controllers
                 var mascotas = await _mascotaService.GetMascotasByClienteIdAsync(codCliente);
 
                 if (mascotas == null || mascotas.Count == 0)
-                {
                     return NotFound($"No se encontraron mascotas para el cliente con ID {codCliente}.");
-                }
 
                 return Ok(mascotas);
             }
             catch (KeyNotFoundException ex)
             {
-                // Si quieres manejar la excepción específica de la mascota por ID, puedes hacerlo aquí
                 return NotFound(new { message = ex.Message });
             }
             catch
@@ -96,7 +101,6 @@ namespace dogTor.Controllers
         }
 
         // GET /api/mascota/tipos
-        // Obtener catálogo de tipos de mascota
         [HttpGet("tipos")]
         public async Task<IActionResult> GetTiposMascota()
         {
@@ -105,9 +109,7 @@ namespace dogTor.Controllers
                 var tipos = await _mascotaService.GetTiposMascotaAsync();
 
                 if (tipos == null || tipos.Count == 0)
-                {
                     return NotFound("No se encontraron tipos de mascota.");
-                }
 
                 return Ok(tipos);
             }
@@ -118,7 +120,6 @@ namespace dogTor.Controllers
         }
 
         // GET /api/mascota/{id}
-        // Obtener una mascota por su ID
         [HttpGet("{id}")]
         public async Task<IActionResult> GetMascotaById(int id)
         {
@@ -127,9 +128,7 @@ namespace dogTor.Controllers
                 var mascota = await _mascotaService.GetMascotaByIdAsync(id);
 
                 if (mascota == null)
-                {
                     return NotFound($"Mascota con ID {id} no encontrada.");
-                }
 
                 return Ok(mascota);
             }

@@ -48,12 +48,12 @@
                         <ul class="list-unstyled mb-0">
 
                             <li><button class="dropdown-item" id="btnCambiarClave"><i class="bi bi-key"></i> Cambiar
-                                    contraseña</button></li>
+                            contraseña</button></li>
                             <li>
                                 <hr class="dropdown-divider">
                             </li>
                             <li><button class="dropdown-item text-danger" id="btnCerrarSesion"><i
-                                        class="bi bi-box-arrow-right"></i> Cerrar sesión</button></li>
+                            class="bi bi-box-arrow-right"></i> Cerrar sesión</button></li>
                         </ul>
                     </div>
                 </div>
@@ -69,7 +69,14 @@
                             <input type="text" id="filtroTexto" class="form-control" placeholder="Ej: Luna, Ana Gómez…">
                             <button id="btnLimpiar" class="btn btn-outline-secondary">Limpiar</button>
                         </div>
+                          <div class="form-check align-self-center ms-2">
+                        <input class="form-check-input" type="checkbox" id="chkSoloMisTurnos" checked>
+                        <label class="form-check-label text-secondary small" for="chkSoloMisTurnos">
+                            Mostrar solo mis turnos
+                        </label>
                     </div>
+                    </div>
+                   
                     <div>
                         <label class="form-label text-secondary small">Fecha</label>
                         <input type="date" id="filtroFecha" class="form-control form-control-sm">
@@ -92,6 +99,7 @@
                     <i class="bi bi-plus-lg"></i> Nuevo turno
                 </button>
                 </div>
+               
             </section>
 
             <section class="card">

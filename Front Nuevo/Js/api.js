@@ -35,15 +35,28 @@ export async function getMascotaByClienteId(clienteId) {
 }
 
 // api.js
-export async function createMascota(mascota) {
-    return fetch(`${API_URL}/mascotas`, {
+export async function createMascota(mascota, imagenArchivo) {
+    // 🟢 FormData en lugar de JSON
+    const formData = new FormData();
+
+    // Agregamos los campos del objeto mascota
+    for (const key in mascota) {
+        if (mascota[key] !== undefined && mascota[key] !== null) {
+            formData.append(key, mascota[key]);
+        }
+    }
+
+    // Agregamos el archivo si existe
+    if (imagenArchivo) {
+        formData.append('imagenArchivo', imagenArchivo);
+    }
+
+    return fetch(`${API_URL}/Mascotas`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(mascota)
+        body: formData // ⚠️ No usar JSON.stringify ni Content-Type
     });
 }
+
 
 export async function updateMascota(id, mascotaData) {
     return fetch(`${API_URL}/Mascotas/${id}`, {
@@ -63,12 +76,19 @@ export async function getTiposMascota() {
     return fetch(`${API_URL}/Mascotas/Tipos`);
 }
 
-
 // ATENCION
 
 export async function getAllAtenciones() {
     return fetch(`${API_URL}/Turnos`);
 }
+
+// ACTUALIZAR ESTADO DEL TURNO
+export async function actualizarEstadoTurno(codDisponibilidad, nuevoEstado) {
+    return fetch(`${API_URL}/Turnos/estado/${codDisponibilidad}?nuevoEstado=${nuevoEstado}`, {
+        method: 'PUT'
+    });
+}
+
 
 // Dashboard
 export async function getTopServiciosReservados() { 

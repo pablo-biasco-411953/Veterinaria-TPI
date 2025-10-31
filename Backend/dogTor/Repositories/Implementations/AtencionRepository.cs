@@ -198,5 +198,46 @@ namespace Veterinaria6.Repository
                 .Include(d => d.CodEstadoNavigation) // Asegura que el nombre del estado se cargue
                 .ToListAsync();
         }
+
+
+
+        public async Task<Disponibilidad> UpdateDisponibilidadEstado(int codDisponibilidad, int nuevoEstado)
+        {
+            var disponibilidad = await _context.Disponibilidads
+                .FirstOrDefaultAsync(d => d.CodDisponibilidad == codDisponibilidad);
+
+            if (disponibilidad == null)
+                throw new KeyNotFoundException("No se encontró la disponibilidad solicitada.");
+
+            // Validar que el nuevo estado sea uno de los permitidos
+            if (nuevoEstado < 1 || nuevoEstado > 4)
+                throw new ArgumentException("Estado no válido.");
+
+            // Reglas opcionales de transición
+            // Ej: Solo se puede pasar de Libre -> Reservado o Cancelado, etc.
+            switch (disponibilidad.CodEstado)
+            {
+                case 1: // Libre
+                    if (nuevoEstado != 2 && nuevoEstado != 4) // Solo Reservado o Cancelado
+                        throw new InvalidOperationException("No se puede cambiar de Libre a ese estado.");
+                    break;
+                case 2: // Reservado
+                    if (nuevoEstado != 3 && nuevoEstado != 4) // Solo Finalizado o Cancelado
+                        throw new InvalidOperationException("No se puede cambiar de Reservado a ese estado.");
+                    break;
+                case 3: // Finalizado
+                case 4: // Cancelado
+                    throw new InvalidOperationException("No se puede cambiar el estado de un turno finalizado o cancelado.");
+            }
+
+            disponibilidad.CodEstado = nuevoEstado;
+            _context.Disponibilidads.Update(disponibilidad);
+            await _context.SaveChangesAsync();
+
+            return disponibilidad;
+        }
     }
+
+    
+
 }

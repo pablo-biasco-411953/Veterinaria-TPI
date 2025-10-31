@@ -465,10 +465,12 @@ async function renderKPIs() {
     }
 
     // 💰 Facturación simulada
-    const total = Turno.reduce((acumulador, atencion) => {
-        return acumulador + (atencion.importe || 0); 
-    }, 0)
-    $('#kpiFacturacion').textContent = '$ ' + new Intl.NumberFormat('es-AR').format(total);
+    const total = Turno
+    .filter(t => (t.estado || '').toString().toLowerCase() === 'finalizado')
+    .reduce((acumulador, t) => acumulador + (t.importe || 0), 0);
+
+$('#kpiFacturacion').textContent = 
+    '$ ' + new Intl.NumberFormat('es-AR').format(total);
 }
 
 // ===== Gráfico de turnos (No modificado) =====
@@ -581,35 +583,62 @@ function renderChart() {
         totalSpan.textContent = `Total mensual: ${tot}`;
     }
 }
+
 function renderProximos(Turno) {
     const lista = document.getElementById("listaProximos");
     lista.innerHTML = ""; // limpiar lista
+
     if (!Turno || Turno.length === 0) {
         lista.innerHTML = '<div class="list-group-item text-muted">No hay turnos próximos</div>';
         return;
     }
 
-    const colorEstado = (estado) => {
-        switch(estado) {
-            case 'Reservado': return 'warning';
-            case 'Confirmado': return 'success';
-            case 'Cancelado': return 'danger';
-            default: return 'secondary';
-        }
-    };
-
-    Turno.forEach(turno => {
-        const item = document.createElement("div");
-        item.className = "list-group-item d-flex justify-content-between align-items-center";
-        item.innerHTML = `
-            <div>
-                <strong>${turno.nombreMascota}</strong> (${turno.nombreCliente})
-                <div class="text-secondary small">${turno.fecha} ${turno.hora}</div>
-            </div>
-            <span class="badge bg-${colorEstado(turno.estado)} text-dark rounded-pill">${turno.estado}</span>
-        `;
-        lista.appendChild(item);
+    // Filtrar solo turnos con estado "Reservado"
+    const turnosReservados = Turno.filter(t => {
+        const estado = t.estado?.toLowerCase();
+        console.log("jij",t)
+        return estado === 'reservado';
     });
+
+    if (turnosReservados.length === 0) {
+        lista.innerHTML = '<div class="list-group-item text-muted">No hay turnos próximos</div>';
+        return;
+    }
+
+   turnosReservados.forEach(t => {
+    const item = document.createElement('div');
+    item.className = 'list-group-item d-flex justify-content-between align-items-center';
+    
+    // Estilos inline para mantenerlo simple
+    item.style.backgroundColor = '#7b5325ff';       // fondo claro
+    item.style.borderLeft = '5px solid #b58c11ff'; // barra izquierda
+    item.style.marginBottom = '8px';
+    item.style.borderRadius = '8px';
+    item.style.padding = '10px 15px';
+    item.style.display = 'flex';
+    item.style.justifyContent = 'space-between';
+    item.style.alignItems = 'center';
+    item.style.color = '#000'; // letra negra
+
+    item.innerHTML = `
+          <div style="font-weight: 500; font-size: 1rem;">
+            <strong>${formatFecha(t.fecha)} ${t.hora}</strong> - ${t.nombreMascota || '-'} - ${t.nombreAtencion || '-'}
+            <div style="font-size: 0.9rem; color: #120087ff;">${ "Dueño: "+t.nombreCliente || '-'}</div>
+        </div>
+        <span style="
+            background-color: #ebeb4eff;
+            color: #000;
+            font-size: 0.75rem;
+            padding: 0.3em 0.6em;
+            border-radius: 12px;
+            font-weight: 600;
+        ">
+            Reservado
+        </span>
+    `;
+
+    lista.appendChild(item);
+});
 }
 // ===== Función de Paginación =====
 function renderPaginacion(container) {
@@ -843,7 +872,6 @@ async function cargarTurnosVeterinario() {
     nombreVeterinario: t.codVeterinario ? `Veterinario ${t.codVeterinario}` : 'Sin asignar'
 }));
 
-        // Llamamos a la función que renderiza la tabla de turnos por veterinario
         renderProximos(Turno);
 
     } catch (err) {
@@ -1093,6 +1121,47 @@ function setearIniciales() {
     }
     badge.textContent = initials.toUpperCase();
 }
+
+$('#formTurno').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const codDisponibilidad = $('#tCodDisponibilidad').value;
+    const codMascota = $('#tMascota').value;
+    const codTipoAtencion = $('#tAtencion').value;
+    
+    // Validaciones básicas
+    if (!codMascota || !codTipoAtencion) {
+        Swal.fire({ title: 'Error', text: 'Seleccione mascota y tipo de atención', icon: 'warning', ...SWAL_THEME });
+        return;
+    }
+
+    try {
+        const body = {
+            codDisponibilidad,
+            codMascota,
+            codTipoAtencion
+        };
+
+        const res = await createAtencion(body);
+        if (!res.ok) throw new Error(`Error ${res.status}`);
+
+        Swal.fire({ title: 'Turno tomado', text: 'Se ha registrado el turno correctamente.', icon: 'success', ...SWAL_THEME });
+
+        // 🔄 Aquí es donde actualizamos todo
+        await cargarTurnosVeterinario();   // Actualiza lista de turnos próximos
+        await cargarDisponibilidad();      // Actualiza disponibilidad
+        renderDisponibilidad();            // Renderiza la tabla
+        renderProximosPaginados();         // Renderiza la lista de turnos próximos con paginación
+
+        // Cerrar modal
+        const modal = bootstrap.Modal.getInstance($('#modalTurno'));
+        modal?.hide();
+
+    } catch (err) {
+        console.error(err);
+        Swal.fire({ title: 'Error', text: 'No se pudo tomar el turno', icon: 'error', ...SWAL_THEME });
+    }
+});
 
 function cargarHorasDisponiblesPorFecha() {
     const inputFecha = document.getElementById('tFecha');

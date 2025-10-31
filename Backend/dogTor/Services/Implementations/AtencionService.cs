@@ -140,5 +140,21 @@ namespace dogTor.Services.Implementations
 
             return disponibilidadModels.Select(d => new DtoDisponibilidad(d)).ToList();
         }
+
+        public async Task<DtoDisponibilidad> ActualizarEstadoDisponibilidadAsync(int codDisponibilidad, int nuevoEstado)
+        {
+            if (codDisponibilidad <= 0)
+                throw new ArgumentException("Código de disponibilidad inválido.");
+
+            if (nuevoEstado < 1 || nuevoEstado > 4)
+                throw new ArgumentException("Estado no permitido.");
+
+            var disponibilidadActualizada = await _repository.UpdateDisponibilidadEstado(codDisponibilidad, nuevoEstado);
+
+            if (disponibilidadActualizada == null)
+                throw new Exception("No se pudo actualizar la disponibilidad.");
+
+            return new DtoDisponibilidad(disponibilidadActualizada);
+        }
     }
 }

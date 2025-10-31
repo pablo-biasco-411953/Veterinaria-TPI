@@ -1,5 +1,5 @@
 import { 
-    getAllAtenciones, getMascotaByClienteId, getTiposAtencion, getAllMascotas, createAtencion, getDisponibilidad
+    getAllAtenciones, getMascotaByClienteId,actualizarEstadoTurno , getTiposAtencion, getAllMascotas, createAtencion, getDisponibilidad
 } from './api.js';
 
 // ===== Variables globales =====
@@ -28,6 +28,105 @@ const $$ = s => document.querySelectorAll(s);
 function formatFecha(fecha) {
     const f = new Date(fecha);
     return f.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+function getEstadoCodigo(nombre) {
+    if (!nombre) return null;
+    nombre = nombre.toLowerCase();
+    switch (nombre) {
+        case 'libre': return 1;
+        case 'reservado': return 2;
+        case 'finalizado':
+        case 'atendido': return 3;
+        case 'cancelado': return 4;
+        default: return null;
+    }
+}
+
+// === Cambiar estado de turno ===
+function setupEditarEstadoButtons() {
+    $$('.btnEditarEstado').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const codDisp = btn.dataset.coddisponibilidad;
+            const estadoActual = btn.dataset.estadoactual?.toLowerCase();
+
+            // Diccionario de estados
+            const estados = {
+                1: 'Libre',
+                2: 'Reservado',
+                3: 'Finalizado',
+                4: 'Cancelado'
+            };
+
+            // Mostrar SweetAlert select
+            const { value: nuevoEstado } = await Swal.fire({
+                title: 'Cambiar estado del turno',
+                input: 'select',
+                inputOptions: estados,
+                inputPlaceholder: estados[getEstadoCodigo(estadoActual)] || 'Seleccioná un estado',
+                background: '#1a202c',
+                color: '#BFD4EA',
+                confirmButtonColor: '#3498db',
+                showCancelButton: true,
+                confirmButtonText: 'Guardar',
+                cancelButtonText: 'Cancelar',
+                didOpen: () => {
+                    const select = Swal.getInput();
+                    select.style.backgroundColor = '#111827';
+                    select.style.color = '#BFD4EA';
+                    select.style.border = '1px solid #3498db';
+                    select.style.borderRadius = '8px';
+                    select.style.padding = '6px';
+                    select.style.transition = 'all 0.3s';
+                    select.addEventListener('focus', () => (select.style.borderColor = '#4fd1c5'));
+                    select.addEventListener('blur', () => (select.style.borderColor = '#3498db'));
+                }
+            });
+
+            if (!nuevoEstado || parseInt(nuevoEstado) === getEstadoCodigo(estadoActual)) return;
+
+            try {
+                const res = await actualizarEstadoTurno(codDisp, nuevoEstado);
+                if (!res.ok) {
+                    const data = await res.json().catch(() => ({}));
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error al actualizar',
+                        text: data.message || 'No se pudo actualizar el estado del turno.',
+                        background: '#1a202c',
+                        color: '#BFD4EA',
+                        confirmButtonColor: '#3498db'
+                    });
+                    return;
+                }
+
+                const badge = btn.closest('td').querySelector('.badge');
+                const nombreNuevo = estados[nuevoEstado];
+                badge.textContent = nombreNuevo;
+                badge.className = `badge bg-${colorEstado(nombreNuevo)} text-dark me-2 animate__animated animate__pulse`;
+
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Estado actualizado!',
+                    text: `El turno fue marcado como "${nombreNuevo}".`,
+                    background: '#1a202c',
+                    color: '#BFD4EA',
+                    timer: 1800,
+                    showConfirmButton: false
+                });
+
+            } catch (err) {
+                console.error(err);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudo conectar con el servidor.',
+                    background: '#1a202c',
+                    color: '#BFD4EA'
+                });
+            }
+        });
+    });
 }
 
 function colorEstado(estadoNombre) {
@@ -73,12 +172,20 @@ function renderTurnosPaginado(lista) {
             <td>${mascota?.nombre || '-'}</td>
             <td>${cliente ? cliente.nombre + ' ' + cliente.apellido : '-'}</td>
             <td>${tipoA?.atencion || '-'}</td>
-            <td><span class="badge bg-${colorEstado(estadoNombre)} text-dark">${estadoNombre}</span></td>
-            <td><button class="btn btn-sm btn-outline-secondary" disabled>Ver Detalle</button></td>
+            <td class="position-relative">
+                <span class="badge bg-${colorEstado(estadoNombre)} text-dark me-2">${estadoNombre}</span>
+                <button class="btn btn-sm btn-outline-secondary btnEditarEstado" 
+                        data-coddisponibilidad="${disp?.codDisponibilidad}" 
+                        data-estadoactual="${estadoNombre}" 
+                        title="Editar estado">
+                    <i class="bi bi-pencil"></i>
+                </button>
+            </td>
         `;
         tbody.appendChild(tr);
     });
 
+    setupEditarEstadoButtons();
     renderPaginacion(lista);
 }
 
@@ -123,9 +230,7 @@ function renderPaginacion(lista) {
     container.appendChild(nextBtn);
 }
 
-// ----------------------------------------------------------------------
 // FUNCIONES DE FILTRADO
-// ----------------------------------------------------------------------
 function filtrarTurnos() {
     const texto = $('#filtroTexto')?.value.toLowerCase().trim() || '';
     const fecha = $('#filtroFecha')?.value || '';
@@ -133,7 +238,8 @@ function filtrarTurnos() {
 
     if (TurnosCargados.length === 0) return;
 
-    const turnosFiltrados = TurnosCargados.filter(t => {
+    // Primero filtro por texto, fecha y estado
+    let turnosFiltrados = TurnosCargados.filter(t => {
         const disp = t.disponibilidadNavigation;
         const mascota = t.mascotaNavigation;
         const cliente = mascota?.cliente;
@@ -151,10 +257,24 @@ function filtrarTurnos() {
         return cumpleTexto && cumpleFecha && cumpleEstado;
     });
 
+    // Luego aplico filtro del veterinario si está activo
+    turnosFiltrados = aplicarFiltroVeterinario(turnosFiltrados);
+
+    // Actualizo variables globales y renderizo
     Turnos = turnosFiltrados;
-    currentPage = 1; 
+    currentPage = 1;
     renderTurnosPaginado(Turnos);
-    document.getElementById('totalTurnos').textContent = `${Turnos.length} turnos encontrados `;
+    document.getElementById('totalTurnos').textContent = `${Turnos.length} turnos encontrados`;
+}
+
+function aplicarFiltroVeterinario(turnos) {
+    const user = JSON.parse(sessionStorage.getItem('dogtorUser') || '{}');
+    const soloMisTurnos = $('#chkSoloMisTurnos')?.checked;
+
+    if (!soloMisTurnos || !user?.id) return turnos;
+
+    // Filtrar por el veterinario logueado
+    return turnos.filter(t => t.codVeterinario === user.id);
 }
 
 function limpiarFiltros() {
@@ -168,6 +288,7 @@ function setupFiltros() {
     $('#filtroTexto')?.addEventListener('input', filtrarTurnos);
     $('#filtroFecha')?.addEventListener('change', filtrarTurnos);
     $('#filtroEstado')?.addEventListener('change', filtrarTurnos);
+    $('#chkSoloMisTurnos')?.addEventListener('change', filtrarTurnos);
     $('#btnLimpiar')?.addEventListener('click', limpiarFiltros);
 }
 
@@ -405,7 +526,10 @@ async function initTurnosPage(userId) {
         if (!res.ok) throw new Error(`Error ${res.status}`);
         TurnosCargados = await res.json();
         Turnos = [...TurnosCargados];
-        renderTurnosPaginado(Turnos);
+
+        // Aplicar filtro "solo mis turnos" si ya está chequeado
+        filtrarTurnos();
+
         document.getElementById('totalTurnos').textContent = `${Turnos.length} turnos encontrados - mostrando 10 por página`;
     } catch (err) {
         console.error(err);

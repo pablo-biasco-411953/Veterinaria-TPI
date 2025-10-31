@@ -36,9 +36,8 @@ function validateField(name, value = '', compareValue = '') {
             if (value.length > 50) return 'El apellido es demasiado largo.';
             break;
         case 'matricula':
-            if (!value.startsWith('MP-')) return 'La matrícula debe comenzar con "MP-".';
-            const numeroMatricula = value.replace('MP-', '');
-            if (numeroMatricula.length < 3 || isNaN(numeroMatricula)) return 'La matrícula debe tener al menos 3 números después de "MP-".';
+            const numeroMatricula = value.replace(/^MP-/, '');
+            if (!/^\d*$/.test(numeroMatricula)) return 'La matrícula solo puede contener números después de MP-.';
             break;
         case 'email':
             if (!value.includes('@') || !value.includes('.')) return 'El email debe tener un formato válido (ejemplo@correo.com).';
@@ -47,6 +46,8 @@ function validateField(name, value = '', compareValue = '') {
         case 'password':
             if (value.length < 8) return 'La contraseña debe tener al menos 8 caracteres.';
             if (!/[A-Z]/.test(value)) return 'La contraseña debe incluir al menos una letra mayúscula.';
+            if (!/[a-z]/.test(value)) return 'La contraseña debe incluir al menos una letra minúscula.';
+            if (!/[0-9]/.test(value)) return 'La contraseña debe incluir al menos un número.';
             if (!/[!@#$%^&*()_\-+=]/.test(value)) return 'La contraseña debe incluir al menos un carácter especial (!@#$%^&*).';
             break;
         case 'passwordConfirm':
@@ -62,52 +63,91 @@ function validateField(name, value = '', compareValue = '') {
 
     const fields = ['nombre', 'apellido', 'matricula', 'email', 'password', 'passwordConfirm'];
 
-    const inputMatricula = form.elements['matricula'];
-    if (inputMatricula) {
-        inputMatricula.value = 'MP-';
-        inputMatricula.addEventListener('input', (e) => {
-            let value = e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, '');
-            if (!value.startsWith('MP-')) value = 'MP-' + value.replace('MP-', '');
-            e.target.value = value.substring(0, 10);
+    // --- Toggle de contraseña ---
+    form.querySelectorAll('.toggle-password').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const input = btn.previousElementSibling;
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.textContent = '🙈';
+            } else {
+                input.type = 'password';
+                btn.textContent = '🙉';
+            }
         });
-    }
+    });
 
+    // --- Tips en vivo para contraseña ---
+    const passwordInput = form.elements['password'];
+    const passwordTips = document.createElement('div');
+    passwordTips.id = 'passwordTips';
+    passwordInput.parentNode.parentNode.appendChild(passwordTips);
+
+    passwordInput.addEventListener('input', () => {
+        const value = passwordInput.value;
+        const tips = [
+            { text: 'Al menos 8 caracteres', valid: value.length >= 8 },
+            { text: 'Al menos una mayúscula', valid: /[A-Z]/.test(value) },
+            { text: 'Al menos un número', valid: /[0-9]/.test(value) },
+            { text: 'Al menos un símbolo (!@#$%^&*)', valid: /[!@#$%^&*()_\-+=]/.test(value) },
+        ];
+
+        passwordTips.innerHTML = tips.map(tip => 
+            `<div style="color:${tip.valid ? '#38c172' : '#ff6b6b'}">${tip.text}</div>`
+        ).join('');
+    });
+
+    // --- Matrícula automática MP- y solo números ---
+    const matriculaInput = form.elements['matricula'];
+    matriculaInput.addEventListener('input', () => {
+        let val = matriculaInput.value.replace(/\D/g, ''); // solo números
+        if (val.length > 0) {
+            matriculaInput.value = 'MP-' + val;
+        } else {
+            matriculaInput.value = '';
+        }
+    });
+
+    // --- Validación de campos excepto contraseñas ---
     fields.forEach(name => {
         const input = form.elements[name];
         if (!input) return;
 
-        let errorSpan = input.nextElementSibling;
-        if (!errorSpan || !errorSpan.classList.contains('invalid-feedback')) {
-            errorSpan = document.createElement('div');
-            errorSpan.classList.add('invalid-feedback');
-            input.parentNode.appendChild(errorSpan);
-        }
+        if (!['password', 'passwordConfirm'].includes(name)) {
+            let errorSpan = input.nextElementSibling;
+            if (!errorSpan || !errorSpan.classList.contains('invalid-feedback')) {
+                errorSpan = document.createElement('div');
+                errorSpan.classList.add('invalid-feedback');
+                input.parentNode.appendChild(errorSpan);
+            }
 
-        input.addEventListener('blur', () => {
-            const compareValue = name === 'passwordConfirm' ? form.elements['password'].value : '';
-            const error = validateField(name, input.value, compareValue);
+            input.addEventListener('blur', () => {
+                const compareValue = name === 'passwordConfirm' ? form.elements['password'].value : '';
+                const error = validateField(name, input.value, compareValue);
 
-            if (error) {
-                input.classList.add('is-invalid');
-                input.classList.remove('is-valid');
-                errorSpan.textContent = error;
-                errorSpan.style.display = 'block';
-            } else {
+                if (error) {
+                    input.classList.add('is-invalid');
+                    input.classList.remove('is-valid');
+                    errorSpan.textContent = error;
+                    errorSpan.style.display = 'block';
+                } else {
+                    input.classList.remove('is-invalid');
+                    input.classList.add('is-valid');
+                    errorSpan.textContent = '';
+                    errorSpan.style.display = 'none';
+                }
+            });
+
+            input.addEventListener('input', () => {
                 input.classList.remove('is-invalid');
-                input.classList.add('is-valid');
+                input.classList.remove('is-valid');
                 errorSpan.textContent = '';
                 errorSpan.style.display = 'none';
-            }
-        });
-
-        input.addEventListener('input', () => {
-            input.classList.remove('is-invalid');
-            input.classList.remove('is-valid');
-            errorSpan.textContent = '';
-            errorSpan.style.display = 'none';
-        });
+            });
+        }
     });
 
+    // --- Submit ---
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const btnSubmit = form.querySelector('button[type="submit"]');
@@ -123,14 +163,14 @@ function validateField(name, value = '', compareValue = '') {
             passwordConfirm: form.elements['passwordConfirm'].value
         };
 
-        // Validaciones
+        // Validaciones finales (solo campos visibles)
         for (const field of fields) {
             const compareValue = field === 'passwordConfirm' ? userData.password : '';
             const error = validateField(field, userData[field], compareValue);
-            const input = form.elements[field];
-            const errorSpan = input.nextElementSibling;
 
-            if (error) {
+            if (error && !['password', 'passwordConfirm'].includes(field)) {
+                const input = form.elements[field];
+                const errorSpan = input.nextElementSibling;
                 input.classList.add('is-invalid');
                 if (errorSpan) {
                     errorSpan.textContent = error;
@@ -140,79 +180,50 @@ function validateField(name, value = '', compareValue = '') {
                 btnSubmit.disabled = false;
                 input.focus();
                 return;
-            } else {
-                input.classList.remove('is-invalid');
-                if (errorSpan) {
-                    errorSpan.textContent = '';
-                    errorSpan.style.display = 'none';
-                }
             }
         }
 
         try {
-            // ===== Registro =====
             const response = await registerUser(userData);
             const data = await response.json();
 
             if (response.ok) {
-                // ===== Login automático =====
-                try {
-                    const loginRes = await loginUser({
-                        username: userData.email, // ✅ coincide con lo que la API espera
-                        password: userData.password
+                const loginRes = await loginUser({ username: userData.email, password: userData.password });
+                const loginData = await loginRes.json();
+
+                if (loginRes.ok && loginData.token) {
+                    sessionStorage.setItem('dogtorUser', JSON.stringify({
+                        id: loginData.user.id,
+                        nombre: loginData.user.nombre,
+                        apellido: loginData.user.apellido,
+                        matricula: loginData.user.matricula,
+                        email: loginData.user.email,
+                        token: loginData.token
+                    }));
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Registro y login exitoso!',
+                        text: 'Redirigiendo al dashboard...',
+                        timer: 2500,
+                        timerProgressBar: true,
+                        showConfirmButton: false
                     });
-                    const loginData = await loginRes.json();
-
-                    if (loginRes.ok && loginData.token) {
-                     sessionStorage.setItem('dogtorUser', JSON.stringify({
-                            id: loginData.user.id,
-                            nombre: loginData.user.nombre,
-                            apellido: loginData.user.apellido,
-                            matricula: loginData.user.matricula,
-                            email: loginData.user.email,
-                            token: loginData.token
-                        }));
-                            Swal.fire({
-                            icon: 'success',
-                            title: '¡Registro y login exitoso!',
-                            text: 'Redirigiendo al dashboard...',
-                            timer: 2500,
-                            timerProgressBar: true,
-                            showConfirmButton: false
-                        });
-                        setTimeout(() => {
-                            window.location.href = './dashboard.html';
-                        }, 2500);
-                    } else {
-                        showAlert('Registro exitoso, pero falló el login automático.', false);
-                        setTimeout(() => {
-                            window.location.href = './index.html';
-                        }, 2500);
-                    }
-
-                } catch (err) {
+                    setTimeout(() => window.location.href = './dashboard.html', 2500);
+                } else {
                     showAlert('Registro exitoso, pero falló el login automático.', false);
-                    setTimeout(() => {
-                        window.location.href = './index.html';
-                    }, 2500);
+                    setTimeout(() => window.location.href = './index.html', 2500);
                 }
-
             } else if (response.status === 409) {
                 showAlert(data?.Message || 'El email ya está registrado.');
             } else {
-                const errorMsg = data?.detail
-                    ? `Error al registrar: ${data.detail}`
-                    : (data?.Message || 'Error al registrar.');
+                const errorMsg = data?.detail ? `Error al registrar: ${data.detail}` : (data?.Message || 'Error al registrar.');
                 showAlert(errorMsg, false);
             }
-
         } catch (err) {
             showAlert('Error de conexión con el servidor.', false);
-
         } finally {
             btnSubmit.textContent = 'Registrar';
             btnSubmit.disabled = false;
         }
     });
-
 })();

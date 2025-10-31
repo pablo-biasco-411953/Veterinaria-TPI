@@ -14,5 +14,6 @@ namespace dogTor.Services.Interfaces
         Task<List<DtoAtencion>> GetAtencionesByClienteIdAsync(int clienteId);
         Task<List<DtoAtencion>> GetAtencionesByVeterinarioIdAsync(int veterinarioId);
         Task<List<DtoDisponibilidad>> GetDisponibilidadPorFechaAsync(DateTime fechaSolicitada);
+        Task<DtoDisponibilidad> ActualizarEstadoDisponibilidadAsync(int codDisponibilidad, int nuevoEstado);
     }
 }

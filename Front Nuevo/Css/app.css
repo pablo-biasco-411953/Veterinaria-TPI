@@ -144,6 +144,23 @@ body::before {
     border-color: var(--bs-info);
     color: var(--bs-dark); /* Color oscuro para el texto */
 }
+#previewMascota {
+    border: 1px solid #0dcaf0;
+    border-radius: 0.25rem;
+    background-color: #f8f9fa;
+}
+.list-group-item {
+    display: flex;
+    align-items: center;
+    gap: 2px; /* espacio entre elementos */
+    flex-wrap: nowrap; /* que no haga salto de línea */
+    white-space: nowrap; /* evitar que el texto se corte */
+    overflow: hidden; /* corta el exceso si no entra */
+    text-overflow: ellipsis; /* agrega "..." si no cabe */
+    font-size: 5px;
+    color: black;
+}
+
 .card {
   background: linear-gradient(180deg, rgba(14, 22, 40, .96), rgba(14, 22, 40, .90));
   border: 1px solid var(--stroke);

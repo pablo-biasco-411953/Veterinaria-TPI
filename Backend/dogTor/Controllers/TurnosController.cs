@@ -199,6 +199,34 @@ namespace dogTor.Controllers
             }
         }
 
-    
+        // PUT /api/turnos/estado/{codDisponibilidad}
+        [HttpPut("estado/{codDisponibilidad}")]
+        public async Task<IActionResult> ActualizarEstadoTurno(int codDisponibilidad, [FromQuery] int nuevoEstado)
+        {
+            try
+            {
+                var disponibilidadActualizada = await _atencionService.ActualizarEstadoDisponibilidadAsync(codDisponibilidad, nuevoEstado);
+
+                return Ok(disponibilidadActualizada);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error interno al actualizar el estado del turno: " + ex.Message });
+            }
+        }
+
+
     }
 }

@@ -19,6 +19,8 @@ public partial class Mascotum
 
     public bool Eliminado { get; set; }
 
+    public string ImagenMascota { get; set; }
+
     public virtual ICollection<Atencion> Atencions { get; set; } = new List<Atencion>();
 
     public virtual Cliente CodClienteNavigation { get; set; }
