@@ -104,6 +104,74 @@ body::after {
     z-index: 1;
 }
 
+#loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  
+  background-color: rgba(26, 32, 44, 0.95); /* Más opaco */
+  
+  display: flex;
+  flex-direction: column; /* Para apilar el logo y el texto */
+  justify-content: center;
+  align-items: center;
+  
+  z-index: 9999;
+  backdrop-filter: blur(5px);
+  transition: opacity 0.3s ease;
+  
+  opacity: 0;
+  visibility: hidden; 
+}
+
+#loading-overlay.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* --- Estilos para el Logo --- */
+#loading-overlay .loader-logo {
+  width: 120px; 
+  height: auto;
+  margin-bottom: 20px; 
+}
+
+/* --- Estilos para el Efecto de Escaneo --- */
+#loading-overlay .loader-container {
+  position: relative; 
+  width: 200px; 
+  height: 5px; 
+  background-color: rgba(52, 152, 219, 0.2); 
+  border-radius: 5px;
+  overflow: hidden; 
+}
+
+#loading-overlay .loader-bar {
+  position: absolute;
+  top: 0;
+  left: -100%; 
+  width: 100%; 
+  height: 100%;
+  background: linear-gradient(90deg, transparent, #3498db, transparent); 
+  animation: scanEffect 2s infinite linear; 
+}
+
+@keyframes scanEffect {
+  0% { left: -100%; }
+  50% { left: 100%; }
+  100% { left: -100%; }
+}
+
+/* --- Estilos para el Texto "Cargando..." --- */
+#loading-overlay .loading-text {
+  color: #BFD4EA; 
+  font-size: 1.1em;
+  font-weight: 500;
+  margin-top: 20px; 
+}
+
 .card {
     width: min(96vw, 480px);
     background: linear-gradient(180deg, rgba(11, 18, 32, .96), rgba(11, 18, 32, .90));

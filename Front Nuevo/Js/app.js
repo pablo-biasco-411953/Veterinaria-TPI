@@ -29,7 +29,7 @@ let totalPaginas = 0;
 const hoy = new Date();
 const yyyy_mm_dd = hoy.toISOString().slice(0, 10);
 let totalPaginasTurnos = 0
-// ===== Helpers DOM =====
+//  DOM 
 const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 const btnPerfil = document.getElementById('btnPerfil');
@@ -68,7 +68,35 @@ function formatFecha(fecha) {
     return f.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
+function showLoader() {
+    let overlay = document.getElementById('loading-overlay');
+    
+    // lo creamos y lo añadimos al body si no existe
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'loading-overlay';
+        
+        overlay.innerHTML = `
+            <img src="../Assets/logo2.png" alt="Dogtor Logo" class="loader-logo">
+            <div class="loader-container">
+                <div class="loader-bar"></div>
+            </div>
+            <div class="loading-text">Cargando...</div>
+        `;
+        document.body.appendChild(overlay);
+    }
+    
+    requestAnimationFrame(() => {
+        overlay.classList.add('visible');
+    });
+}
 
+function hideLoader() {
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) {
+        overlay.classList.remove('visible');
+    }
+}
 
 function renderReservasPorDia() {
   const canvas = document.getElementById('chartReservasDia');
@@ -123,29 +151,22 @@ function renderProximosPaginados() {
     const lista = document.getElementById("listaProximos");
     lista.innerHTML = "";
 
-    // --- FIX 1: Usar la variable global 'Turno' y filtrar por los de HOY ---
-    // Filtramos turnos de HOY que estén 'Reservado' o 'Confirmado'
     const turnosFiltrados = Turno.filter(t => {
         const estadoLower = (t.estado || '').toLowerCase();
-        // 't.fecha' (ej: "2025-11-03") debe coincidir con la variable global 'yyyy_mm_dd'
         return t.fecha === yyyy_mm_dd && (estadoLower === 'reservado' || estadoLower === 'confirmado');
     });
 
     if (!turnosFiltrados || turnosFiltrados.length === 0) {
         lista.innerHTML = '<div class="list-group-item text-muted">No hay turnos próximos hoy</div>';
-        // Limpiamos paginación anterior si no hay items
         document.getElementById('proximosPaginacion')?.remove();
         return;
     }
 
-    // 1️⃣ Calcular total de páginas (basado en los turnos filtrados)
     totalPaginasTurnos = Math.ceil(turnosFiltrados.length / ITEMS_POR_PAGINA_TURNOS);
     const inicio = (paginaActualTurnos - 1) * ITEMS_POR_PAGINA_TURNOS;
     const fin = inicio + ITEMS_POR_PAGINA_TURNOS;
     const turnosPagina = turnosFiltrados.slice(inicio, fin);
 
-    // 2️⃣ Renderizar items
-    // --- FIX 2: 'colorEstado' ahora espera un string, no un objeto ---
     const colorEstado = (estadoString) => {
         const estadoLower = (estadoString || '').toLowerCase();
         switch(estadoLower) {
@@ -160,8 +181,6 @@ function renderProximosPaginados() {
         const item = document.createElement("div");
         item.className = "list-group-item d-flex justify-content-between align-items-center";
         
-        // --- FIX 3: Pasamos el string 'turno.estado' a colorEstado ---
-        // y mostramos 'turno.estado' (que es un string) en el badge.
         item.innerHTML = `
             <div>
                 <strong>${turno.nombreMascota}</strong> (${turno.nombreCliente})
@@ -172,7 +191,6 @@ function renderProximosPaginados() {
         lista.appendChild(item);
     });
 
-    // 3️⃣ Renderizar botones de paginación
     renderPaginacionTurnos();
 }
 function formatFechaHora(fecha, hora) {
@@ -187,7 +205,6 @@ function formatFechaHora(fecha, hora) {
     return `${dia}/${mes}/${anio} ${horas}:${minutos}`;
 }
 function renderPaginacionTurnos() {
-    // Elimina paginación anterior
     document.getElementById('proximosPaginacion')?.remove();
 
     if (totalPaginasTurnos <= 1) return;
@@ -230,7 +247,6 @@ function renderPaginacionTurnos() {
     nav.appendChild(ul);
     document.getElementById("listaProximos").insertAdjacentElement('afterend', nav);
 
-    // Listeners
     nav.querySelectorAll('.page-link').forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
@@ -255,7 +271,6 @@ async function renderTopServiciosChart() {
   const canvas = document.getElementById('chartTopServicios');
   if (!canvas || typeof Chart === 'undefined') return;
 
-  // Si ya había un chart, lo destruimos para evitar duplicados
   if (chartTopServiciosInstance) chartTopServiciosInstance.destroy();
 
   let topServicios = [];
@@ -354,7 +369,6 @@ async function renderTopServiciosChart() {
 }
 
 
-// 💡 FUNCIÓN ESTADO: Mapea el nombre del estado a una clase de Bootstrap (con texto negro)
 function badgeEstado(estadoNombre) {
     const estado = (estadoNombre || '').toLowerCase(); 
     switch (estado) {
@@ -514,11 +528,11 @@ function abrirModalTurno(codDisponibilidad, fecha, hora) {
     const modal = new bootstrap.Modal(modalElement);
     modal.show();
     
-    // Al abrir el modal, poblamos el select de Tipos de Atención
+    // poblamos el select de Tipos de Atención
     poblarSelectTiposAtencion(Tipo_Atencion); 
 }
 
-// ===== Funciones de Renderizado (Dashboard) =====
+//  Funciones de Renderizado 
 
 async function renderKPIs() {
     const raw = sessionStorage.getItem('dogtorUser');
@@ -531,9 +545,7 @@ async function renderKPIs() {
 
     $('#kpiTurnosHoy').textContent = Turno.length.toString();
     
-    // 🕒 Cantidad de turnos libres globales
     try {
-        // Usamos getDisponibilidadFecha que trae SOLO los libres (por convención)
         const res = await getDisponibilidad(); 
         if (res.ok) {
             const turnos = await res.json();
@@ -548,7 +560,6 @@ async function renderKPIs() {
         $('#kpiDisponibles').textContent = '0';
     }
 
-    // 💰 Facturación simulada
     const total = Turno
     .filter(t => (t.estado || '').toString().toLowerCase() === 'finalizado')
     .reduce((acumulador, t) => acumulador + (t.importe || 0), 0);
@@ -557,7 +568,7 @@ $('#kpiFacturacion').textContent =
     '$ ' + new Intl.NumberFormat('es-AR').format(total);
 }
 
-// ===== Gráfico de turnos (No modificado) =====
+// Gráfico de turnos
 function monthKey(dateStr) {
     const d = new Date(dateStr + 'T00:00:00');
     const y = d.getFullYear();
@@ -1098,6 +1109,7 @@ async function guardarTurno(e) {
         // Resetear estado del botón
         btnGuardar.disabled = false;
         btnGuardar.textContent = 'Guardar';
+    
     }
 }
 
@@ -1164,34 +1176,36 @@ async function initDashboard() {
         window.location.href = '../Pages/index.html'; 
         return; 
     }
+    showLoader();
     const user = JSON.parse(raw);
 
     try {
-        // 1️⃣ Cargar turnos generales
         await cargarTurnosProximos();  
         turnosHoy = Turno.filter(t => new Date(t.fecha).toDateString() === new Date().toDateString());
 
-        // 2️⃣ Cargar datos del usuario
         await cargarDatos(user.id);
 
-        // 3️⃣ Inicializar UI
         setearIniciales();
         renderKPIs();
         renderChart();
         setupPerfilMenu();
-        renderDisponibilidad();
+       
         setupFormTurnoSubmit();
         setupBusquedaDinamica();
 
-        // 4️⃣ Cargar turnos del veterinario
         await cargarTurnosVeterinario();
         paginaActualTurnos = 1; 
         renderProximos();          
         renderProximosPaginados();
         renderTopServiciosChart();
-
+        hideLoader();
+        renderDisponibilidad();
     } catch (err) {
         console.error("Error fatal en initDashboard:", err);
+    }
+    finally {
+
+        hideLoader();
     }
 }
 
@@ -1219,47 +1233,6 @@ function setearIniciales() {
     }
     badge.textContent = initials.toUpperCase();
 }
-
-// $('#formTurno').addEventListener('submit', async (e) => {
-//     e.preventDefault();
-
-//     const codDisponibilidad = $('#tCodDisponibilidad').value;
-//     const codMascota = $('#tMascota').value;
-//     const codTipoAtencion = $('#tAtencion').value;
-    
-//     // Validaciones básicas
-//     if (!codMascota || !codTipoAtencion) {
-//         Swal.fire({ title: 'Error', text: 'Seleccione mascota y tipo de atención', icon: 'warning', ...SWAL_THEME });
-//         return;
-//     }
-
-//     try {
-//         const body = {
-//             codDisponibilidad,
-//             codMascota,
-//             codTipoAtencion
-//         };
-
-//         const res = await createAtencion(body);
-//         if (!res.ok) throw new Error(`Error ${res.status}`);
-
-//         Swal.fire({ title: 'Turno tomado', text: 'Se ha registrado el turno correctamente.', icon: 'success', ...SWAL_THEME });
-
-//         // 🔄 Aquí es donde actualizamos todo
-//         await cargarTurnosVeterinario();   // Actualiza lista de turnos próximos
-//         await cargarDisponibilidad();      // Actualiza disponibilidad
-//         renderDisponibilidad();            // Renderiza la tabla
-//         renderProximosPaginados();         // Renderiza la lista de turnos próximos con paginación
-
-//         // Cerrar modal
-//         const modal = bootstrap.Modal.getInstance($('#modalTurno'));
-//         modal?.hide();
-
-//     } catch (err) {
-//         console.error(err);
-//         Swal.fire({ title: 'Error', text: 'No se pudo tomar el turno', icon: 'error', ...SWAL_THEME });
-//     }
-// });
 
 function cargarHorasDisponiblesPorFecha() {
     const inputFecha = document.getElementById('tFecha');

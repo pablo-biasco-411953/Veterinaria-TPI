@@ -481,9 +481,39 @@ function setupBusquedaDinamica() {
     });
     $('#tFecha')?.addEventListener('change', cargarHorasDisponiblesPorFecha);
 }
+function hideLoader() {
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) {
+        overlay.classList.remove('visible');
+    }
+}
+function showLoader() {
+    let overlay = document.getElementById('loading-overlay');
+    
+    // Si no existe, lo creamos y lo añadimos al body
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'loading-overlay';
+        
+        // Incluimos el logo y el efecto de escaneo
+        overlay.innerHTML = `
+            <img src="../Assets/logo2.png" alt="Dogtor Logo" class="loader-logo">
+            <div class="loader-container">
+                <div class="loader-bar"></div>
+            </div>
+            <div class="loading-text">Cargando...</div>
+        `;
+        document.body.appendChild(overlay);
+    }
+    
+    requestAnimationFrame(() => {
+        overlay.classList.add('visible');
+    });
+}
 
 // ===== Inicialización =====
 async function initTurnosPage(codVeterinario) {
+    showLoader();
     try {
         const res = await getAllAtenciones();
         if (!res.ok) throw new Error('Error al cargar turnos');
@@ -495,6 +525,10 @@ async function initTurnosPage(codVeterinario) {
     } catch (err) {
         console.error(err);
         Swal.fire({ title: 'Error', text: 'No se pudo cargar la lista de turnos', icon: 'error', ...SWAL_THEME });
+    }
+    finally {
+
+        hideLoader();
     }
 }
 

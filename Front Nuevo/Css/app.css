@@ -183,13 +183,88 @@ body::before {
     justify-content: center;
     font-weight: 600;
     font-size: 0.9rem;
-    background-color: #0d6efd; /* ejemplo */
+    background-color: #0d6efd;
     color: #fff;
 }
 
+/* --- Estilos para el Overlay de Carga --- */
+
+#loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  
+  background-color: rgba(26, 32, 44, 0.95); /* Más opaco para que el logo resalte */
+  
+  display: flex;
+  flex-direction: column; /* Para apilar el logo y el texto */
+  justify-content: center;
+  align-items: center;
+  
+  z-index: 9999;
+  backdrop-filter: blur(5px);
+  transition: opacity 0.3s ease;
+  
+  opacity: 0;
+  visibility: hidden; /* Usamos visibility para una mejor transición con display */
+}
+
+#loading-overlay.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Oculta el spinner si ya no lo usaremos, o ajusta si quieres mantenerlo
+#loading-overlay .spinner-border {
+  display: none;
+}
+*/
+
+/* --- Estilos para el Logo --- */
+#loading-overlay .loader-logo {
+  width: 120px; /* Tamaño del logo */
+  height: auto;
+  margin-bottom: 20px; /* Espacio entre el logo y el texto/barra */
+}
+
+/* --- Estilos para el Efecto de Escaneo --- */
+#loading-overlay .loader-container {
+  position: relative; /* Para posicionar la barra de escaneo */
+  width: 200px; /* Ancho del "escáner" */
+  height: 5px; /* Altura de la barra de carga */
+  background-color: rgba(52, 152, 219, 0.2); /* Fondo de la barra de carga (azul transparente) */
+  border-radius: 5px;
+  overflow: hidden; /* Para que la barra de escaneo no se salga */
+}
+
+#loading-overlay .loader-bar {
+  position: absolute;
+  top: 0;
+  left: -100%; /* Empieza fuera del contenedor */
+  width: 100%; /* Cubre todo el ancho del contenedor */
+  height: 100%;
+  background: linear-gradient(90deg, transparent, #3498db, transparent); /* Gradiente de azul */
+  animation: scanEffect 2s infinite linear; /* Animación de escaneo */
+}
+
+@keyframes scanEffect {
+  0% { left: -100%; }
+  50% { left: 100%; }
+  100% { left: -100%; }
+}
+
+/* --- Estilos para el Texto "Cargando..." --- */
+#loading-overlay .loading-text {
+  color: #BFD4EA; /* Color de texto del tema */
+  font-size: 1.1em;
+  font-weight: 500;
+  margin-top: 20px; /* Espacio por encima del texto */
+}
 
 #listaProximos {
-    --bs-list-group-bg: #95bbc0; /* Fondo suave */
+    --bs-list-group-bg: #ece9ea;
 }
 
 #listaProximos .list-group-item {
