@@ -124,50 +124,36 @@ namespace Veterinaria6.Repository
 
         public async Task<bool> Insert(Atencion atencion, int codDisponibilidad)
         {
-            // 💡 IMPORTANTE: LA LÓGICA DE CALCULAR EL IMPORTE TOTAL DEBE HACERSE AQUÍ
+            // Validar que la fecha del turno no haya pasado
+            var disponibilidad = await _context.Disponibilidads
+                .FirstOrDefaultAsync(d => d.CodDisponibilidad == codDisponibilidad);
 
-            // 1. Calcular el Importe Total (Suma de los detalles)
-            // Asumimos que el modelo 'atencion' ya trae su colección 'DetalleAtencions'
-            // donde cada detalle tiene Cantidad y PrecioUnitario llenos por el servicio.
+            if (disponibilidad == null)
+                throw new InvalidOperationException("La disponibilidad seleccionada no existe.");
+
+            if (disponibilidad.Fecha.Date < DateTime.Now.Date)
+                throw new InvalidOperationException("No se puede registrar un turno en una fecha pasada.");
+
+            if (disponibilidad.CodEstado != 1) // 1 = Libre
+                throw new InvalidOperationException("La disponibilidad seleccionada ya está reservada.");
+
+            // Calcular el Importe Total (Suma de los detalles)
             decimal totalImporte = atencion.DetalleAtencions.Sum(d => d.PrecioUnitario * d.Cantidad);
-
-            // 2. Asignar el total a la cabecera
             atencion.Importe = totalImporte;
+            atencion.CodDisponibilidad = codDisponibilidad;
 
             using var transaction = await _context.Database.BeginTransactionAsync();
-
             try
             {
-                var disponibilidad = await _context.Disponibilidads
-                    .FirstOrDefaultAsync(d => d.CodDisponibilidad == codDisponibilidad);
-
-                // Verifica que el estado sea 'Libre'
-                if (disponibilidad == null || disponibilidad.CodEstado != 1)
-                {
-                    throw new InvalidOperationException("La disponibilidad seleccionada no existe o ya está reservada.");
-                }
-
-                // Marca el slot como 'Reservado'
+                // Marca el turno como 'Reservado'
                 disponibilidad.CodEstado = 2;
                 _context.Disponibilidads.Update(disponibilidad);
 
-                // Asegura que la FK se vincule
-                atencion.CodDisponibilidad = codDisponibilidad;
-
-                // 3. Agrega la atención (que automáticamente incluye sus detalles si la colección no es null)
                 await _context.Atencions.AddAsync(atencion);
-
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
                 return true;
-            }
-            catch (InvalidOperationException ex)
-            {
-                // Esto captura el error de lógica de negocio (ya reservado)
-                await transaction.RollbackAsync();
-                // Puedes relanzar la excepción para que la capa de servicio la maneje
-                throw;
             }
             catch
             {
@@ -175,8 +161,6 @@ namespace Veterinaria6.Repository
                 return false;
             }
         }
-
-
 
         public async Task<List<Disponibilidad>> GetDisponibilidadFechaHora(DateTime fechaSolicitada)
         {

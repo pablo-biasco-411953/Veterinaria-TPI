@@ -25,38 +25,27 @@ namespace dogTor.Controllers
         public async Task<IActionResult> RegistrarTurno(int codDisponibilidad, [FromBody] DtoAtencion atencionDto)
         {
             if (atencionDto == null)
-            {
                 return BadRequest("Datos inválidos.");
-            }
-
-            // ⚠️ NOTA: Asumimos que el DTO que llega del frontend es PLANO y contiene
-            // todos los FKs (CodMascota, CodTipoA, CodVeterinario).
 
             try
             {
-                // El servicio maneja la creación de la factura detallada (DetalleAtencions)
-                // y la validación del CodDisponibilidad.
                 var nuevoTurno = await _atencionService.RegistrarAtencionAsync(atencionDto, codDisponibilidad);
 
                 if (nuevoTurno == null)
-                {
                     return StatusCode(500, "No se pudo crear el turno.");
-                }
 
                 return StatusCode(201, nuevoTurno);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
             }
             catch (ArgumentException ex)
             {
                 return BadRequest(new { message = ex.Message });
             }
-            catch (InvalidOperationException ex)
-            {
-                // Esto captura la excepción del repositorio si el slot ya estaba reservado
-                return BadRequest(new { message = ex.Message });
-            }
             catch (Exception ex)
             {
-                // Devolver una respuesta consistente con el resto del proyecto
                 return StatusCode(500, new { message = "Error interno al procesar el turno: " + ex.Message });
             }
         }
