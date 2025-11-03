@@ -1,5 +1,6 @@
 import { 
-    getAllAtenciones, getMascotaByClienteId,actualizarEstadoTurno , getTiposAtencion, getAllMascotas, createAtencion, getDisponibilidad
+    getAllAtenciones, getMascotaByClienteId, actualizarEstadoTurno, 
+    getTiposAtencion, getAllMascotas, createAtencion, getDisponibilidad
 } from './api.js';
 
 // ===== Variables globales =====
@@ -9,7 +10,7 @@ let Mascotas = [];
 let TipoAtencion = [];
 let Disponibilidad = [];
 let currentPage = 1;
-const pageSize = 10; // cantidad de turnos por pagina
+const pageSize = 10;
 let totalPages = 1;
 const SWAL_THEME = {
     background: '#1a202c',
@@ -24,33 +25,134 @@ const yyyy_mm_dd = hoy.toISOString().slice(0, 10);
 const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 
-// === Helpers ===
+// ===== Helpers =====
 function formatFecha(fecha) {
     const f = new Date(fecha);
     return f.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
-function getEstadoCodigo(nombre) {
-    if (!nombre) return null;
+function normalizarEstado(nombre) {
+    console.log("pene ", nombre)
+    if (!nombre) return '';
+        console.log("pene entro", nombre)
+
     nombre = nombre.toLowerCase();
+    if (nombre === 'atendido') return 'finalizado'; // normalizamos
+
+    return nombre;
+}
+
+function getEstadoCodigo(nombre) {
     switch (nombre) {
-        case 'libre': return 1;
-        case 'reservado': return 2;
-        case 'finalizado':
-        case 'atendido': return 3;
-        case 'cancelado': return 4;
+        case 'Libre': return 1;
+        case 'Reservado': return 2;
+        case 'Finalizado': return 3;
+        case 'Cancelado': return 4;
         default: return null;
     }
 }
+function colorEstado(estadoNombre) {
+    const estado = normalizarEstado(estadoNombre);
+    switch (estado) {
+        case 'reservado':
+        case 'pendiente': return 'warning';
+        case 'finalizado': return 'success';
+        case 'cancelado': return 'danger';
+        case 'libre': return 'info';
+        default: return 'secondary';
+    }
+}
 
-// === Cambiar estado de turno ===
+// ===== Render de turnos =====
+function renderTurnosPaginado(lista) {
+    const tbody = $('#tablaTurnos');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    if (!lista.length) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center text-secondary">No se encontraron turnos.</td></tr>`;
+        $('#paginacionTurnos').innerHTML = '';
+        return;
+    }
+
+    totalPages = Math.ceil(lista.length / pageSize);
+    const start = (currentPage - 1) * pageSize;
+    const end = start + pageSize;
+    const pageItems = lista.slice(start, end);
+
+    pageItems.forEach(t => {
+        const disp = t.disponibilidadNavigation;
+        const tipoA = t.tipoAtencionNavigation;
+        const mascota = t.mascotaNavigation;
+        const cliente = mascota?.cliente;
+        const estadoNombre = normalizarEstado(disp?.estado?.nombre) || 'Desconocido';
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${formatFecha(disp?.fecha)}</td>
+            <td>${disp?.hora?.substring(0,5) || '-'}</td>
+            <td>${mascota?.nombre || '-'}</td>
+            <td>${cliente ? cliente.nombre + ' ' + cliente.apellido : '-'}</td>
+            <td>${tipoA?.atencion || '-'}</td>
+            <td class="position-relative">
+                <span class="badge bg-${colorEstado(estadoNombre)} text-dark me-2 animate__animated animate__pulse">${estadoNombre}</span>
+                <button class="btn btn-sm btn-outline-secondary btnEditarEstado" 
+                        data-coddisponibilidad="${disp?.codDisponibilidad}" 
+                        data-estadoactual="${estadoNombre}" 
+                        title="Editar estado">
+                    <i class="bi bi-pencil"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    setupEditarEstadoButtons();
+    renderPaginacion(lista);
+}
+
+function renderPaginacion(lista) {
+    const tbody = $('#tablaTurnos');
+    if (!tbody) return;
+
+    const container = $('#paginacionTurnos') || document.createElement('div');
+    container.id = 'paginacionTurnos';
+    container.className = 'd-flex justify-content-center mt-2 gap-1';
+    if (!$('#paginacionTurnos')) tbody.parentNode.appendChild(container);
+
+    container.innerHTML = '';
+    if (totalPages <= 1) return;
+
+    const prevBtn = document.createElement('button');
+    prevBtn.className = 'btn btn-sm btn-outline-info';
+    prevBtn.textContent = '«';
+    prevBtn.disabled = currentPage === 1;
+    prevBtn.addEventListener('click', () => { currentPage--; renderTurnosPaginado(lista); });
+    container.appendChild(prevBtn);
+
+    for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement('button');
+        btn.className = `btn btn-sm ${i === currentPage ? 'btn-info text-white' : 'btn-outline-info'}`;
+        btn.textContent = i;
+        btn.addEventListener('click', () => { currentPage = i; renderTurnosPaginado(lista); });
+        container.appendChild(btn);
+    }
+
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'btn btn-sm btn-outline-info';
+    nextBtn.textContent = '»';
+    nextBtn.disabled = currentPage === totalPages;
+    nextBtn.addEventListener('click', () => { currentPage++; renderTurnosPaginado(lista); });
+    container.appendChild(nextBtn);
+}
+
+// ===== Editar estado de turno =====
 function setupEditarEstadoButtons() {
     $$('.btnEditarEstado').forEach(btn => {
         btn.addEventListener('click', async () => {
             const codDisp = btn.dataset.coddisponibilidad;
-            const estadoActual = btn.dataset.estadoactual?.toLowerCase();
+            const estadoActual = normalizarEstado(btn.dataset.estadoactual);
 
-            // Diccionario de estados
             const estados = {
                 1: 'Libre',
                 2: 'Reservado',
@@ -58,7 +160,6 @@ function setupEditarEstadoButtons() {
                 4: 'Cancelado'
             };
 
-            // Mostrar SweetAlert select
             const { value: nuevoEstado } = await Swal.fire({
                 title: 'Cambiar estado del turno',
                 input: 'select',
@@ -129,151 +230,48 @@ function setupEditarEstadoButtons() {
     });
 }
 
-function colorEstado(estadoNombre) {
-    const estado = (estadoNombre || '').toLowerCase();
-    switch (estado) {
-        case 'reservado':
-        case 'pendiente': return 'warning';
-        case 'finalizado':
-        case 'atendido': return 'success';
-        case 'cancelado': return 'danger';
-        case 'libre': return 'info';
-        default: return 'secondary';
-    }
-}
-
-function renderTurnosPaginado(lista) {
-    const tbody = $('#tablaTurnos');
-    if (!tbody) return;
-    tbody.innerHTML = '';
-
-    if (!lista.length) {
-        tbody.innerHTML = `<tr><td colspan="7" class="text-center text-secondary">No se encontraron turnos.</td></tr>`;
-        $('#paginacionTurnos').innerHTML = '';
-        return;
-    }
-
-    totalPages = Math.ceil(lista.length / pageSize);
-    const start = (currentPage - 1) * pageSize;
-    const end = start + pageSize;
-    const pageItems = lista.slice(start, end);
-
-    pageItems.forEach(t => {
-        const disp = t.disponibilidadNavigation;
-        const tipoA = t.tipoAtencionNavigation;
-        const mascota = t.mascotaNavigation;
-        const cliente = mascota?.cliente;
-        const estadoNombre = disp?.estado?.nombre || 'Desconocido';
-
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${formatFecha(disp?.fecha)}</td>
-            <td>${disp?.hora?.substring(0,5) || '-'}</td>
-            <td>${mascota?.nombre || '-'}</td>
-            <td>${cliente ? cliente.nombre + ' ' + cliente.apellido : '-'}</td>
-            <td>${tipoA?.atencion || '-'}</td>
-            <td class="position-relative">
-                <span class="badge bg-${colorEstado(estadoNombre)} text-dark me-2">${estadoNombre}</span>
-                <button class="btn btn-sm btn-outline-secondary btnEditarEstado" 
-                        data-coddisponibilidad="${disp?.codDisponibilidad}" 
-                        data-estadoactual="${estadoNombre}" 
-                        title="Editar estado">
-                    <i class="bi bi-pencil"></i>
-                </button>
-            </td>
-        `;
-        tbody.appendChild(tr);
-    });
-
-    setupEditarEstadoButtons();
-    renderPaginacion(lista);
-}
-
-function renderPaginacion(lista) {
-    const tbody = $('#tablaTurnos'); // <--- aquí lo agregamos
-    if (!tbody) return;
-
-    const container = $('#paginacionTurnos') || document.createElement('div');
-    container.id = 'paginacionTurnos';
-    container.className = 'd-flex justify-content-center mt-2 gap-1';
-
-    // Solo append si no existe aún
-    if (!$('#paginacionTurnos')) tbody.parentNode.appendChild(container);
-
-    container.innerHTML = '';
-
-    if (totalPages <= 1) return;
-
-    // Boton anterior
-    const prevBtn = document.createElement('button');
-    prevBtn.className = 'btn btn-sm btn-outline-info';
-    prevBtn.textContent = '«';
-    prevBtn.disabled = currentPage === 1;
-    prevBtn.addEventListener('click', () => { currentPage--; renderTurnosPaginado(lista); });
-    container.appendChild(prevBtn);
-
-    // Botones de paginas
-    for (let i = 1; i <= totalPages; i++) {
-        const btn = document.createElement('button');
-        btn.className = `btn btn-sm ${i === currentPage ? 'btn-info text-white' : 'btn-outline-info'}`;
-        btn.textContent = i;
-        btn.addEventListener('click', () => { currentPage = i; renderTurnosPaginado(lista); });
-        container.appendChild(btn);
-    }
-
-    // Boton siguiente
-    const nextBtn = document.createElement('button');
-    nextBtn.className = 'btn btn-sm btn-outline-info';
-    nextBtn.textContent = '»';
-    nextBtn.disabled = currentPage === totalPages;
-    nextBtn.addEventListener('click', () => { currentPage++; renderTurnosPaginado(lista); });
-    container.appendChild(nextBtn);
-}
-
-// FUNCIONES DE FILTRADO
+// ===== Filtros =====
 function filtrarTurnos() {
-    const texto = $('#filtroTexto')?.value.toLowerCase().trim() || '';
+    const texto = ($('#filtroTexto')?.value || '').toLowerCase().trim();
     const fecha = $('#filtroFecha')?.value || '';
-    const estado = $('#filtroEstado')?.value.toLowerCase() || '';
+    const estadoFiltro = ($('#filtroEstado')?.value || '').toLowerCase().trim();
 
-    if (TurnosCargados.length === 0) return;
+    if (!TurnosCargados.length) return;
 
-    // Primero filtro por texto, fecha y estado
     let turnosFiltrados = TurnosCargados.filter(t => {
         const disp = t.disponibilidadNavigation;
         const mascota = t.mascotaNavigation;
         const cliente = mascota?.cliente;
 
+        // Texto
         const nombreMascota = (mascota?.nombre || '').toLowerCase();
         const nombreCliente = (cliente ? `${cliente.nombre} ${cliente.apellido}` : '').toLowerCase();
         const cumpleTexto = !texto || nombreMascota.includes(texto) || nombreCliente.includes(texto);
 
+        // Fecha
         const fechaTurno = (disp?.fecha || '').startsWith(fecha);
         const cumpleFecha = !fecha || fechaTurno;
 
-        const estadoTurno = (disp?.estado?.nombre || '').toLowerCase();
-        const cumpleEstado = !estado || estadoTurno === estado;
+        // Estado
+        const estadoTurno = normalizarEstado(disp?.estado?.nombre || '').trim().toLowerCase();
+        const cumpleEstado = !estadoFiltro || estadoTurno === estadoFiltro;
+
+        console.log("Filtro:", estadoFiltro, "Turno:", estadoTurno, "Cumple:", cumpleEstado);
 
         return cumpleTexto && cumpleFecha && cumpleEstado;
     });
 
-    // Luego aplico filtro del veterinario si esta activo
     turnosFiltrados = aplicarFiltroVeterinario(turnosFiltrados);
-
-    // Actualizo variables globales y renderizo
     Turnos = turnosFiltrados;
     currentPage = 1;
     renderTurnosPaginado(Turnos);
-    document.getElementById('totalTurnos').textContent = `${Turnos.length} turnos encontrados`;
+    $('#totalTurnos').textContent = `${Turnos.length} turnos encontrados`;
 }
-
 function aplicarFiltroVeterinario(turnos) {
     const user = JSON.parse(sessionStorage.getItem('dogtorUser') || '{}');
     const soloMisTurnos = $('#chkSoloMisTurnos')?.checked;
 
     if (!soloMisTurnos || !user?.id) return turnos;
-
-    // Filtrar por el veterinario logueado
     return turnos.filter(t => t.codVeterinario === user.id);
 }
 
@@ -292,7 +290,7 @@ function setupFiltros() {
     $('#btnLimpiar')?.addEventListener('click', limpiarFiltros);
 }
 
-
+// ===== Disponibilidad y catalogos =====
 async function cargarDisponibilidad() {
     try {
         const res = await getDisponibilidad();
@@ -332,6 +330,7 @@ function poblarSelectTiposAtencion(tipos) {
     });
 }
 
+// ===== Horas disponibles =====
 function cargarHorasDisponiblesPorFecha() {
     const inputFecha = $('#tFecha');
     const selectHora = $('#tHora');
@@ -339,11 +338,10 @@ function cargarHorasDisponiblesPorFecha() {
 
     selectHora.innerHTML = '<option value="">Seleccione hora</option>';
     selectHora.disabled = true;
-
     if (!inputFecha.value) return;
 
     const slotsDisponibles = Disponibilidad
-        .filter(d => d.fecha.startsWith(inputFecha.value) && d.estado?.nombre?.toLowerCase() === 'libre')
+        .filter(d => d.fecha.startsWith(inputFecha.value) && normalizarEstado(d.estado?.nombre) === 'libre')
         .sort((a, b) => a.hora.localeCompare(b.hora));
 
     if (slotsDisponibles.length === 0) {
@@ -362,7 +360,7 @@ function cargarHorasDisponiblesPorFecha() {
     }
 }
 
-
+// ===== Guardar turno =====
 async function guardarTurno(e) {
     e.preventDefault();
     const form = e.target;
@@ -377,11 +375,11 @@ async function guardarTurno(e) {
         alertBox.classList.remove('d-none');
         return;
     }
+
     const codMascota = parseInt(selectedOption.value);
     const codDisponibilidad = $('#tHora').value;
     const codTipoAtencion = $('#tAtencion').value;
-
-    if (!codMascota || !codTipoAtencion || !codDisponibilidad || codDisponibilidad === 'Seleccione hora') return;
+    if (!codMascota || !codTipoAtencion || !codDisponibilidad) return;
 
     const user = JSON.parse(sessionStorage.getItem('dogtorUser') || '{}');
     const insertTurnoData = {
@@ -393,60 +391,45 @@ async function guardarTurno(e) {
     btnGuardar.disabled = true;
     btnGuardar.textContent = 'Guardando...';
 
- try {
-    const res = await createAtencion(insertTurnoData, codDisponibilidad);
-    if (res.ok) {
-        Swal.fire({
-            title: '¡Turno Registrado!',
-            html: 'La reserva ha sido guardada.',
-            icon: 'success',
-            timer: 2500,
-            timerProgressBar: true,
-            showConfirmButton: false,
-            ...SWAL_THEME
-        }).then(() => {
-            bootstrap.Modal.getInstance($('#modalTurno'))?.hide();
-            initTurnosPage(user.id); // recarga la tabla
-        });
-    } else {
-        let errorText = 'Error desconocido';
-        try {
-            const json = await res.json(); // parseamos el JSON
-            errorText = json.message || errorText; // usamos solo el message
-        } catch {
-            errorText = await res.text(); // fallback si no es JSON
+    try {
+        const res = await createAtencion(insertTurnoData, codDisponibilidad);
+        if (res.ok) {
+            Swal.fire({
+                title: '¡Turno Registrado!',
+                html: 'La reserva ha sido guardada.',
+                icon: 'success',
+                timer: 2500,
+                timerProgressBar: true,
+                showConfirmButton: false,
+                ...SWAL_THEME
+            }).then(() => {
+                bootstrap.Modal.getInstance($('#modalTurno'))?.hide();
+                initTurnosPage(user.id);
+            });
+        } else {
+            let errorText = 'Error desconocido';
+            try {
+                const json = await res.json();
+                errorText = json.message || errorText;
+            } catch {
+                errorText = await res.text();
+            }
+            Swal.fire({ title: 'Error al Guardar', text: errorText, icon: 'error', showConfirmButton: true, ...SWAL_THEME });
         }
-
-        Swal.fire({
-            title: 'Error al Guardar',
-            text: errorText, // aquí solo sale el mensaje
-            icon: 'error',
-            showConfirmButton: true,
-            ...SWAL_THEME
-        });
+    } catch (err) {
+        console.error(err);
+        Swal.fire({ title: 'Error al Guardar', text: err.message || 'Error desconocido', icon: 'error', showConfirmButton: true, ...SWAL_THEME });
+    } finally {
+        btnGuardar.disabled = false;
+        btnGuardar.textContent = 'Guardar';
     }
-} catch (err) {
-    console.error(err);
-    Swal.fire({
-        title: 'Error al Guardar',
-        text: err.message || 'Error desconocido',
-        icon: 'error',
-        showConfirmButton: true,
-        ...SWAL_THEME
-    });
-} finally {
-    btnGuardar.disabled = false;
-    btnGuardar.textContent = 'Guardar';
-}
 }
 
 function setupFormTurnoSubmit() {
     $('#formTurno')?.addEventListener('submit', guardarTurno);
 }
 
-// ----------------------------------------------------------------------
-// BUSQUEDA DE MASCOTAS POR DNI
-// ----------------------------------------------------------------------
+// ===== Búsqueda de mascotas =====
 async function poblarSelectMascotasPorCliente(codCliente) {
     const selectMascota = $('#tMascota');
     const inputTutor = $('#tTutor');
@@ -470,7 +453,6 @@ async function poblarSelectMascotasPorCliente(codCliente) {
                 statusDiv.textContent = 'No se encontraron mascotas activas.';
                 return;
             }
-
             mascotasCliente.forEach(m => {
                 const opt = document.createElement('option');
                 opt.value = m.codMascota;
@@ -497,121 +479,31 @@ function setupBusquedaDinamica() {
         if (!isNaN(dni) && dni > 0) poblarSelectMascotasPorCliente(dni);
         else $('#tTutorDniStatus').textContent = 'Ingrese un DNI valido.';
     });
-
     $('#tFecha')?.addEventListener('change', cargarHorasDisponiblesPorFecha);
 }
 
-function renderTurnos(lista) {
-    const tbody = $('#tablaTurnos');
-    if (!tbody) return;
-    tbody.innerHTML = '';
-
-    if (!lista.length) {
-        tbody.innerHTML = `<tr><td colspan="7" class="text-center text-secondary">No se encontraron turnos.</td></tr>`;
-        return;
-    }
-
-    lista.forEach(t => {
-        const disp = t.disponibilidadNavigation;
-        const tipoA = t.tipoAtencionNavigation;
-        const mascota = t.mascotaNavigation;
-        const cliente = mascota?.cliente;
-        const estadoNombre = disp?.estado?.nombre || 'Desconocido';
-
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${formatFecha(disp?.fecha)}</td>
-            <td>${disp?.hora?.substring(0,5) || '-'}</td>
-            <td>${mascota?.nombre || '-'}</td>
-            <td>${cliente ? cliente.nombre + ' ' + cliente.apellido : '-'}</td>
-            <td>${tipoA?.atencion || '-'}</td>
-            <td><span class="badge bg-${colorEstado(estadoNombre)} text-dark">${estadoNombre}</span></td>
-            <td><button class="btn btn-sm btn-outline-secondary" disabled>Ver Detalle</button></td>
-        `;
-        tbody.appendChild(tr);
-    });
-}
-
-
-async function initTurnosPage(userId) {
-    await cargarDisponibilidad();
-    await cargarCatalogosModal();
-    setupModalLogic();
-    setupBusquedaDinamica();
-    setupFormTurnoSubmit();
-    setupFiltros();
-
+// ===== Inicialización =====
+async function initTurnosPage(codVeterinario) {
     try {
-        const res = await getAllAtenciones(userId);
-        if (!res.ok) throw new Error(`Error ${res.status}`);
-        TurnosCargados = await res.json();
-        Turnos = [...TurnosCargados];
-
-        // Aplicar filtro "solo mis turnos" si ya esta chequeado
-        filtrarTurnos();
-
-        document.getElementById('totalTurnos').textContent = `${Turnos.length} turnos encontrados - mostrando 10 por pagina`;
+        const res = await getAllAtenciones();
+        if (!res.ok) throw new Error('Error al cargar turnos');
+        const turnos = await res.json();
+        TurnosCargados = turnos;
+        Turnos = turnos.filter(t => !codVeterinario || t.codVeterinario === codVeterinario);
+        currentPage = 1;
+        renderTurnosPaginado(Turnos);
     } catch (err) {
         console.error(err);
-        Swal.fire({ title: 'Error', text: 'No se pudieron cargar los turnos.', icon: 'error', ...SWAL_THEME });
+        Swal.fire({ title: 'Error', text: 'No se pudo cargar la lista de turnos', icon: 'error', ...SWAL_THEME });
     }
 }
 
-function setupModalLogic() {
-    const modal = $('#modalTurno');
-    if (!modal) return;
-    modal.addEventListener('hidden.bs.modal', () => {
-        $('#formTurno')?.reset();
-        $('#tMascota').disabled = true;
-        $('#tTutorDniStatus').textContent = '';
-        $('#tAlert').classList.add('d-none');
-        $('#tAlert').classList.remove('alert-danger');
-    });
-}
-
-function setupPerfilMenu() {
-    const raw = sessionStorage.getItem('dogtorUser');
-    if (!raw) return;
-
-    const user = JSON.parse(raw);
-    const perfilBtn = document.getElementById('btnPerfil');
-    const dropdownMenu = document.getElementById('menuPerfil');
-
-    if (!perfilBtn || !dropdownMenu) return;
-
-    // Iniciales
-    const iniciales = `${(user.nombre?.[0] || 'U')}${(user.apellido?.[0] || 'S')}`.toUpperCase();
-    perfilBtn.textContent = iniciales;
-
-    // Toggle menú al hacer click
-    perfilBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        dropdownMenu.classList.toggle('d-none');
-    });
-
-    // Cerrar menú al hacer click afuera
-    document.addEventListener('click', (e) => {
-        if (!dropdownMenu.contains(e.target) && !perfilBtn.contains(e.target)) {
-            dropdownMenu.classList.add('d-none');
-        }
-    });
-
-    // Boton de cerrar sesion
-    const btnCerrarSesion = document.getElementById('btnCerrarSesion');
-    btnCerrarSesion?.addEventListener('click', (e) => {
-        e.preventDefault();
-        sessionStorage.removeItem('dogtorUser');
-        localStorage.removeItem('token');
-        localStorage.removeItem('userEmail');
-        window.location.href = './index.html'; // o ruta correcta de login
-    });
-}
-
-
-document.addEventListener('DOMContentLoaded', () => {
-    setupPerfilMenu();
-
-    const user = JSON.parse(sessionStorage.getItem('dogtorUser') || '{}');
-    if (user?.id) initTurnosPage(user.id);
+// ===== Ejecutar al cargar =====
+document.addEventListener('DOMContentLoaded', async () => {
+    await cargarDisponibilidad();
+    await cargarCatalogosModal();
+    setupFiltros();
+    setupFormTurnoSubmit();
+    setupBusquedaDinamica();
+    initTurnosPage();
 });
-

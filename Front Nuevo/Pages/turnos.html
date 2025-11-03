@@ -28,12 +28,12 @@
                 <span>DOGTOR</span>
             </div>
             <nav class="nav flex-column">
-                <a class="nav-link" href="./dashboard.html"><i class="bi bi-speedometer2 me-2"></i>Menú</a>
+                <a class="nav-link" href="./inicio.html"><i class="bi bi-speedometer2 me-2"></i>Inicio</a>
                 <a class="nav-link active" href="./turnos.html"><i class="bi bi-calendar-event me-2"></i>Turnos</a>
                 <a class="nav-link" href="./clientes.html"><i class="bi bi-people me-2"></i>Clientes y Mascotas</a>
-                <!-- <a class="nav-link" href="./historial.html"><i class="bi bi-activity me-2"></i>Historial</a> -->
+                <a class="nav-link" href="./dashboard.html"><i class="bi bi-bar-chart me-2"></i>Dashboard</a>
             </nav>
-        </aside>
+            </aside>
 
         <main class="content">
             <header class="topbar d-flex justify-content-between align-items-center">
@@ -85,9 +85,11 @@
                         <label class="form-label text-secondary small">Estado</label>
                         <select id="filtroEstado" class="form-select form-select-sm">
                             <option value="">Todos</option>
-                            <option value="pendiente">Pendiente</option>
-                            <option value="confirmado">Confirmado</option>
-                            <option value="atendido">Atendido</option>
+                            <option value="Reservado">Reservado</option>
+                            <option value="Finalizado">Finalizado</option>
+                            <option value="cancelado">Cancelado</option>
+                            <option value="libre">Libre</option>
+
                         </select>
                     </div>
                     <button 

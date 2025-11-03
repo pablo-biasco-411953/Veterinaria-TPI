@@ -10,6 +10,7 @@ let Tipo_Atencion = [];
 let Disponibilidad = [];
 let Turno = [];
 let turnosHoy = [];
+const currentPage = window.location.pathname.split('/').pop();
 
 const ITEMS_POR_PAGINA_TURNOS = 6; 
 let paginaActualTurnos = 1;
@@ -38,19 +39,85 @@ btnPerfil.addEventListener('click', () => {
     menuPerfil.classList.toggle('d-none');
 });
 
-// Opcional: cerrar al hacer clic fuera
 document.addEventListener('click', (e) => {
     if (!btnPerfil.contains(e.target) && !menuPerfil.contains(e.target)) {
         menuPerfil.classList.add('d-none');
     }
 });
 
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    if (currentPage === 'inicio.html') {
+      await renderKPIs();
+      renderChart();
+      renderProximos(Turno);
+    }
+
+    if (currentPage === 'dashboard.html') {
+      await renderTopServiciosChart();
+      renderReservasPorDia();
+      renderTiposAtencionChart();
+    }
+  } catch (err) {
+    console.error("Error al cargar la página:", err);
+  }
+});
 
 function formatFecha(fecha) {
     const f = new Date(fecha);
     return f.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
+
+
+function renderReservasPorDia() {
+  const canvas = document.getElementById('chartReservasDia');
+  if (!canvas || typeof Chart === 'undefined') return;
+
+  new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+      datasets: [{
+        label: 'Reservas',
+        data: [5, 7, 3, 8, 4, 6, 2],
+        borderColor: '#0dcaf0',
+        fill: false
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        y: { beginAtZero: true, ticks: { precision: 0 } }
+      }
+    }
+  });
+}
+
+function renderTiposAtencionChart() {
+  const canvas = document.getElementById('chartTiposAtencion');
+  if (!canvas || typeof Chart === 'undefined') return;
+
+  new Chart(canvas, {
+    type: 'doughnut',
+    data: {
+      labels: ['Consulta', 'Vacunación', 'Cirugía', 'Control'],
+      datasets: [{
+        data: [30, 20, 10, 40],
+        backgroundColor: ['#198754', '#ffc107', '#dc3545', '#0d6efd']
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'bottom', labels: { color: '#BFD4EA' } }
+      }
+    }
+  });
+}
 
 function renderProximosPaginados() {
     const lista = document.getElementById("listaProximos");
@@ -175,100 +242,115 @@ function renderPaginacionTurnos() {
         });
     });
 }
-function generateColors(count) {
-    // Usamos tus colores de Bootstrap para la coherencia visual
-    const baseColors = ['#0DCAF0', '#198754', '#FFC107', '#DC3545', '#6F42C1', '#20C997']; 
-    // Si tienes más de 6 servicios, cicla los colores
-    return Array.from({ length: count }, (_, i) => baseColors[i % baseColors.length]);
+function generateColors(n) {
+  const colors = [];
+  for (let i = 0; i < n; i++) {
+    const hue = Math.floor((360 / n) * i);
+    colors.push(`hsl(${hue}, 70%, 60%)`);
+  }
+  return colors;
 }
 
 async function renderTopServiciosChart() {
-    const canvas = document.getElementById('chartTopServicios'); 
-    if (!canvas || typeof Chart === 'undefined') return;
+  const canvas = document.getElementById('chartTopServicios');
+  if (!canvas || typeof Chart === 'undefined') return;
 
-    if (chartTopServiciosInstance) {
-        chartTopServiciosInstance.destroy();
+  // Si ya había un chart, lo destruimos para evitar duplicados
+  if (chartTopServiciosInstance) chartTopServiciosInstance.destroy();
+
+  let topServicios = [];
+  try {
+    const response = await getTopServiciosReservados();
+    if (response.ok) {
+      topServicios = await response.json();
+      console.log("Top servicios:", topServicios);
+    } else {
+      console.error(`Error ${response.status} al obtener top servicios`);
+      return;
     }
+  } catch (error) {
+    console.error("Error al obtener el Top Servicios:", error);
+    return;
+  }
 
-    let topServicios = [];
-    try {
-        const response = await getTopServiciosReservados(); 
-        if (response.ok) {
-            topServicios = await response.json();
-            console.log("La data", topServicios)
-        } else {
-            console.error(`Error ${response.status} al cargar el Top Servicios.`);
-            return;
-        }
-    } catch (error) {
-        console.error("Error al obtener el Top Servicios:", error);
-        return;
+  // Si no hay datos
+  if (!topServicios.length) {
+    const p = document.createElement('p');
+    p.classList.add('text-center', 'text-secondary', 'mt-3');
+    p.textContent = 'No hay datos para mostrar';
+    canvas.parentNode.replaceChild(p, canvas);
+    document.getElementById('chartTotal').textContent = 'Total reservas: 0';
+    return;
+  }
+
+  const labels = topServicios.map(s => s.nombreServicio);
+  const data = topServicios.map(s => s.totalReservas);
+  const colors = generateColors(labels.length);
+
+  chartTopServiciosInstance = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Total de Reservas',
+        data,
+        backgroundColor: colors
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+
+      animations: {
+    tension: {
+      duration: 1000,
+      easing: 'easeInOutQuart',
+      from: 0,
+      to: 0.4,
+      loop: false
     }
-
-    if (topServicios.length === 0) {
-        canvas.replaceWith(document.createElement('p')).textContent = 'No hay datos para mostrar';
-        return;
-    }
-
-    const labels = topServicios.map(s => s.nombreServicio);
-    const data = topServicios.map(s => s.totalReservas);
-    const colors = generateColors(labels.length);
-
-    chartTopServiciosInstance = new Chart(canvas, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Total de Reservas',
-                data: data,
-                backgroundColor: colors
-            }]
+},
+  
+      plugins: {
+        legend: { display: false },
+        title: {
+          display: true,
+          text: 'Top servicios más reservados',
+          color: '#BFD4EA'
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                title: {
-                    display: true,
-                    text: 'Top servicios más reservados',
-                    color: '#BFD4EA'
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            let label = context.label || '';
-                            if (label) label += ': ';
-                            const value = context.parsed.y;
-                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                            const percentage = ((value / total) * 100).toFixed(1) + '%';
-                            return `${label}${value} (${percentage})`;
-                        }
-                    }
-                }
-            },
-            animation: {
-                duration: 1500,
-                easing: 'easeInOutBounce',
-                onProgress: function() {
-                    const totalActual = chartTopServiciosInstance.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                    const totalEl = document.getElementById('chartTotal');
-                    if (totalEl) totalEl.textContent = `Total reservas: ${totalActual}`;
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: { precision: 0 }
-                }
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const value = ctx.parsed.y;
+              const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+              const pct = ((value / total) * 100).toFixed(1) + '%';
+              return `${ctx.label}: ${value} (${pct})`;
             }
+          }
         }
-    });
+      },
+      animation: {
+        duration: 1500,
+        easing: 'easeInOutBounce',
+        onProgress: function() {
+          const totalActual = chartTopServiciosInstance.data.datasets[0].data.reduce((a, b) => a + b, 0);
+          const totalEl = document.getElementById('chartTotal');
+          if (totalEl) totalEl.textContent = `Total reservas: ${totalActual}`;
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { precision: 0 }
+        }
+      }
+    }
+  });
 
-    // Inicializamos el total al cargar
-    const totalReservas = data.reduce((a, b) => a + b, 0);
-    const totalEl = document.getElementById('chartTotal');
-    if (totalEl) totalEl.textContent = `Total reservas: ${totalReservas}`;
+  // Inicializar total
+  const total = data.reduce((a, b) => a + b, 0);
+  const totalEl = document.getElementById('chartTotal');
+  if (totalEl) totalEl.textContent = `Total reservas: ${total}`;
 }
 
 
@@ -515,7 +597,6 @@ function renderChart() {
         if (!t.fecha) return;
         const key = monthKey(t.fecha);
         if (buckets[key]) {
-            // 💡 Lógica de mapeo de estados del backend a estados del gráfico
             const e = (t.estado || '').toLowerCase();
             
             if (e === 'reservado' || e === 'libre') buckets[key].pendiente++; 
@@ -547,6 +628,12 @@ function renderChart() {
         options: {
             responsive: true,
             maintainAspectRatio: true,
+                animation: {
+            duration: 1000,           // duración total de la animación
+            easing: 'easeOutQuart',   // suaviza la animación
+            delay: (context) => context.dataIndex * 150 // barras secuenciales
+        },
+
             plugins: {
                 legend: { position: 'top', labels: { color: '#BFD4EA' } },
                 tooltip: {

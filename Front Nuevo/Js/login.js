@@ -15,7 +15,7 @@ const SWAL_THEME = {
 
     if (existingUser && existingToken) {
         console.log('Sesion activa detectada, redirigiendo...');
-        window.location.href = './dashboard.html';
+        window.location.href = './inicio.html';
         return; 
     }
 
@@ -60,7 +60,7 @@ const SWAL_THEME = {
                 localStorage.setItem('userEmail', email);
 
                 // Redirigir al dashboard
-                window.location.href = './dashboard.html';
+                window.location.href = './inicio.html';
             } else if (response.status === 401) {
                 Swal.fire({
                     title: 'Acceso denegado',

@@ -208,7 +208,7 @@ function validateField(name, value = '', compareValue = '') {
                         timerProgressBar: true,
                         showConfirmButton: false
                     });
-                    setTimeout(() => window.location.href = './dashboard.html', 2500);
+                    setTimeout(() => window.location.href = './inicio.html', 2500);
                 } else {
                     showAlert('Registro exitoso, pero fallo el login automatico.', false);
                     setTimeout(() => window.location.href = './index.html', 2500);
