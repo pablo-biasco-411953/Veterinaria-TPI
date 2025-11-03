@@ -9,18 +9,17 @@ const SWAL_THEME = {
 };
 
 (function () {
-    // ✅ 1. VERIFICAR SI YA HAY SESIÓN ACTIVA
+    // VERIFICAR SI YA HAY SESIoN ACTIVA
     const existingUser = sessionStorage.getItem('dogtorUser');
     const existingToken = localStorage.getItem('token');
 
     if (existingUser && existingToken) {
-        // Podés validar si el token sigue vigente si querés hacer una petición al backend
-        console.log('Sesión activa detectada, redirigiendo...');
+        console.log('Sesion activa detectada, redirigiendo...');
         window.location.href = './dashboard.html';
-        return; // Detiene el script aquí
+        return; 
     }
 
-    // ✅ 2. SI NO HAY SESIÓN, CONTINÚA CON EL LOGIN NORMAL
+    // Si no hay sesion me voy al login normall
     const form = document.getElementById('loginForm');
     if (!form) return;
 
@@ -32,8 +31,8 @@ const SWAL_THEME = {
 
         if (!email || !password) {
             Swal.fire({
-                title: 'Datos inválidos!',
-                text: 'Ingresá el email y la contraseña',
+                title: 'Datos invalidos!',
+                text: 'Ingresa el email y la contraseña',
                 icon: 'error',
                 ...SWAL_THEME
             });
@@ -47,7 +46,7 @@ const SWAL_THEME = {
                 const data = await response.json();
                 const user = data.user;
 
-                // ✅ Guardar sesión
+                //  Guardar sesion
                 sessionStorage.setItem('dogtorUser', JSON.stringify({
                     id: user.id,
                     nombre: user.nombre,
@@ -73,7 +72,7 @@ const SWAL_THEME = {
                 const err = await response.json();
                 Swal.fire({
                     title: 'Error',
-                    text: err?.Message || 'Error al iniciar sesión.',
+                    text: err?.Message || 'Error al iniciar sesion.',
                     icon: 'error',
                     ...SWAL_THEME
                 });
@@ -81,7 +80,7 @@ const SWAL_THEME = {
         } catch (error) {
             console.error(error);
             Swal.fire({
-                title: 'Error de conexión',
+                title: 'Error de conexion',
                 text: 'No se pudo conectar con el servidor.',
                 icon: 'error',
                 ...SWAL_THEME

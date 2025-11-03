@@ -9,7 +9,7 @@ let Mascotas = [];
 let TipoAtencion = [];
 let Disponibilidad = [];
 let currentPage = 1;
-const pageSize = 10; // cantidad de turnos por página
+const pageSize = 10; // cantidad de turnos por pagina
 let totalPages = 1;
 const SWAL_THEME = {
     background: '#1a202c',
@@ -63,7 +63,7 @@ function setupEditarEstadoButtons() {
                 title: 'Cambiar estado del turno',
                 input: 'select',
                 inputOptions: estados,
-                inputPlaceholder: estados[getEstadoCodigo(estadoActual)] || 'Seleccioná un estado',
+                inputPlaceholder: estados[getEstadoCodigo(estadoActual)] || 'Selecciona un estado',
                 background: '#1a202c',
                 color: '#BFD4EA',
                 confirmButtonColor: '#3498db',
@@ -204,7 +204,7 @@ function renderPaginacion(lista) {
 
     if (totalPages <= 1) return;
 
-    // Botón anterior
+    // Boton anterior
     const prevBtn = document.createElement('button');
     prevBtn.className = 'btn btn-sm btn-outline-info';
     prevBtn.textContent = '«';
@@ -212,7 +212,7 @@ function renderPaginacion(lista) {
     prevBtn.addEventListener('click', () => { currentPage--; renderTurnosPaginado(lista); });
     container.appendChild(prevBtn);
 
-    // Botones de páginas
+    // Botones de paginas
     for (let i = 1; i <= totalPages; i++) {
         const btn = document.createElement('button');
         btn.className = `btn btn-sm ${i === currentPage ? 'btn-info text-white' : 'btn-outline-info'}`;
@@ -221,7 +221,7 @@ function renderPaginacion(lista) {
         container.appendChild(btn);
     }
 
-    // Botón siguiente
+    // Boton siguiente
     const nextBtn = document.createElement('button');
     nextBtn.className = 'btn btn-sm btn-outline-info';
     nextBtn.textContent = '»';
@@ -257,7 +257,7 @@ function filtrarTurnos() {
         return cumpleTexto && cumpleFecha && cumpleEstado;
     });
 
-    // Luego aplico filtro del veterinario si está activo
+    // Luego aplico filtro del veterinario si esta activo
     turnosFiltrados = aplicarFiltroVeterinario(turnosFiltrados);
 
     // Actualizo variables globales y renderizo
@@ -304,7 +304,7 @@ async function cargarDisponibilidad() {
         Disponibilidad = await res.json();
     } catch (err) {
         console.error("Error cargando disponibilidad:", err);
-        Swal.fire({ title: 'Error de Conexión', text: 'No se pudo obtener la agenda de turnos.', icon: 'error', ...SWAL_THEME });
+        Swal.fire({ title: 'Error de Conexion', text: 'No se pudo obtener la agenda de turnos.', icon: 'error', ...SWAL_THEME });
         Disponibilidad = [];
     }
 }
@@ -323,7 +323,7 @@ async function cargarCatalogosModal() {
 function poblarSelectTiposAtencion(tipos) {
     const select = $('#tAtencion');
     if (!select) return;
-    select.innerHTML = '<option value="">Seleccione tipo de atención</option>';
+    select.innerHTML = '<option value="">Seleccione tipo de atencion</option>';
     tipos.forEach(t => {
         const opt = document.createElement('option');
         opt.value = t.codTipoA;
@@ -372,7 +372,7 @@ async function guardarTurno(e) {
     const selectMascota = $('#tMascota');
     const selectedOption = selectMascota.options[selectMascota.selectedIndex];
     if (selectMascota.disabled || !selectedOption || selectedOption.value === "") {
-        alertBox.textContent = "Debe buscar y seleccionar una mascota válida.";
+        alertBox.textContent = "Debe buscar y seleccionar una mascota valida.";
         alertBox.classList.add('alert-danger');
         alertBox.classList.remove('d-none');
         return;
@@ -393,31 +393,51 @@ async function guardarTurno(e) {
     btnGuardar.disabled = true;
     btnGuardar.textContent = 'Guardando...';
 
-    try {
-        const res = await createAtencion(insertTurnoData, codDisponibilidad);
-        if (res.ok) {
-            Swal.fire({
-                title: '¡Turno Registrado!',
-                html: 'La reserva ha sido guardada.',
-                icon: 'success',
-                timer: 3500,
-                timerProgressBar: true,
-                showConfirmButton: false,
-                ...SWAL_THEME
-            }).then(() => {
-                bootstrap.Modal.getInstance($('#modalTurno'))?.hide();
-                initTurnosPage(user.id); // recarga la tabla
-            });
-        } else {
-            const errorText = await res.text();
-            Swal.fire({ title: 'Error al Guardar', text: errorText, icon: 'error', showConfirmButton: true, ...SWAL_THEME });
+ try {
+    const res = await createAtencion(insertTurnoData, codDisponibilidad);
+    if (res.ok) {
+        Swal.fire({
+            title: '¡Turno Registrado!',
+            html: 'La reserva ha sido guardada.',
+            icon: 'success',
+            timer: 2500,
+            timerProgressBar: true,
+            showConfirmButton: false,
+            ...SWAL_THEME
+        }).then(() => {
+            bootstrap.Modal.getInstance($('#modalTurno'))?.hide();
+            initTurnosPage(user.id); // recarga la tabla
+        });
+    } else {
+        let errorText = 'Error desconocido';
+        try {
+            const json = await res.json(); // parseamos el JSON
+            errorText = json.message || errorText; // usamos solo el message
+        } catch {
+            errorText = await res.text(); // fallback si no es JSON
         }
-    } catch (err) {
-        console.error(err);
-    } finally {
-        btnGuardar.disabled = false;
-        btnGuardar.textContent = 'Guardar';
+
+        Swal.fire({
+            title: 'Error al Guardar',
+            text: errorText, // aquí solo sale el mensaje
+            icon: 'error',
+            showConfirmButton: true,
+            ...SWAL_THEME
+        });
     }
+} catch (err) {
+    console.error(err);
+    Swal.fire({
+        title: 'Error al Guardar',
+        text: err.message || 'Error desconocido',
+        icon: 'error',
+        showConfirmButton: true,
+        ...SWAL_THEME
+    });
+} finally {
+    btnGuardar.disabled = false;
+    btnGuardar.textContent = 'Guardar';
+}
 }
 
 function setupFormTurnoSubmit() {
@@ -438,7 +458,7 @@ async function poblarSelectMascotasPorCliente(codCliente) {
     statusDiv.textContent = 'Buscando mascotas...';
 
     if (!codCliente || isNaN(codCliente)) {
-        statusDiv.textContent = 'Ingrese un DNI válido.';
+        statusDiv.textContent = 'Ingrese un DNI valido.';
         return;
     }
 
@@ -467,7 +487,7 @@ async function poblarSelectMascotasPorCliente(codCliente) {
         }
     } catch (err) {
         console.error(err);
-        statusDiv.textContent = 'Error de conexión.';
+        statusDiv.textContent = 'Error de conexion.';
     }
 }
 
@@ -475,7 +495,7 @@ function setupBusquedaDinamica() {
     $('#btnBuscarCliente')?.addEventListener('click', () => {
         const dni = parseInt($('#tTutorDni').value.trim());
         if (!isNaN(dni) && dni > 0) poblarSelectMascotasPorCliente(dni);
-        else $('#tTutorDniStatus').textContent = 'Ingrese un DNI válido.';
+        else $('#tTutorDniStatus').textContent = 'Ingrese un DNI valido.';
     });
 
     $('#tFecha')?.addEventListener('change', cargarHorasDisponiblesPorFecha);
@@ -527,10 +547,10 @@ async function initTurnosPage(userId) {
         TurnosCargados = await res.json();
         Turnos = [...TurnosCargados];
 
-        // Aplicar filtro "solo mis turnos" si ya está chequeado
+        // Aplicar filtro "solo mis turnos" si ya esta chequeado
         filtrarTurnos();
 
-        document.getElementById('totalTurnos').textContent = `${Turnos.length} turnos encontrados - mostrando 10 por página`;
+        document.getElementById('totalTurnos').textContent = `${Turnos.length} turnos encontrados - mostrando 10 por pagina`;
     } catch (err) {
         console.error(err);
         Swal.fire({ title: 'Error', text: 'No se pudieron cargar los turnos.', icon: 'error', ...SWAL_THEME });
@@ -576,7 +596,7 @@ function setupPerfilMenu() {
         }
     });
 
-    // Botón de cerrar sesión
+    // Boton de cerrar sesion
     const btnCerrarSesion = document.getElementById('btnCerrarSesion');
     btnCerrarSesion?.addEventListener('click', (e) => {
         e.preventDefault();

@@ -1,4 +1,4 @@
-import { forgotPassword } from './api.js'; // tu api.js con la función que agregamos
+import { forgotPassword } from './api.js'; // tu api.js con la funcion que agregamos
 
 document.getElementById('forgotForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -15,7 +15,7 @@ document.getElementById('forgotForm').addEventListener('submit', async (e) => {
     }
 
     try {
-        // Llamamos al endpoint usando la función de api.js
+        // Llamamos al endpoint usando la funcion de api.js
         const res = await forgotPassword(email);
         const data = await res.json();
 
@@ -40,7 +40,7 @@ document.getElementById('forgotForm').addEventListener('submit', async (e) => {
             });
         }
     } catch (err) {
-        message.textContent = 'Error en la conexión con el servidor.';
+        message.textContent = 'Error en la conexion con el servidor.';
         Swal.fire({
             icon: 'error',
             title: 'Error',

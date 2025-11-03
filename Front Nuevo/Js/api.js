@@ -101,13 +101,7 @@ export async function getTurnosDisponibles() {
     return fetch(`${API_URL}/Turnos/disponibilidad/`);
 }
 
-export async function createAtencion(atencionData, codDisponibilidad) {
-    return fetch(`${API_URL}/Turnos/insertar/${codDisponibilidad}`, { 
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(atencionData) 
-    });
-}
+
 
 export async function deleteAtencion(id) {
     return fetch(`${API_URL}/Atencion/${id}`, {
@@ -122,6 +116,15 @@ export async function getTiposAtencion() {
 // TURNOS x VETERINARIO
 export async function getTurnosByVeterinarioId(veterinarioId) {
     return fetch(`${API_URL}/Turnos/AtencionesxVeterinario/${veterinarioId}`);
+}
+
+// TURNOS / ATENCION
+export async function createAtencion(atencionData, codDisponibilidad) {
+    return fetch(`${API_URL}/Turnos/insertar/${codDisponibilidad}`, { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(atencionData)
+    });
 }
 
 
@@ -156,7 +159,7 @@ export async function createCliente(cliente) {
   });
 }
 
-// RECUPERACIÓN DE CONTRASEÑA
+// RECUPERACIoN DE CONTRASEÑA
 export async function forgotPassword(email) {
     return fetch(`${API_URL}/User/forgot-password`, {
         method: 'POST',

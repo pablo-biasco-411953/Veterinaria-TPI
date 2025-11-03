@@ -40,7 +40,7 @@ function validateField(name, value = '', compareValue = '') {
             if (!/^\d*$/.test(numeroMatricula)) return 'La matrícula solo puede contener números después de MP-.';
             break;
         case 'email':
-            if (!value.includes('@') || !value.includes('.')) return 'El email debe tener un formato válido (ejemplo@correo.com).';
+            if (!value.includes('@') || !value.includes('.')) return 'El email debe tener un formato valido (ejemplo@correo.com).';
             if (value.length < 5) return 'El email es demasiado corto.';
             break;
         case 'password':
@@ -48,7 +48,7 @@ function validateField(name, value = '', compareValue = '') {
             if (!/[A-Z]/.test(value)) return 'La contraseña debe incluir al menos una letra mayúscula.';
             if (!/[a-z]/.test(value)) return 'La contraseña debe incluir al menos una letra minúscula.';
             if (!/[0-9]/.test(value)) return 'La contraseña debe incluir al menos un número.';
-            if (!/[!@#$%^&*()_\-+=]/.test(value)) return 'La contraseña debe incluir al menos un carácter especial (!@#$%^&*).';
+            if (!/[!@#$%^&*()_\-+=]/.test(value)) return 'La contraseña debe incluir al menos un caracter especial (!@#$%^&*).';
             break;
         case 'passwordConfirm':
             if (value !== compareValue) return 'Las contraseñas no coinciden.';
@@ -97,7 +97,7 @@ function validateField(name, value = '', compareValue = '') {
         ).join('');
     });
 
-    // --- Matrícula automática MP- y solo números ---
+    // --- Matrícula automatica MP- y solo números ---
     const matriculaInput = form.elements['matricula'];
     matriculaInput.addEventListener('input', () => {
         let val = matriculaInput.value.replace(/\D/g, ''); // solo números
@@ -108,7 +108,7 @@ function validateField(name, value = '', compareValue = '') {
         }
     });
 
-    // --- Validación de campos excepto contraseñas ---
+    // --- Validacion de campos excepto contraseñas ---
     fields.forEach(name => {
         const input = form.elements[name];
         if (!input) return;
@@ -210,17 +210,17 @@ function validateField(name, value = '', compareValue = '') {
                     });
                     setTimeout(() => window.location.href = './dashboard.html', 2500);
                 } else {
-                    showAlert('Registro exitoso, pero falló el login automático.', false);
+                    showAlert('Registro exitoso, pero fallo el login automatico.', false);
                     setTimeout(() => window.location.href = './index.html', 2500);
                 }
             } else if (response.status === 409) {
-                showAlert(data?.Message || 'El email ya está registrado.');
+                showAlert(data?.Message || 'El email ya esta registrado.');
             } else {
                 const errorMsg = data?.detail ? `Error al registrar: ${data.detail}` : (data?.Message || 'Error al registrar.');
                 showAlert(errorMsg, false);
             }
         } catch (err) {
-            showAlert('Error de conexión con el servidor.', false);
+            showAlert('Error de conexion con el servidor.', false);
         } finally {
             btnSubmit.textContent = 'Registrar';
             btnSubmit.disabled = false;

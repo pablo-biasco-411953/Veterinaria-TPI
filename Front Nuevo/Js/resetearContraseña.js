@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // 3. Validación para submit
+    // 3. Validacion para submit
     function validarPassword(password) {
         const minLength = 8;
         if (password.length < minLength) return 'La contraseña debe tener al menos 8 caracteres.';
@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const token = params.get('token');
 
         if (!token) {
-            message.textContent = 'Token no válido.';
+            message.textContent = 'Token no valido.';
             return;
         }
 
@@ -125,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         localStorage.setItem('token', loginData.token);
                         window.location.href = './index.html';
                     } catch (err) {
-                        console.error('Login automático fallido', err);
+                        console.error('Login automatico fallido', err);
                     }
                 });
 
@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
         } catch (err) {
-            message.textContent = 'Error en la conexión con el servidor.';
+            message.textContent = 'Error en la conexion con el servidor.';
             Swal.fire({
                 icon: 'error',
                 title: 'Error',

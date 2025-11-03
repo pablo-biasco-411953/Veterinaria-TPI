@@ -8,7 +8,7 @@
   --accent: #00BFFF;
   --accent-2: #3EC6FF;
 
-  /* Colores para el gráfico/leyenda */
+  /* Colores para el grafico/leyenda */
   --pendiente: #FFC107;
   /* warning */
   --confirmado: #0DCAF0;
@@ -162,8 +162,8 @@ body::before {
     white-space: nowrap; /* evitar que el texto se corte */
     overflow: hidden; /* corta el exceso si no entra */
     text-overflow: ellipsis; /* agrega "..." si no cabe */
-    font-size: 5px;
-    color: black;
+    font-size: 15px;
+    color: rgb(0, 0, 0);
 }
 
 .card {
@@ -187,6 +187,26 @@ body::before {
     color: #fff;
 }
 
+
+#listaProximos {
+    --bs-list-group-bg: #95bbc0; /* Fondo suave */
+}
+
+#listaProximos .list-group-item {
+    background-color: var(--bs-list-group-bg);
+    border-radius: 12px;
+    margin-bottom: 6px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    transition: all 0.25s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    cursor: pointer;
+}
+
+#listaProximos .list-group-item:hover {
+    background-color: #dcd6e2;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
 .card-header {
   border-bottom: 1px solid rgba(255, 255, 255, .06);
   color: #BFD4EA
@@ -399,5 +419,26 @@ body::before {
 }
 
 .dropdown-divider {
-  border-color: #475569;
+  border-color: #374964;
+}
+/* Animación de entrada "flotante" */
+.float-in {
+  opacity: 0;
+  transform: translateY(20px) scale(0.95);
+  animation: floatIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes floatIn {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-5px) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }

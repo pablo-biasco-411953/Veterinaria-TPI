@@ -37,9 +37,9 @@
 
         <main class="content">
             <header class="topbar d-flex justify-content-between align-items-center">
-                <h1 class="page-title">Gestión de Turnos</h1>
+                <h1 class="page-title">Gestion de Turnos</h1>
                 <div class="user d-flex align-items-center gap-2 position-relative">
-                    <span class="text-secondary small d-none d-md-inline" id="userRole">Recepción</span>
+                    <span class="text-secondary small d-none d-md-inline" id="userRole">Recepcion</span>
 
                     <button id="btnPerfil" class="avatar-initials border-0 bg-transparent"
                         aria-label="Usuario">US</button>
@@ -47,13 +47,13 @@
                     <div id="menuPerfil" class="perfil-menu d-none">
                         <ul class="list-unstyled mb-0">
 
-                            <li><button class="dropdown-item" id="btnCambiarClave"><i class="bi bi-key"></i> Cambiar
+                            <!-- <li><button class="dropdown-item" id="btnCambiarClave"><i class="bi bi-key"></i> Cambiar
                             contraseña</button></li>
-                            <li>
+                            <li> -->
                                 <hr class="dropdown-divider">
                             </li>
                             <li><button class="dropdown-item text-danger" id="btnCerrarSesion"><i
-                            class="bi bi-box-arrow-right"></i> Cerrar sesión</button></li>
+                            class="bi bi-box-arrow-right"></i> Cerrar sesion</button></li>
                         </ul>
                     </div>
                 </div>
@@ -66,7 +66,7 @@
                         <label class="form-label text-secondary small">Buscar (mascota o tutor)</label>
                         <div class="input-group input-group-sm">
                             <span class="input-group-text"><i class="bi bi-search"></i></span>
-                            <input type="text" id="filtroTexto" class="form-control" placeholder="Ej: Luna, Ana Gómez…">
+                            <input type="text" id="filtroTexto" class="form-control" placeholder="Ej: Luna, Ana Gomez…">
                             <button id="btnLimpiar" class="btn btn-outline-secondary">Limpiar</button>
                         </div>
                           <div class="form-check align-self-center ms-2">
@@ -115,7 +115,7 @@
                                 <th>Hora</th>
                                 <th>Mascota</th>
                                 <th>Cliente</th>
-                                <th>Tipo de Atención</th>
+                                <th>Tipo de Atencion</th>
                                 <th>Estado</th>
                             </tr>
                         </thead>
@@ -176,11 +176,11 @@
                     <div class="col-md-6">
                         <label class="form-label text-info">Hora</label>
                         <select id="tHora" class="form-select bg-secondary-subtle text-white border-info"></select>
-                        <div class="form-text text-secondary">Sólo horarios libres.</div>
+                        <div class="form-text text-secondary">Solo horarios libres.</div>
                         <input type="hidden" id="tCodDisponibilidad">
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label text-info">Tipo de atención</label>
+                        <label class="form-label text-info">Tipo de atencion</label>
                         <select id="tAtencion" class="form-select bg-secondary-subtle text-white border-info"></select>
                     </div>
                     

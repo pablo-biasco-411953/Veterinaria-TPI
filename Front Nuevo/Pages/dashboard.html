@@ -39,9 +39,9 @@
       <header class="topbar d-flex justify-content-between align-items-center">
         <h1 class="page-title">Dashboard</h1>
         <div class="user d-flex align-items-center gap-2 position-relative">
-          <span class="text-secondary small d-none d-md-inline" id="userRole">Recepción</span>
+          <span class="text-secondary small d-none d-md-inline" id="userRole">Recepcion</span>
 
-          <!-- Botón de perfil -->
+          <!-- Boton de perfil -->
           <button id="btnPerfil" class="avatar-initials border-0 bg-transparent" aria-label="Usuario">US</button>
 
           <!-- Menú desplegable -->
@@ -49,13 +49,13 @@
           <!-- Menú desplegable -->
           <div id="menuPerfil" class="perfil-menu d-none">
             <ul class="list-unstyled mb-0">
-              <li><button class="dropdown-item" id="btnCambiarClave"><i class="bi bi-key"></i> Cambiar
+              <!-- <li><button class="dropdown-item" id="btnCambiarClave"><i class="bi bi-key"></i> Cambiar
                   contraseña</button></li>
-              <li>
+              <li> -->
                 <hr class="dropdown-divider">
               </li>
               <li><button class="dropdown-item text-danger" id="btnCerrarSesion"><i class="bi bi-box-arrow-right"></i>
-                  Cerrar sesión</button></li>
+                  Cerrar sesion</button></li>
             </ul>
           </div>
         </div>
@@ -106,69 +106,56 @@
               <div class="kpi-icon"><i class="bi bi-cash-coin"></i></div>
               <div>
                 <div class="kpi-value" id="kpiFacturacion">—</div>
-                <div class="kpi-label">Facturación mes</div>
+                <div class="kpi-label">Facturación Total</div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- Gráfico + Próximos turnos -->
-      <section class="row g-3">
-        <div class="col-lg-7">
-          <div class="card h-100">
-            <div class="card-header d-flex justify-content-between align-items-center">
-              <span>Turnos por mes</span>
-              <span class="text-secondary small" id="chartCaption">Últimos 6 meses
-                (pendiente/confirmado/atendido)</span>
-            </div>
-            <div class="card-body">
-
-              <div class="chart-box">
-                <canvas id="chartTopServicios" aria-label="Gráfico de turnos por mes" role="img"></canvas>
-              </div>
-              <!--ESTADO TURNOS -->
-              <div class="chart-legend mt-2">
-                <span class="legend-total ms-auto" id="chartTotal">Total mensual: —</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-       <div class="col-lg-5">
-  <div class="card h-100">
-    <div class="card-header d-flex justify-content-between align-items-center">
-      <span>Mis siguientes turnos:</span>
-      <a href="./turnos.html" class="btn btn-sm btn-outline-info">Ver todos</a>
-    </div>
-
-    <div class="list-group list-group-flush" id="listaProximos">
-    </div>
-
-    <nav class="mt-2 d-flex justify-content-center">
-      <ul class="pagination pagination-sm mb-0" id="paginacionTurnos">
-      </ul>
-    </nav>
-  </div>
-</div>
-      </section>
-
-      <!-- Disponibilidad de hoy -->
-<section class="card mt-3">
-    <div class="table-responsive">
+ <!-- Disponibilidad + Mis siguientes turnos -->
+<section class="row g-3">
+  <!-- Disponibilidad de hoy (IZQUIERDA) -->
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Disponibilidad de hoy</span>
+      </div>
+      <div class="table-responsive">
         <table class="table align-middle mb-0">
-            <thead>
-                <tr>
-                    <th class="w-auto">Fecha</th> 
-                    <th class="w-auto">Hora</th>
-                    <th class="w-auto">Estado</th>
-                    <th class="w-auto text-center">Acción</th> </tr>
-            </thead>
-            <tbody id="tablaDisponibilidad">
-                </tbody>
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Hora</th>
+              <th>Estado</th>
+              <th class="text-center">Acción</th>
+            </tr>
+          </thead>
+          <tbody id="tablaDisponibilidad"></tbody>
         </table>
+      </div>
+     <nav class="mt-2 d-flex justify-content-center">
+      <ul class="pagination pagination-sm mb-0" id="paginacionDisponibilidad"></ul>
+    </nav>
     </div>
-    </section>
+  </div>
+
+  <!-- Mis siguientes turnos (DERECHA) -->
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Mis siguientes turnos:</span>
+        <a href="./turnos.html" class="btn btn-sm btn-outline-info">Ver todos</a>
+      </div>
+
+      <div class="list-group list-group-flush" id="listaProximos"></div>
+
+      <nav class="mt-2 d-flex justify-content-center">
+      <ul class="pagination pagination-sm mb-0" id="paginacionTurnos"></ul>
+    </nav>
+    </div>
+  </div>
+</section>
 
       <footer class="py-4 text-center text-secondary small">
         © 2025 Dogtor — Clínica Veterinaria Inteligente
@@ -218,11 +205,11 @@
                     <div class="col-md-6">
                         <label class="form-label text-info">Hora</label>
                         <select id="tHora" class="form-select bg-secondary-subtle text-white border-info"></select>
-                        <div class="form-text text-secondary">Sólo horarios libres.</div>
+                        <div class="form-text text-secondary">Solo horarios libres.</div>
                         <input type="hidden" id="tCodDisponibilidad">
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label text-info">Tipo de atención</label>
+                        <label class="form-label text-info">Tipo de atencion</label>
                         <select id="tAtencion" class="form-select bg-secondary-subtle text-white border-info"></select>
                     </div>
                    

@@ -4,7 +4,7 @@ import { getAllMascotas, getTiposMascota, createMascota, getClientesByDNI, creat
 // ===== Variables globales =====
 let Mascotas = [];          // Lista filtrada
 let MascotasCargadas = [];  // Data original
-let TipoMascota = [];       // Catálogo de tipos
+let TipoMascota = [];       // Catalogo de tipos
 let paginaActual = 1;
 const MASCOTAS_POR_PAGINA = 6;
 
@@ -282,16 +282,16 @@ function abrirModalBuscarDueño() {
 
         try {
             const res = await getClientesByDNI(dni);
-            if (!res.ok) throw new Error('No se encontró un dueño con ese DNI');
+            if (!res.ok) throw new Error('No se encontro un dueño con ese DNI');
             const dataCliente = await res.json();
-            if (!dataCliente.length) throw new Error('No se encontró un dueño con ese DNI');
+            if (!dataCliente.length) throw new Error('No se encontro un dueño con ese DNI');
 
             const cliente = dataCliente[0];
             modal.hide();
             abrirModalRegistro('mascota', cliente.dni, `${cliente.nombre} ${cliente.apellido}`);
         } catch (err) {
             console.error(err);
-            Swal.fire('Error', err.message || 'Ocurrió un error al buscar el dueño', 'error');
+            Swal.fire('Error', err.message || 'Ocurrio un error al buscar el dueño', 'error');
         }
     };
 }
@@ -452,9 +452,9 @@ $('#formRegistro').onsubmit = async e => {
 
         try {
             const resCliente = await getClientesByDNI(dniTutor);
-            if (!resCliente.ok) throw new Error('No se encontró un dueño con ese DNI');
+            if (!resCliente.ok) throw new Error('No se encontro un dueño con ese DNI');
             const dataCliente = await resCliente.json();
-            if (!dataCliente.length) throw new Error('No se encontró un dueño con ese DNI');
+            if (!dataCliente.length) throw new Error('No se encontro un dueño con ese DNI');
 
             const codCliente = dataCliente[0].codCliente;
 
@@ -480,7 +480,7 @@ $('#formRegistro').onsubmit = async e => {
             cargarMascotas();
         } catch (err) {
             console.error(err);
-            Swal.fire('Error', err.message || 'Ocurrió un error al registrar la mascota', 'error');
+            Swal.fire('Error', err.message || 'Ocurrio un error al registrar la mascota', 'error');
         }
     }
 };
@@ -507,7 +507,7 @@ function setearIniciales() {
     badge.textContent = initials.toUpperCase();
 }
 
-// Inicialización 
+// Inicializacion 
 async function initClientes() {
     setearIniciales();
     const raw = sessionStorage
