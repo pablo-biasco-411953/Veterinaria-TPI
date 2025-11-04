@@ -45,11 +45,12 @@
                     <input type="email" name="email" placeholder="Ej: dogtor@gmail.com" required inputmode="email"
                         autocomplete="email" />
                 </label>
-
                 <label class="field">
-                    <span>Contraseña</span>
-                    <input type="password" name="password" placeholder="••••••••" required
-                        autocomplete="current-password" />
+                <span>Contraseña</span>
+                <div class="password-wrapper">
+                    <input type="password" name="password" placeholder="••••••••" required autocomplete="current-password" />
+                    <button type="button" class="toggle-password" aria-label="Mostrar u ocultar contraseña">🙉</button>
+                </div>
                 </label>
 
                 <div class="actions">

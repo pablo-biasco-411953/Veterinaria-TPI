@@ -164,6 +164,56 @@ body::after {
   100% { left: -100%; }
 }
 
+.password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-wrapper input {
+  width: 100%;
+  padding: 14px 44px 14px 14px; /* espacio para el ojito */
+  background: var(--bg-800);
+  border: 1px solid var(--stroke);
+  color: var(--text);
+  border-radius: 14px;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s, background-color .2s;
+}
+
+.password-wrapper input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0, 191, 255, .16);
+  background: #0F1A2E;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  color: var(--text);
+  line-height: 1;
+  padding: 0;
+}
+
+
+.toggle-password {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  color: var(--text);
+  line-height: 1;
+  padding: 0;
+}
+
 /* --- Estilos para el Texto "Cargando..." --- */
 #loading-overlay .loading-text {
   color: #BFD4EA; 
