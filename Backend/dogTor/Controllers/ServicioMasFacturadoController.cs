@@ -1,5 +1,4 @@
 ﻿using dogTor.Repositories.Interfaces;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace dogTor.Controllers
@@ -15,20 +14,22 @@ namespace dogTor.Controllers
             _repo = repo;
         }
 
-        [HttpGet("GetAllServicios")]
-
-        public async Task<IActionResult> GetAllServicios(DateTime? fechMin, DateTime? fecMax)
+        // GET: api/ServicioMasFacturado?fecMin=2025-10-01&fecMax=2025-10-31
+        [HttpGet]
+        public async Task<IActionResult> GetAllServicios([FromQuery] DateTime? fecMin, [FromQuery] DateTime? fecMax)
         {
             try
             {
-                var servicio = await _repo.GetAllAtencion(fechMin, fecMax);
+                var servicios = await _repo.GetAllAtencion(fecMin, fecMax);
 
-                return Ok(servicio);
+                if (servicios == null || !servicios.Any())
+                    return NotFound(new { message = "No se encontraron servicios en el rango indicado." });
+
+                return Ok(servicios);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
-                throw;
+                return StatusCode(500, new { message = "Error al obtener los servicios más facturados", error = ex.Message });
             }
         }
     }

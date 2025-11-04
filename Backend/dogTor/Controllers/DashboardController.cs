@@ -1,8 +1,8 @@
-﻿using dogTor.Repositories.Implementations;
-using dogTor.Repositories.Interfaces;
-using dogTor.Services.Interfaces;
-using Microsoft.AspNetCore.Http;
+﻿using dogTor.Repositories.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Globalization;
+using System.Threading.Tasks;
 
 namespace dogTor.Controllers
 {
@@ -10,29 +10,36 @@ namespace dogTor.Controllers
     [ApiController]
     public class DashboardController : ControllerBase
     {
-        public readonly IServicioReservadoRepository _servicioReservadoRepository;
+        private readonly IServicioReservadoRepository _servicioReservadoRepository;
+
         public DashboardController(IServicioReservadoRepository servicioReservadoRepository)
         {
             _servicioReservadoRepository = servicioReservadoRepository;
         }
 
         [HttpGet("GetTopServiciosReservados")]
-        public async Task<IActionResult> GetTiposMascota()
+        public async Task<IActionResult> GetTopServiciosReservados([FromQuery] string? mes = null)
         {
             try
             {
-                var tipos = await _servicioReservadoRepository.GetTopServicioReservadoList();
+                DateTime? fechaFiltro = null;
+
+                if (!string.IsNullOrEmpty(mes) &&
+                    DateTime.TryParseExact(mes, "yyyy-MM", CultureInfo.InvariantCulture, DateTimeStyles.None, out var fechaParsed))
+                {
+                    fechaFiltro = fechaParsed;
+                }
+
+                var tipos = await _servicioReservadoRepository.GetTopServicioReservadoList(fechaFiltro);
 
                 if (tipos == null || tipos.Count == 0)
-                {
-                    return NotFound("No se encontraron tipos de mascota.");
-                }
+                    return NotFound("No se encontraron servicios reservados para el mes seleccionado.");
 
                 return Ok(tipos);
             }
-            catch
+            catch (Exception ex)
             {
-                return StatusCode(500, "Error interno al recuperar esto.");
+                return StatusCode(500, $"Error interno al recuperar los servicios reservados: {ex.Message}");
             }
         }
     }

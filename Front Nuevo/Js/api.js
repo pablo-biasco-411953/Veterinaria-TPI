@@ -88,11 +88,19 @@ export async function actualizarEstadoTurno(codDisponibilidad, nuevoEstado) {
 
 
 // Dashboard
-export async function getTopServiciosReservados() { 
-    const token = localStorage.getItem('token');
-    return fetch(`${API_URL}/Dashboard/GetTopServiciosReservados`);
-}
+export async function getTopServiciosReservados(mes = null) {
+    let url = `${API_URL}/Dashboard/GetTopServiciosReservados`;
+    
+    if (mes) {
+        // mes debe venir en formato 'YYYY-MM', por ejemplo '2025-04'
+        url += `?mes=${mes}`;
+    }
 
+    return fetch(url, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' }
+    });
+}
 export async function getAtencionByClienteId(id) {
     return fetch(`${API_URL}/Turnos/AtencionesxCliente/${id}`);
 }
@@ -177,20 +185,18 @@ export async function resetPassword(token, nuevaContraseña) {
 }
 
 
-// ENDPOINT PARA TRAER FACTURACIONES POR SEMANA
-export async function GetFacturacionesSemanal(fechaInicio, fechaFin) {
-    const url = `${API_URL}/ServicioMasFacturado/GetAllServicios?fechMin=${fechaInicio}&fecMax=${fechaFin}`;
+// FACTURACIÓN SEMANAL
+export async function getFacturacionSemanal(fecMin, fecMax) {
+const url = `${API_URL}/ServicioMasFacturado?fecMin=${fecMin}&fecMax=${fecMax}`;
+  
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: { 'Accept': 'application/json' }
+  });
 
-    const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-            'Accept': 'application/json'
-        }
-    });
+  if (!response.ok) {
+    throw new Error('Error al obtener la facturación semanal');
+  }
 
-    if (!response.ok) {
-        throw new Error('Error al obtener las facturaciones semanales');
-    }
-
-    return await response.json();
+  return response.json();
 }

@@ -143,52 +143,93 @@
     <option value="3">Últimos 3 meses</option>
   </select>
 </div> -->
-      <section class="row g-4">
+       <section class="row g-4">
+                
+                <!-- 1. GRÁFICO PRINCIPAL: FACTURACIÓN SEMANAL (100% de Ancho) -->
+                <div class="col-12">
+                    <div class="card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <h5 class="mb-0">Evolución de Facturación (Semanal / Diaria)</h5>
+                            <div class="d-flex align-items-center gap-2">
+                                <label for="filtroFechaDesde" class="text-secondary small mb-0 d-none d-sm-inline">Desde:</label>
+                                <input type="date" id="filtroFechaDesde" class="form-control form-control-sm" />
+                                <label for="filtroFechaHasta" class="text-secondary small mb-0 d-none d-sm-inline">Hasta:</label>
+                                <input type="date" id="filtroFechaHasta" class="form-control form-control-sm" />
+                                <button id="btnFiltrarFacturacion" class="btn btn-sm btn-info" aria-label="Actualizar gráfico de facturación">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                </button>
+                            </div>
+                            <span id="chartFacturacionTotal" class="text-secondary small">Total: —</span>
+                        </div>
+                        <div class="chart-box position-relative">
+                            <canvas id="chartFacturacionSemanal"></canvas>
+                            <div id="loadingFacturacion" class="position-absolute top-50 start-50 translate-middle text-secondary small d-none">
+                                <div class="spinner-border spinner-border-sm text-info me-2"></div>
+                                Cargando datos...
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-        <!-- Chart 1: Turnos por mes (Top Servicios) -->
-        <div class="col-lg-7">
-          <div class="card h-100">
-            <div class="card-header d-flex justify-content-between align-items-center">
-              <span>Turnos por mes</span>
-              <span class="text-secondary small" id="chartCaption">Últimos 6 meses (pendiente/confirmado/atendido)</span>
-            </div>
-            <div class="card-body">
-              <div class="chart-box">
-                <canvas id="chartTopServicios" aria-label="Gráfico de turnos por mes" role="img"></canvas>
-              </div>
-              <div class="chart-legend mt-2">
-                <span class="legend-total ms-auto" id="chartTotal">Total mensual: —</span>
-              </div>
-            </div>
-          </div>
-        </div>
 
-        <!-- Chart 2: Reservas por día (hardcodeado) -->
-        <div class="col-md-6">
-          <div class="card">
-            <h5>Reservas por Día (Ejemplo)</h5>
-            <div class="chart-box">
-              <canvas id="chartReservasDia"></canvas>
-            </div>
-          </div>
-        </div>
+                <!-- 2. GRÁFICO SECUNDARIO: TURNOS POR MES (50% de Ancho) -->
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
+                            <span>Servicios más reservados por mes</span>
+                            <div class="d-flex align-items-center gap-2">
+                                <label for="filtroMes" class="text-secondary small mb-0">Mes:</label>
+                                <select id="filtroMes" class="form-select form-select-sm w-auto"></select>
+                                <button id="btnFiltrarMes" class="btn btn-sm btn-info" aria-label="Filtrar turnos por mes">
+                                    <i class="bi bi-filter"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <span class="text-secondary small mb-3 d-block" id="chartCaption"></span>
+                            <div class="chart-box">
+                                <canvas id="chartTopServicios" aria-label="Gráfico de turnos por mes" role="img"></canvas>
+                            </div>
+                            <div class="chart-legend mt-2 d-flex justify-content-end">
+                                <span class="legend-total" id="chartTotal">Total mensual: —</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-        <!-- Chart 3: Tipos de Atención (hardcodeado) -->
-        <div class="col-md-6">
-          <div class="card">
-            <h5>Tipos de Atención (Ejemplo)</h5>
-            <div class="chart-box">
-              <canvas id="chartTiposAtencion"></canvas>
-            </div>
-          </div>
-        </div>
-      </section>
+                <!-- 3. GRÁFICO SECUNDARIO: TIPOS DE ATENCIÓN (50% de Ancho) -->
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5>Distribución de Servicios</h5>
+                        </div>
+                        <div class="card-body">
+                            <span class="text-secondary small mb-3 d-block">Proporción de tipos de atención (ejemplo)</span>
+                            <div class="chart-box">
+                                <canvas id="chartTiposAtencion"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 4. GRÁFICO DE EJEMPLO DE RESERVAS POR DÍA (opcional, en una nueva fila si lo necesitas) -->
+                <div class="col-12 d-none">
+                    <div class="card h-100">
+                        <h5>Reservas por Día de la Semana</h5>
+                        <div class="chart-box">
+                            <canvas id="chartReservasDia"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
-      <footer class="py-4 text-center text-secondary small">
-        © 2025 Dogtor — Clínica Veterinaria Inteligente
-      </footer>
-    </main>
-  </div>
+            <footer class="py-4 text-center text-secondary small">
+                © 2025 Dogtor — Clínica Veterinaria Inteligente
+            </footer>
+        </main>
+    </div>
+
+
 
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

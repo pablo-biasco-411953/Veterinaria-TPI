@@ -131,8 +131,8 @@ namespace Veterinaria6.Repository
             if (disponibilidad == null)
                 throw new InvalidOperationException("La disponibilidad seleccionada no existe.");
 
-            if (disponibilidad.Fecha.Date < DateTime.Now.Date)
-                throw new InvalidOperationException("No se puede registrar un turno en una fecha pasada.");
+            //if (disponibilidad.Fecha.Date < DateTime.Now.Date)
+            //    throw new InvalidOperationException("No se puede registrar un turno en una fecha pasada.");
 
             if (disponibilidad.CodEstado != 1) // 1 = Libre
                 throw new InvalidOperationException("La disponibilidad seleccionada ya está reservada.");

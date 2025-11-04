@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', () => {
             const input = btn.previousElementSibling;
             input.type = input.type === 'password' ? 'text' : 'password';
-            btn.textContent = input.type === 'password' ? '🙉' : '🙈';
+            btn.textContent = input.type === 'password' ? '🙈' : '🙉';
         });
     });
 

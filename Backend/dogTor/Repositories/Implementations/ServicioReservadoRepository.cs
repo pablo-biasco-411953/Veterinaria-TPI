@@ -14,35 +14,46 @@ namespace dogTor.Repositories.Implementations
             _context = context;
         }
 
-        public async Task<List<DtoServicioReservado>> GetTopServicioReservadoList()
+        public async Task<List<DtoServicioReservado>> GetTopServicioReservadoList(DateTime? fechaFiltro = null)
         {
-            // Fecha de hoy y hace 6 meses
-            var fechaHoy = DateTime.Today;
-            var fecha6Meses = fechaHoy.AddMonths(-6);
-
-            // Usamos el DbSet de Atencion. El CodTipoA define el servicio.
-            var topServicios = await _context.Atencions
+            var query = _context.Atencions
                 .Include(a => a.CodTipoANavigation)
-                .Include(a => a.CodDisponibilidadNavigation) // necesario para filtrar por fecha
-                                                             // Filtramos solo los turnos de los últimos 6 meses
-                .Where(a => a.CodDisponibilidadNavigation.Fecha >= fecha6Meses &&
-                            a.CodDisponibilidadNavigation.Fecha <= fechaHoy)
-                // Agrupamos por el ID del servicio y su nombre
+                .Include(a => a.CodDisponibilidadNavigation)
+                .AsQueryable();
+
+            // Si viene un mes específico, filtramos por ese mes y año
+            if (fechaFiltro.HasValue)
+            {
+                var mes = fechaFiltro.Value.Month;
+                var anio = fechaFiltro.Value.Year;
+
+                query = query.Where(a =>
+                    a.CodDisponibilidadNavigation.Fecha.Month == mes &&
+                    a.CodDisponibilidadNavigation.Fecha.Year == anio);
+            }
+            else
+            {
+                // Si no viene filtro, usamos últimos 6 meses como antes
+                var fechaHoy = DateTime.Today;
+                var fecha6Meses = fechaHoy.AddMonths(-6);
+                query = query.Where(a =>
+                    a.CodDisponibilidadNavigation.Fecha >= fecha6Meses &&
+                    a.CodDisponibilidadNavigation.Fecha <= fechaHoy);
+            }
+
+            var topServicios = await query
                 .GroupBy(a => new
                 {
                     a.CodTipoA,
                     NombreServicio = a.CodTipoANavigation.Descripcion
                 })
-                // Proyectamos a DTO
                 .Select(g => new DtoServicioReservado
                 {
                     CodTipoA = g.Key.CodTipoA,
                     NombreServicio = g.Key.NombreServicio,
                     TotalReservas = g.Count()
                 })
-                // Orden descendente por total de reservas
                 .OrderByDescending(r => r.TotalReservas)
-                // Tomamos solo el Top 6
                 .Take(6)
                 .ToListAsync();
 
@@ -50,4 +61,3 @@ namespace dogTor.Repositories.Implementations
         }
     }
 }
-

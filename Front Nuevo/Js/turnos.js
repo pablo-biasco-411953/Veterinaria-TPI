@@ -33,26 +33,26 @@ document.addEventListener('click', (e) => {
 
 
 function setearIniciales() {
-    const badge = $('#avatar') || $('#btnPerfil');
-    if (!badge) return;
+    const badge = $('#avatar') || $('#btnPerfil');
+    if (!badge) return;
 
 
-    const raw = sessionStorage.getItem('dogtorUser');
-    let initials = 'US';
-    if (raw) {
-        try {
-            const u = JSON.parse(raw);
+    const raw = sessionStorage.getItem('dogtorUser');
+    let initials = 'US';
+    if (raw) {
+        try {
+            const u = JSON.parse(raw);
             console.log(u)
-            const email = (u.email || '').trim();
-            if (email) {
-                const namePart = email.split('@')[0];
-                const parts = namePart.split(/[._-]+/).filter(Boolean);
-                if (parts.length === 1) initials = parts[0].slice(0, 2);
-                else initials = (parts[0][0] || '') + (parts[1][0] || '');
-            }
-        } catch { }
-    }
-    badge.textContent = initials.toUpperCase();
+            const email = (u.email || '').trim();
+            if (email) {
+                const namePart = email.split('@')[0];
+                const parts = namePart.split(/[._-]+/).filter(Boolean);
+                if (parts.length === 1) initials = parts[0].slice(0, 2);
+                else initials = (parts[0][0] || '') + (parts[1][0] || '');
+            }
+        } catch { }
+    }
+    badge.textContent = initials.toUpperCase();
 }
 
 const hoy = new Date();
@@ -101,12 +101,15 @@ function colorEstado(estadoNombre) {
 // ===== Render de turnos =====
 function renderTurnosPaginado(lista) {
     const tbody = $('#tablaTurnos');
-    if (!tbody) return;
+    const tableContainer = tbody?.closest('.table-responsive');
+    if (!tbody || !tableContainer) return;
+
     tbody.innerHTML = '';
 
     if (!lista.length) {
         tbody.innerHTML = `<tr><td colspan="7" class="text-center text-secondary">No se encontraron turnos.</td></tr>`;
-        $('#paginacionTurnos').innerHTML = '';
+        $('#paginacionTurnos')?.remove();
+        $('#totalTurnos').textContent = '0 turnos encontrados';
         return;
     }
 
@@ -120,7 +123,8 @@ function renderTurnosPaginado(lista) {
         const tipoA = t.tipoAtencionNavigation;
         const mascota = t.mascotaNavigation;
         const cliente = mascota?.cliente;
-        const estadoNombre = normalizarEstado(disp?.estado?.nombre) || 'Desconocido';
+        const estadoNombre = disp?.estado?.nombre || 'Desconocido';
+        const estadoNormalizado = normalizarEstado(estadoNombre);
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -130,7 +134,7 @@ function renderTurnosPaginado(lista) {
             <td>${cliente ? cliente.nombre + ' ' + cliente.apellido : '-'}</td>
             <td>${tipoA?.atencion || '-'}</td>
             <td class="position-relative">
-                <span class="badge bg-${colorEstado(estadoNombre)} text-dark me-2 animate__animated animate__pulse">${estadoNombre}</span>
+                <span class="badge bg-${colorEstado(estadoNormalizado)} text-dark me-2 animate__animated animate__pulse">${estadoNormalizado.charAt(0).toUpperCase() + estadoNormalizado.slice(1)}</span>
                 <button class="btn btn-sm btn-outline-secondary btnEditarEstado" 
                         data-coddisponibilidad="${disp?.codDisponibilidad}" 
                         data-estadoactual="${estadoNombre}" 
@@ -149,42 +153,77 @@ function renderTurnosPaginado(lista) {
 
     setupEditarEstadoButtons();
     renderPaginacion(lista);
+    $('#totalTurnos').textContent = `${lista.length} turnos encontrados`;
+
 }
 
 
 function renderPaginacion(lista) {
-    const tbody = $('#tablaTurnos');
-    if (!tbody) return;
+    const tableContainer = $('#tablaTurnos')?.closest('.table-responsive');
+    const cardContainer = tableContainer?.closest('.card'); // El contenedor padre de la tabla
+    if (!tableContainer || !cardContainer) return;
 
-    const container = $('#paginacionTurnos') || document.createElement('div');
-    container.id = 'paginacionTurnos';
-    container.className = 'd-flex justify-content-center mt-2 gap-1';
-    if (!$('#paginacionTurnos')) tbody.parentNode.appendChild(container);
+    // Removemos la paginación anterior si existe
+    $('#paginacionTurnos')?.remove();
 
-    container.innerHTML = '';
+    // 1. Crear el contenedor principal
+    const navContainer = document.createElement('div');
+    navContainer.id = 'paginacionTurnos';
+    // Usamos padding vertical y centralizamos, ajustando el margin superior para separarlo visualmente
+    navContainer.className = 'd-flex justify-content-center pt-3 pb-3 border-top border-secondary-subtle'; 
+    
+    const ul = document.createElement('ul');
+    // Usamos las clases de Bootstrap para paginación
+    ul.className = 'pagination pagination-sm justify-content-center mb-0';
+
     if (totalPages <= 1) return;
 
-    const prevBtn = document.createElement('button');
-    prevBtn.className = 'btn btn-sm btn-outline-info';
-    prevBtn.textContent = '«';
-    prevBtn.disabled = currentPage === 1;
-    prevBtn.addEventListener('click', () => { currentPage--; renderTurnosPaginado(lista); });
-    container.appendChild(prevBtn);
+    // 2. Botón Anterior (<<)
+    ul.innerHTML += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                        <a class="page-link" href="#" data-page="${currentPage - 1}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>`;
 
-    for (let i = 1; i <= totalPages; i++) {
-        const btn = document.createElement('button');
-        btn.className = `btn btn-sm ${i === currentPage ? 'btn-info text-white' : 'btn-outline-info'}`;
-        btn.textContent = i;
-        btn.addEventListener('click', () => { currentPage = i; renderTurnosPaginado(lista); });
-        container.appendChild(btn);
+    // Lógica para mostrar solo un rango de páginas (máx 5 botones)
+    let startPage = Math.max(1, currentPage - 2);
+    let endPage = Math.min(totalPages, startPage + 4);
+
+    if (endPage - startPage < 4) {
+        startPage = Math.max(1, endPage - 4);
+    }
+    
+    // 3. Botones de Números
+    for (let i = startPage; i <= endPage; i++) {
+        ul.innerHTML += `<li class="page-item ${i === currentPage ? 'active' : ''}">
+                            <a class="page-link" href="#" data-page="${i}">${i}</a>
+                        </li>`;
     }
 
-    const nextBtn = document.createElement('button');
-    nextBtn.className = 'btn btn-sm btn-outline-info';
-    nextBtn.textContent = '»';
-    nextBtn.disabled = currentPage === totalPages;
-    nextBtn.addEventListener('click', () => { currentPage++; renderTurnosPaginado(lista); });
-    container.appendChild(nextBtn);
+    // 4. Botón Siguiente (>>)
+    ul.innerHTML += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                        <a class="page-link" href="#" data-page="${currentPage + 1}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>`;
+
+    navContainer.appendChild(ul);
+    
+    // 5. Insertar la paginación DENTRO del contenedor 'card', pero DESPUÉS del 'table-responsive'
+    // Esto asegura que la paginación esté correctamente marginada y formateada dentro de la tarjeta.
+    cardContainer.appendChild(navContainer);
+
+    // 6. Configurar Event Listeners
+    navContainer.querySelectorAll('.page-link').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const newPage = parseInt(e.currentTarget.dataset.page);
+            if (newPage > 0 && newPage <= totalPages && newPage !== currentPage) {
+                currentPage = newPage; 
+                renderTurnosPaginado(lista);
+            }
+        });
+    });
 }
 
 // ===== Editar estado de turno =====
@@ -192,7 +231,8 @@ function setupEditarEstadoButtons() {
     $$('.btnEditarEstado').forEach(btn => {
         btn.addEventListener('click', async () => {
             const codDisp = btn.dataset.coddisponibilidad;
-            const estadoActual = normalizarEstado(btn.dataset.estadoactual);
+            const estadoActualNombre = btn.dataset.estadoactual;
+            const estadoActualCodigo = getEstadoCodigo(estadoActualNombre);
 
             const estados = {
                 1: 'Libre',
@@ -201,11 +241,11 @@ function setupEditarEstadoButtons() {
                 4: 'Cancelado'
             };
 
-            const { value: nuevoEstado } = await Swal.fire({
+            const { value: nuevoEstadoCodigo } = await Swal.fire({
                 title: 'Cambiar estado del turno',
                 input: 'select',
                 inputOptions: estados,
-                inputPlaceholder: estados[getEstadoCodigo(estadoActual)] || 'Selecciona un estado',
+                inputPlaceholder: estados[estadoActualCodigo] || 'Selecciona un estado',
                 background: '#1a202c',
                 color: '#BFD4EA',
                 confirmButtonColor: '#3498db',
@@ -225,10 +265,26 @@ function setupEditarEstadoButtons() {
                 }
             });
 
-            if (!nuevoEstado || parseInt(nuevoEstado) === getEstadoCodigo(estadoActual)) return;
+            if (!nuevoEstadoCodigo) return; // Cancelado por el usuario
+            
+            const nuevoEstadoParsed = parseInt(nuevoEstadoCodigo);
+
+            // Validación: Mismo Estado
+            if (nuevoEstadoParsed === estadoActualCodigo) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: '¡Atención!',
+                    text: 'No se puede cambiar al mismo estado.',
+                    background: '#1a202c',
+                    color: '#BFD4EA',
+                    confirmButtonColor: '#3498db'
+                });
+                return;
+            }
 
             try {
-                const res = await actualizarEstadoTurno(codDisp, nuevoEstado);
+                const res = await actualizarEstadoTurno(codDisp, nuevoEstadoParsed);
+                
                 if (!res.ok) {
                     const data = await res.json().catch(() => ({}));
                     Swal.fire({
@@ -237,24 +293,23 @@ function setupEditarEstadoButtons() {
                         text: data.message || 'No se pudo actualizar el estado del turno.',
                         background: '#1a202c',
                         color: '#BFD4EA',
-                        confirmButtonColor: '#3498db'
+                        confirmButtonColor: '#3498db' 
                     });
                     return;
                 }
-
-                const badge = btn.closest('td').querySelector('.badge');
-                const nombreNuevo = estados[nuevoEstado];
-                badge.textContent = nombreNuevo;
-                badge.className = `badge bg-${colorEstado(nombreNuevo)} text-dark me-2 animate__animated animate__pulse`;
-
+                
+                // Si la actualización es exitosa, notificamos y recargamos la grilla
                 Swal.fire({
                     icon: 'success',
                     title: '¡Estado actualizado!',
-                    text: `El turno fue marcado como "${nombreNuevo}".`,
+                    text: `El turno fue marcado como "${estados[nuevoEstadoParsed]}". Recargando lista...`,
                     background: '#1a202c',
                     color: '#BFD4EA',
                     timer: 1800,
                     showConfirmButton: false
+                }).then(() => {
+                     // Recargar la grilla desde el servidor para reflejar el cambio
+                     initTurnosPage(); 
                 });
 
             } catch (err) {
@@ -277,7 +332,12 @@ function filtrarTurnos() {
     const fecha = $('#filtroFecha')?.value || '';
     const estadoFiltro = ($('#filtroEstado')?.value || '').toLowerCase().trim();
 
-    if (!TurnosCargados.length) return;
+    if (!TurnosCargados.length) {
+        Turnos = [];
+        currentPage = 1;
+        renderTurnosPaginado(Turnos);
+        return;
+    }
 
     let turnosFiltrados = TurnosCargados.filter(t => {
         const disp = t.disponibilidadNavigation;
@@ -297,8 +357,6 @@ function filtrarTurnos() {
         const estadoTurno = normalizarEstado(disp?.estado?.nombre || '').trim().toLowerCase();
         const cumpleEstado = !estadoFiltro || estadoTurno === estadoFiltro;
 
-        console.log("Filtro:", estadoFiltro, "Turno:", estadoTurno, "Cumple:", cumpleEstado);
-
         return cumpleTexto && cumpleFecha && cumpleEstado;
     });
 
@@ -306,7 +364,6 @@ function filtrarTurnos() {
     Turnos = turnosFiltrados;
     currentPage = 1;
     renderTurnosPaginado(Turnos);
-    $('#totalTurnos').textContent = `${Turnos.length} turnos encontrados`;
 }
 function aplicarFiltroVeterinario(turnos) {
     const user = JSON.parse(sessionStorage.getItem('dogtorUser') || '{}');
@@ -320,6 +377,7 @@ function limpiarFiltros() {
     $('#filtroTexto').value = '';
     $('#filtroFecha').value = '';
     $('#filtroEstado').value = '';
+    // El checkbox se mantiene chequeado, ya que el HTML lo define así por defecto
     filtrarTurnos();
 }
 
@@ -553,14 +611,22 @@ function showLoader() {
 }
 
 // ===== Inicialización =====
-async function initTurnosPage(codVeterinario) {
+async function initTurnosPage() {
     showLoader();
+    const rawUser = sessionStorage.getItem('dogtorUser');
+    const user = rawUser ? JSON.parse(rawUser) : {};
+    const codVeterinario = user.id;
+    
     try {
         const res = await getAllAtenciones();
         if (!res.ok) throw new Error('Error al cargar turnos');
         const turnos = await res.json();
         TurnosCargados = turnos;
-        Turnos = turnos.filter(t => !codVeterinario || t.codVeterinario === codVeterinario);
+        
+        // Aplicar el filtro "Solo mis turnos" inmediatamente al cargar, 
+        // ya que el checkbox está checked por defecto en el HTML.
+        Turnos = aplicarFiltroVeterinario(TurnosCargados);
+        
         currentPage = 1;
         renderTurnosPaginado(Turnos);
     } catch (err) {
@@ -572,7 +638,8 @@ async function initTurnosPage(codVeterinario) {
         hideLoader();
     }
 }
-  // Cerrar sesión
+ 
+// Cerrar sesión
     const btnCerrarSesion = document.getElementById('btnCerrarSesion');
     btnCerrarSesion?.addEventListener('click', (e) => {
         e.preventDefault();

@@ -13,21 +13,46 @@ namespace dogTor.Repositories.Implementations
         {
             _context = context;
         }
+
         public async Task<List<DtoServicioMasFacturado>> GetAllAtencion(DateTime? fecMin, DateTime? fecMax)
         {
+            // 1. Definición del Rango de Fechas
+            DateTime fechaFin = fecMax.HasValue ? fecMax.Value : DateTime.Now;
+            DateTime fechaInicio = fecMin.HasValue ? fecMin.Value : fechaFin.AddDays(-7);
 
-            var query = await _context.Atencions
-                    .Include(a => a.DetalleAtencions)
-                    .Include(a => a.CodDisponibilidadNavigation)
-                    .Include(a => a.CodTipoANavigation)
-                    .Select(a => new DtoServicioMasFacturado
-                    {
-                        Facturado = Convert.ToDouble(a.Importe),
-                        FechaFac = Convert.ToDateTime(a.CodDisponibilidadNavigation.Fecha),
-                        Descripcion = Convert.ToString(a.CodTipoANavigation.Descripcion)
+            var groupedQuery = await _context.Atencions
+                .Include(a => a.CodDisponibilidadNavigation)
 
-                    }).ToListAsync();
-            return query;
+                // 2. FILTRO: Aplicar el filtro por rango de fechas Y por estado 3
+                .Where(a => a.CodDisponibilidadNavigation.Fecha >= fechaInicio &&
+                            a.CodDisponibilidadNavigation.Fecha <= fechaFin &&
+                            a.CodDisponibilidadNavigation.CodEstado == 3) // ⬅️ Condición Estado = 3
+
+                // 3. AGRUPACIÓN: Agrupar por la semana (calculada a partir del año y el número de semana)
+                .GroupBy(a => new
+                {
+                    Year = a.CodDisponibilidadNavigation.Fecha.Year,
+                    // Calcula un número de semana aproximado para agrupar en SQL
+                    // Se puede usar EF.Functions.DatePart("week", a.CodDisponibilidadNavigation.Fecha) en EF Core 5+
+                    WeekNum = (a.CodDisponibilidadNavigation.Fecha.DayOfYear / 7)
+                })
+
+                // 4. SELECCIÓN: Proyectar los resultados agregados
+                .Select(g => new DtoServicioMasFacturado
+                {
+                    // Usamos la fecha mínima dentro del grupo para representar el inicio de esa semana
+                    FechaFac = g.Min(a => a.CodDisponibilidadNavigation.Fecha),
+
+                    // Sumamos todos los importes de ese grupo semanal
+                    Facturado = g.Sum(a => (double?)a.Importe) ?? 0,
+
+                    // Reemplazamos la descripción con un texto genérico, ya que la data es agregada
+                    Descripcion = "Total Facturación Semanal"
+                })
+                .OrderBy(d => d.FechaFac)
+                .ToListAsync();
+
+            return groupedQuery;
         }
     }
 }
