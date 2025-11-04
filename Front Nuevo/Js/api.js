@@ -175,3 +175,22 @@ export async function resetPassword(token, nuevaContraseña) {
         body: JSON.stringify({ token, NuevaContraseña: nuevaContraseña }) // <-- mayúscula
     });
 }
+
+
+// ENDPOINT PARA TRAER FACTURACIONES POR SEMANA
+export async function GetFacturacionesSemanal(fechaInicio, fechaFin) {
+    const url = `${API_URL}/ServicioMasFacturado/GetAllServicios?fechMin=${fechaInicio}&fecMax=${fechaFin}`;
+
+    const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json'
+        }
+    });
+
+    if (!response.ok) {
+        throw new Error('Error al obtener las facturaciones semanales');
+    }
+
+    return await response.json();
+}
