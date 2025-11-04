@@ -62,9 +62,7 @@ namespace Veterinaria6.Repository
                 .Include(a => a.CodTipoANavigation)
                 .Include(a => a.CodDisponibilidadNavigation)
                     .ThenInclude(d => d.CodEstadoNavigation)
-                // 💡 Incluir los Detalles es CRUCIAL para mostrar la info de precio
                 .Include(a => a.DetalleAtencions)
-                // Opcional: Si quieres los detalles de los Tipos de Atención de los Detalles (doble anidación)
                 // .Include(a => a.DetalleAtencions).ThenInclude(d => d.CodTipoANavigation)
                 .ToListAsync();
         }
@@ -131,8 +129,8 @@ namespace Veterinaria6.Repository
             if (disponibilidad == null)
                 throw new InvalidOperationException("La disponibilidad seleccionada no existe.");
 
-            //if (disponibilidad.Fecha.Date < DateTime.Now.Date)
-            //    throw new InvalidOperationException("No se puede registrar un turno en una fecha pasada.");
+            if (disponibilidad.Fecha.Date < DateTime.Now.Date)
+                throw new InvalidOperationException("No se puede registrar un turno en una fecha pasada.");
 
             if (disponibilidad.CodEstado != 1) // 1 = Libre
                 throw new InvalidOperationException("La disponibilidad seleccionada ya está reservada.");
@@ -193,12 +191,9 @@ namespace Veterinaria6.Repository
             if (disponibilidad == null)
                 throw new KeyNotFoundException("No se encontró la disponibilidad solicitada.");
 
-            // Validar que el nuevo estado sea uno de los permitidos
             if (nuevoEstado < 1 || nuevoEstado > 4)
                 throw new ArgumentException("Estado no válido.");
 
-            // Reglas opcionales de transición
-            // Ej: Solo se puede pasar de Libre -> Reservado o Cancelado, etc.
             switch (disponibilidad.CodEstado)
             {
                 case 1: // Libre

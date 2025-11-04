@@ -5,11 +5,6 @@ namespace dogTor.Helpers
 {
     public static class ImagenHelper
     {
-        /// <summary>
-        /// Convierte un archivo a Base64 listo para <img src="...">
-        /// </summary>
-        /// <param name="rutaArchivo">Ruta del archivo en disco</param>
-        /// <returns>Base64 con prefijo data:image/png;base64,</returns>
         public static string ConvertirArchivoABase64(string rutaArchivo)
         {
             if (!File.Exists(rutaArchivo))

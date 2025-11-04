@@ -26,21 +26,17 @@ namespace dogTor.Repositories.Implementations
                 // 2. FILTRO: Aplicar el filtro por rango de fechas Y por estado 3
                 .Where(a => a.CodDisponibilidadNavigation.Fecha >= fechaInicio &&
                             a.CodDisponibilidadNavigation.Fecha <= fechaFin &&
-                            a.CodDisponibilidadNavigation.CodEstado == 3) // ⬅️ Condición Estado = 3
+                            a.CodDisponibilidadNavigation.CodEstado == 3) 
 
-                // 3. AGRUPACIÓN: Agrupar por la semana (calculada a partir del año y el número de semana)
                 .GroupBy(a => new
                 {
                     Year = a.CodDisponibilidadNavigation.Fecha.Year,
-                    // Calcula un número de semana aproximado para agrupar en SQL
-                    // Se puede usar EF.Functions.DatePart("week", a.CodDisponibilidadNavigation.Fecha) en EF Core 5+
                     WeekNum = (a.CodDisponibilidadNavigation.Fecha.DayOfYear / 7)
                 })
 
                 // 4. SELECCIÓN: Proyectar los resultados agregados
                 .Select(g => new DtoServicioMasFacturado
                 {
-                    // Usamos la fecha mínima dentro del grupo para representar el inicio de esa semana
                     FechaFac = g.Min(a => a.CodDisponibilidadNavigation.Fecha),
 
                     // Sumamos todos los importes de ese grupo semanal
