@@ -497,7 +497,7 @@ $('#formRegistro').onsubmit = async e => {
         const telefono = $('#rTelefono').value.trim();
 
         if (!validateOwnerForm(nombre, apellido, dni, telefono)) {
-            Swal.fire('Error de Formulario', 'Por favor, corrige los errores marcados en rojo.', 'error');
+            Swal.fire('Error de Formulario', 'Por favor, corrija los errores marcados en rojo.', 'error');
             return;
         }
 

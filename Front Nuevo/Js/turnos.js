@@ -628,7 +628,6 @@ function setUserRoleLabel() {
     }
 }
 
-
 function showLoader() {
     let overlay = document.getElementById('loading-overlay');
     
@@ -637,7 +636,7 @@ function showLoader() {
         overlay.id = 'loading-overlay';
         
         overlay.innerHTML = `
-            <img src="../Assets/logo2.png" alt="Dogtor Logo">
+            <img src="../Assets/logo2.png" alt="Dogtor Logo" class="loader-logo">
             <div class="loader-container">
                 <div class="loader-bar"></div>
             </div>
@@ -650,6 +649,7 @@ function showLoader() {
         overlay.classList.add('visible');
     });
 }
+
 
 
 function hideLoader() {

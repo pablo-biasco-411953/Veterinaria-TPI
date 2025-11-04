@@ -16,6 +16,12 @@ namespace dogTor.Repository
         // CREATE: Agregamos nuevo veterinario (User)
         public async Task<bool> CreateUserAsync(Veterinario nuevoVeterinario)
         {
+            bool matriculaExiste = await _context.Veterinario
+        .AnyAsync(v => v.Matricula == nuevoVeterinario.Matricula);
+
+            if (matriculaExiste)
+                throw new InvalidOperationException("Ya existe un veterinario con esa matrícula.");
+
             await _context.Veterinario.AddAsync(nuevoVeterinario);
             return await _context.SaveChangesAsync() > 0;
         }
