@@ -165,14 +165,9 @@ namespace dogTor.Controllers
         [HttpGet("AtencionesxVeterinario/{veterinarioId}")]
         public async Task<IActionResult> GetAtencionesByVeterinarioId(int veterinarioId)
         {
-            // ⚠️ NOTA DE SEGURIDAD: En un entorno de producción, este método debería 
-            // verificar que el 'veterinarioId' en la URL coincida con el ID del 
-            // veterinario que está logueado (obtenido del token JWT) para evitar
-            // que un veterinario vea los turnos de otro.
 
             try
             {
-                // Asumimos que IAtencionService tiene un método GetAtencionesByVeterinarioIdAsync
                 var atenciones = await _atencionService.GetAtencionesByVeterinarioIdAsync(veterinarioId);
 
                 if (atenciones == null || atenciones.Count == 0)

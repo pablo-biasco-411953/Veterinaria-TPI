@@ -28,16 +28,14 @@ namespace dogTor.Repository
             }
             catch (Exception ex)
             {
-                // Log del error completo en consola para depuración
                 Console.WriteLine("Error al insertar Mascota:");
                 Console.WriteLine(ex.ToString());
 
-                // Re-lanzar la excepción para que llegue al servicio/controlador
                 throw;
             }
         }
 
-        // DELETE: Eliminar mascota (marcar como eliminado)
+        // DELETE: Eliminar mascota 
         public async Task<bool> Delete(int id)
         {
             var mascotaActual = await GetByIdAsync(id);

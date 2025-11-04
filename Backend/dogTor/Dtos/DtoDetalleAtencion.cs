@@ -10,8 +10,8 @@ namespace dogTor.Dtos
         public int? CodAtencion { get; set; }
         public DtoTipoAtencion? TipoAtencion { get; set; } // Lo dejaremos anidado para output
 
-        public double PrecioUnitario { get; set; } // 💡 NUEVO: Precio cobrado
-        public int Cantidad { get; set; }             // 💡 NUEVO: Cantidad
+        public double PrecioUnitario { get; set; } 
+        public int Cantidad { get; set; }             
 
         public string? Observaciones { get; set; }
 
@@ -23,8 +23,8 @@ namespace dogTor.Dtos
             CodDetalle = detalle.CodDetalle;
             CodAtencion = detalle.CodAtencion;
             Observaciones = detalle.Observaciones;
-            PrecioUnitario = (double)detalle.PrecioUnitario; // 💡 MAPEADO
-            Cantidad = detalle.Cantidad;                      // 💡 MAPEADO
+            PrecioUnitario = (double)detalle.PrecioUnitario; 
+            Cantidad = detalle.Cantidad;                      
 
             if (detalle.CodTipoANavigation != null)
             {
@@ -38,12 +38,11 @@ namespace dogTor.Dtos
         {
             var detalleModel = new DetalleAtencion();
 
-            // 💡 Necesitas asignar todas las propiedades necesarias para el INSERT
             detalleModel.CodDetalle = CodDetalle ?? 0;
-            detalleModel.CodAtencion = CodAtencion ?? 0; // Asignado por el servicio principal
+            detalleModel.CodAtencion = CodAtencion ?? 0; 
             detalleModel.CodTipoA = TipoAtencion?.CodTipoA ?? 0;
-            detalleModel.PrecioUnitario = (decimal)PrecioUnitario; // 💡 MAPEADO
-            detalleModel.Cantidad = Cantidad;                         // 💡 MAPEADO
+            detalleModel.PrecioUnitario = (decimal)PrecioUnitario; 
+            detalleModel.Cantidad = Cantidad;                        
             detalleModel.Observaciones = Observaciones ?? string.Empty;
 
             return detalleModel;
