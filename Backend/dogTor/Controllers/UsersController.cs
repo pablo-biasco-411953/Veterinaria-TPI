@@ -62,7 +62,7 @@ namespace dogTor.Controllers
             {
                 DtoVeterinario user = await _userService.LoginAsync(credentials);
 
-                var token = GenerateJwtToken(user.CodVeterinario.Value, user.Email);
+                var token = GenerateJwtToken(user.CodVeterinario.Value, user.Email, user.IsAdmin);
 
                 return Ok(new
                 {
@@ -73,7 +73,9 @@ namespace dogTor.Controllers
                         Nombre = user.Nombre,
                         Apellido = user.Apellido,
                         Matricula = user.Matricula,
-                        Email = user.Email
+                        Email = user.Email,
+                        IsAdmin = user.IsAdmin
+
                     }
                 });
             }
@@ -198,15 +200,17 @@ namespace dogTor.Controllers
         }
 
         // JWT  
-        private string GenerateJwtToken(int codVeterinario, string email)
+        private string GenerateJwtToken(int codVeterinario, string email, bool isAdmin)
         {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"]));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            var role = isAdmin ? "Admin" : "Veterinario";
 
             var claims = new[]
             {
                 new Claim(JwtRegisteredClaimNames.Sub, email),
                 new Claim("id", codVeterinario.ToString()),
+                new Claim(ClaimTypes.Role, role),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 

@@ -23,5 +23,7 @@ public partial class Veterinario
 
     public DateTime? ResetTokenExpiration { get; set; }
 
+    public bool IsAdmin { get; set; }
+
     public virtual ICollection<Atencion> Atencions { get; set; } = new List<Atencion>();
 }

@@ -1,4 +1,5 @@
 ﻿using dogTor.Repositories.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Globalization;
@@ -6,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace dogTor.Controllers
 {
+    [Authorize(Roles = "Admin")]
     [Route("api/[controller]")]
     [ApiController]
     public class DashboardController : ControllerBase

@@ -6,18 +6,15 @@ namespace dogTor.Dtos
     public class DtoVeterinario
     {
         public int? CodVeterinario { get; set; }
-
         public string? Nombre { get; set; }
-
         public string? Apellido { get; set; }
-
         public string? Matricula { get; set; }
-
-        public string? Email { get; set; } // El email puede ser público si es el nombre de usuario
+        public string? Email { get; set; }
         public string Password { get; set; } = null;
+        public bool IsAdmin { get; set; }
+
         public DtoVeterinario() { }
 
-        // Constructor para mapear desde el Model de Entity Framework
         public DtoVeterinario(Veterinario veterinarioModel)
         {
             this.CodVeterinario = veterinarioModel.CodVeterinario;
@@ -26,6 +23,7 @@ namespace dogTor.Dtos
             this.Matricula = veterinarioModel.Matricula;
             this.Email = veterinarioModel.Email;
             this.Password = veterinarioModel.Password;
+            this.IsAdmin = veterinarioModel.IsAdmin;
         }
 
 
@@ -37,8 +35,8 @@ namespace dogTor.Dtos
                 Nombre = this.Nombre ?? string.Empty,
                 Apellido = this.Apellido ?? string.Empty,
                 Matricula = this.Matricula ?? string.Empty,
-                Email = this.Email ?? string.Empty
-
+                Email = this.Email ?? string.Empty,
+                IsAdmin = this.IsAdmin
             };
         }
     }

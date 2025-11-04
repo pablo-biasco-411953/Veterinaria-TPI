@@ -1,23 +1,20 @@
-// clientes.js
 import { getAllMascotas, getTiposMascota, createMascota, getClientesByDNI, createCliente } from './api.js';
 
-// ===== Variables globales =====
-let Mascotas = [];          // Lista filtrada
-let MascotasCargadas = [];  // Data original
-let TipoMascota = [];       // Catalogo de tipos
+let Mascotas = [];
+let MascotasCargadas = [];
+let TipoMascota = [];  
 let paginaActual = 1;
 const MASCOTAS_POR_PAGINA = 6;
 
-// ===== Variables filtros =====
+//  Variables filtros 
 let tipoActivo = '';
 let nombreBusqueda = '';
 let clienteBusqueda = '';
 
-// ===== Helpers DOM =====
+// DOM 
 const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 
-// ===== Imagen default según tipo =====
 function imagenPorTipo(tipoNombre) {
     switch ((tipoNombre || '').toLowerCase()) {
         case 'gato': return '../Assets/gato.png';
@@ -28,7 +25,6 @@ function imagenPorTipo(tipoNombre) {
     }
 }
 
-// ===== Filtrado combinado =====
 function filtrarMascotasCombinado() {
     let mascotasFiltradas = MascotasCargadas;
 
@@ -91,7 +87,6 @@ function initBusqueda() {
     }
 }
 
-// ===== Render filtros por tipo =====
 function renderFiltroTipoMascota() {
     const cont = $('#filtroTipoMascota');
     if (!cont) return;
@@ -124,7 +119,6 @@ function renderFiltroTipoMascota() {
     });
 }
 
-// ===== Render mascotas =====
 function renderMascotas() {
     const grid = document.getElementById('gridMascotas');
     if (!grid) return;
@@ -176,6 +170,8 @@ function agregarEfecto3D() {
     const cards = document.querySelectorAll('.card-mascota .card');
 
     cards.forEach(card => {
+        card.style.transform = 'rotateX(0deg) rotateY(0deg) scale(1)'; // Reset initial style
+        
         card.addEventListener('mousemove', e => {
             const rect = card.getBoundingClientRect();
             const x = e.clientX - rect.left;
@@ -256,7 +252,6 @@ function renderPaginacion(totalPaginas) {
     footer.insertAdjacentElement('beforebegin', nav);
 }
 
-// ===== Cargar tipos de mascota =====
 async function cargarTiposMascota() {
     try {
         const res = await getTiposMascota();
@@ -269,7 +264,6 @@ async function cargarTiposMascota() {
     }
 }
 
-// ===== Cargar mascotas =====
 async function cargarMascotas() {
     try {
         const res = await getAllMascotas();
@@ -331,6 +325,57 @@ function abrirModalBuscarDueño() {
     };
 }
 
+function clearOwnerValidation() {
+    $$('#bloqueDueño input').forEach(input => {
+        input.classList.remove('is-invalid');
+        const feedback = $(`#${input.id}Feedback`);
+        if (feedback) feedback.textContent = '';
+    });
+}
+
+// Muestra el error en el campo específico
+function displayFieldError(fieldId, message) {
+    const input = $(`#${fieldId}`);
+    const feedback = $(`#${fieldId}Feedback`);
+    
+    if (input) input.classList.add('is-invalid');
+    if (feedback) feedback.textContent = message;
+}
+
+// Valida el formulario de Dueño antes de enviar
+function validateOwnerForm(nombre, apellido, dni, telefono) {
+    clearOwnerValidation();
+    let isValid = true;
+
+    // 1. Nombre
+    if (nombre.length < 2) {
+        displayFieldError('rNombre', 'El nombre debe tener al menos 2 caracteres.');
+        isValid = false;
+    }
+
+    // 2. Apellido
+    if (apellido.length < 2) {
+        displayFieldError('rApellido', 'El apellido debe tener al menos 2 caracteres.');
+        isValid = false;
+    }
+
+    // 3. DNI
+    const dniClean = dni.replace(/\D/g, '');
+    if (dniClean.length < 7 || dniClean.length > 8 || isNaN(dniClean)) {
+        displayFieldError('rDni', 'El DNI debe ser numérico y tener 7 u 8 dígitos.');
+        isValid = false;
+    }
+
+    // 4. Teléfono (Opcional, pero si se ingresa, debe ser válido para Argentina)
+    const phoneClean = telefono.replace(/[^0-9]/g, ''); // Solo números
+    if (telefono && phoneClean.length < 8) {
+        displayFieldError('rTelefono', 'El teléfono debe tener al menos 8 dígitos (sin contar el código de área opcional).');
+        isValid = false;
+    }
+
+    return isValid;
+}
+
 function abrirModalRegistro(modo = 'dueño', dniTutor = '', nombreTutor = '') {
     const modalEl = $('#modalRegistro');
     if (!modalEl) return;
@@ -355,6 +400,7 @@ function abrirModalRegistro(modo = 'dueño', dniTutor = '', nombreTutor = '') {
         bloqueDueño.classList.remove('d-none');
         bloqueMascota.classList.add('d-none');
         formRegistro.reset();
+        clearOwnerValidation(); // Limpiar validación al abrir
 
         inputsDueño.forEach(i => i.required = true);
         inputsMascota.forEach(i => i.required = false);
@@ -367,25 +413,32 @@ function abrirModalRegistro(modo = 'dueño', dniTutor = '', nombreTutor = '') {
         bloqueMascota.classList.remove('d-none');
 
         $('#rMascotaNombre').value = '';
-        $('#rMascotaEdad').value = '';
+        
+        const edadInputEl = $('#rMascotaEdad');
+        if (edadInputEl) {
+            edadInputEl.value = '';
+            edadInputEl.maxLength = 2; // Máximo 99 años
+            edadInputEl.setAttribute('max', 50); // Límite de edad para validación JS
+        }
 
-       const inputImagen = document.getElementById('rMascotaImagen');
-const preview = document.getElementById('previewMascota');
 
-inputImagen.addEventListener('change', e => {
-    const file = e.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = () => {
-            preview.src = reader.result;
-            preview.classList.add('visible'); // muestra la preview
-        };
-        reader.readAsDataURL(file);
-    } else {
-        preview.src = '';
-        preview.classList.remove('visible'); // oculta si no hay imagen
-    }
-});
+        const inputImagen = document.getElementById('rMascotaImagen');
+        const preview = document.getElementById('previewMascota');
+
+        inputImagen.addEventListener('change', e => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    preview.src = reader.result;
+                    preview.classList.add('visible'); 
+                };
+                reader.readAsDataURL(file);
+            } else {
+                preview.src = '';
+                preview.classList.remove('visible');
+            }
+        });
         if (preview) preview.src = '';
         if (inputImagen) inputImagen.value = '';
 
@@ -397,10 +450,15 @@ inputImagen.addEventListener('change', e => {
         }
 
         inputsDueño.forEach(i => i.required = false);
-        inputsMascota.forEach(i => i.required = true);
+        inputsMascota.forEach(i => {
+            if (i.id !== 'rMascotaImagen') {
+                i.required = true;
+            } else {
+                i.required = false;
+            }
+        });
     }
 
-    // 🔹 Preview de imagen
     const inputImagen = $('#rMascotaImagen');
     const preview = $('#previewMascota');
     if (inputImagen) {
@@ -418,7 +476,6 @@ inputImagen.addEventListener('change', e => {
         });
     }
 
-    // 🔹 Reset al cerrar modal
     modalEl.addEventListener('hidden.bs.modal', () => {
         formRegistro.reset();
         if (preview) preview.src = '';
@@ -426,7 +483,7 @@ inputImagen.addEventListener('change', e => {
     });
 }
 
-// ===== Formulario registro =====
+//  Formulario registro 
 $('#formRegistro').onsubmit = async e => {
     e.preventDefault();
     const bloqueDueño = $('#bloqueDueño');
@@ -439,18 +496,28 @@ $('#formRegistro').onsubmit = async e => {
         const dni = $('#rDni').value.trim();
         const telefono = $('#rTelefono').value.trim();
 
-        if (!nombre || !apellido || !dni) {
-            Swal.fire('Error', 'Complete todos los campos obligatorios', 'error');
+        if (!validateOwnerForm(nombre, apellido, dni, telefono)) {
+            Swal.fire('Error de Formulario', 'Por favor, corrige los errores marcados en rojo.', 'error');
             return;
         }
 
         try {
             const res = await createCliente({ Nombre: nombre, Apellido: apellido, Dni: Number(dni), Telefono: telefono });
+            
             if (!res.ok) {
                 const errData = await res.json().catch(() => ({}));
+                
+                // Intentar mapear error del servidor al campo DNI
+                if (errData?.detail?.includes('Duplicate entry') || errData?.detail?.includes('DNI')) {
+                    displayFieldError('rDni', 'El DNI ingresado ya se encuentra registrado.');
+                    Swal.fire('Error de Registro', 'El DNI ya existe en nuestra base de datos.', 'error');
+                    return;
+                }
+                
                 throw new Error(errData.detail || 'No se pudo registrar el dueño');
             }
-
+            
+            // Éxito
             Swal.fire({
                 title: 'Dueño cargado con éxito',
                 text: '¿Desea añadirle una mascota?',
@@ -476,7 +543,7 @@ $('#formRegistro').onsubmit = async e => {
         // Registrar mascota
         const dniTutor = $('#rTutorDni').value.trim();
         const nombre = $('#rMascotaNombre').value.trim();
-        const edad = $('#rMascotaEdad').value.trim();
+        const edadInput = $('#rMascotaEdad').value.trim(); 
         const tipo = $('#rMascotaTipo').value;
         const inputImagen = $('#rMascotaImagen');
 
@@ -484,7 +551,17 @@ $('#formRegistro').onsubmit = async e => {
             Swal.fire('Error', 'Complete todos los campos obligatorios', 'error');
             return;
         }
+        
+        let edad = 0;
+        if (edadInput) {
+            edad = parseInt(edadInput);
 
+            // Validar si es un número válido y dentro de un rango razonable (0 a 50 años)
+            if (isNaN(edad) || edad < 0 || edad > 50) {
+                 Swal.fire('Error de Validación', 'La edad debe ser un número entre 0 y 50 años para una mascota.', 'error');
+                 return;
+            }
+        }
         try {
             const resCliente = await getClientesByDNI(dniTutor);
             if (!resCliente.ok) throw new Error('No se encontro un dueño con ese DNI');
@@ -495,7 +572,7 @@ $('#formRegistro').onsubmit = async e => {
 
             const nuevaMascota = {
                 Nombre: nombre,
-                Edad: Number(edad),
+                Edad: edad, // Usamos la variable 'edad' validada
                 CodCliente: codCliente,
                 CodTipo: Number(tipo),
                 Activo: true
@@ -518,10 +595,37 @@ $('#formRegistro').onsubmit = async e => {
             Swal.fire('Error', err.message || 'Ocurrio un error al registrar la mascota', 'error');
         }
     }
+
 };
 
-// ===== Iniciales usuario =====
+function setupPermissions() {
+    const raw = sessionStorage.getItem('dogtorUser');
+    const dashboardLink = document.querySelector('a[href="./dashboard.html"]');
+
+    if (!raw) {
+        if (dashboardLink) dashboardLink.classList.add('d-none');
+        return;
+    }
+
+    try {
+        const user = JSON.parse(raw);
+        const isAdmin = user.isAdmin;
+
+        if (dashboardLink && !isAdmin) {
+            dashboardLink.classList.add('d-none');
+        } else if (dashboardLink && isAdmin) {
+            dashboardLink.classList.remove('d-none');
+        }
+
+    } catch (e) {
+        console.error("Error al parsear datos de usuario:", e);
+        if (dashboardLink) dashboardLink.classList.add('d-none');
+    }
+}
+
+//  Iniciales usuario 
 function setearIniciales() {
+    setUserRoleLabel();
     const badge = $('#avatar') || $('#btnPerfil');
     if (!badge) return;
 
@@ -542,9 +646,61 @@ function setearIniciales() {
     badge.textContent = initials.toUpperCase();
 }
 
+function showLoader() {
+    let overlay = document.getElementById('loading-overlay');
+    
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'loading-overlay';
+        
+        overlay.innerHTML = `
+            <img src="../Assets/logo2.png" alt="Dogtor Logo" class="loader-logo">
+            <div class="loader-container">
+                <div class="loader-bar"></div>
+            </div>
+            <div class="loading-text">Cargando...</div>
+        `;
+        document.body.appendChild(overlay);
+    }
+    
+    requestAnimationFrame(() => {
+        overlay.classList.add('visible');
+    });
+}
+
+
+function hideLoader() {
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) { overlay.classList.remove('visible'); }
+}
+function setUserRoleLabel() {
+    const roleElement = document.getElementById('userRole');
+    if (!roleElement) return;
+
+    const raw = sessionStorage.getItem('dogtorUser');
+    if (!raw) {
+        roleElement.textContent = 'Visitante';
+        return;
+    }
+    
+    try {
+        const user = JSON.parse(raw);
+        if (user.isAdmin) {
+            roleElement.textContent = 'Administrador';
+        } else {
+            roleElement.textContent = 'Veterinario';
+        }
+    } catch (e) {
+        console.error("Error al determinar rol de usuario:", e);
+        roleElement.textContent = 'Desconocido';
+    }
+}
+
 // Inicializacion 
 async function initClientes() {
+    showLoader();
     setearIniciales();
+    setupPermissions();
     const raw = sessionStorage
     .getItem('dogtorUser');
 if (!raw) {
@@ -553,7 +709,7 @@ return;
 }
 await Promise.all([cargarTiposMascota(), cargarMascotas()]);
 initBusqueda();
-
+hideLoader()
 const btnRegistrarCliente = $('#btnRegistrarCliente');
 if (btnRegistrarCliente) btnRegistrarCliente.addEventListener('click', abrirModalInicio);
 

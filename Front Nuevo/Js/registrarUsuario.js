@@ -63,7 +63,6 @@ function validateField(name, value = '', compareValue = '') {
 
     const fields = ['nombre', 'apellido', 'matricula', 'email', 'password', 'passwordConfirm'];
 
-    // --- Toggle de contraseña ---
     form.querySelectorAll('.toggle-password').forEach(btn => {
         btn.addEventListener('click', () => {
             const input = btn.previousElementSibling;
@@ -77,7 +76,6 @@ function validateField(name, value = '', compareValue = '') {
         });
     });
 
-    // --- Tips en vivo para contraseña ---
     const passwordInput = form.elements['password'];
     const passwordTips = document.createElement('div');
     passwordTips.id = 'passwordTips';
@@ -97,7 +95,6 @@ function validateField(name, value = '', compareValue = '') {
         ).join('');
     });
 
-    // --- Matrícula automatica MP- y solo números ---
     const matriculaInput = form.elements['matricula'];
     matriculaInput.addEventListener('input', () => {
         let val = matriculaInput.value.replace(/\D/g, ''); // solo números
@@ -108,7 +105,6 @@ function validateField(name, value = '', compareValue = '') {
         }
     });
 
-    // --- Validacion de campos excepto contraseñas ---
     fields.forEach(name => {
         const input = form.elements[name];
         if (!input) return;
@@ -147,7 +143,6 @@ function validateField(name, value = '', compareValue = '') {
         }
     });
 
-    // --- Submit ---
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const btnSubmit = form.querySelector('button[type="submit"]');
@@ -163,7 +158,6 @@ function validateField(name, value = '', compareValue = '') {
             passwordConfirm: form.elements['passwordConfirm'].value
         };
 
-        // Validaciones finales (solo campos visibles)
         for (const field of fields) {
             const compareValue = field === 'passwordConfirm' ? userData.password : '';
             const error = validateField(field, userData[field], compareValue);

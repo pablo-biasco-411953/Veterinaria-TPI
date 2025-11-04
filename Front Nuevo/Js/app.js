@@ -1,30 +1,26 @@
 import {
     getMascotaByClienteId, getTiposMascota, getAllAtenciones, getTiposAtencion,
     getDisponibilidad, getTurnosDisponibles,
-    getAllMascotas, createAtencion, getTurnosByVeterinarioId, getTopServiciosReservados, getFacturacionSemanal
+    getAllMascotas, createAtencion, getTurnosByVeterinarioId, getTopServiciosReservados, getFacturacionSemanal,getTopVeterinarios
 } from './api.js';
 
-// ======================================================
-// --- 1. VARIABLES GLOBALES Y CONFIGURACIÓN ---
-// ======================================================
 let Mascota = [];
 let Tipo_Atencion = [];
 let Disponibilidad = [];
-let Turno = []; // ESTE ARRAY CONTIENE LOS DATOS DE TODOS LOS TURNOS HISTÓRICOS
-let turnosHoy = [];
-let TipoMascota = [];
+let Turno = [];
 
-// Instancias de gráficos para evitar el error "Canvas is already in use"
+
 let chartFacturacionSemanalInstance = null;
 let chartTopServiciosInstance = null;
-let chartReservasDiaInstance = null; // Instancia para Reservas por Día
-let chartTiposAtencionInstance = null; // Instancia para Tipos de Atención
+let chartTopVeterinariosInstance = null;
+let chartTiposAtencionInstance = null; 
 
 const currentPage = window.location.pathname.split('/').pop();
 const meses = [
     'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
     'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
 ];
+
 const ITEMS_POR_PAGINA_TURNOS = 6;
 let paginaActualTurnos = 1;
 
@@ -54,17 +50,6 @@ document.addEventListener('click', (e) => {
     if (!btnPerfil?.contains(e.target) && !menuPerfil?.contains(e.target)) { menuPerfil?.classList.add('d-none'); }
 });
 
-
-// ======================================================
-// --- 2. FUNCIONES AUXILIARES ---
-// ======================================================
-
-function monthKey(dateStr) {
-    const d = new Date(dateStr + 'T00:00:00');
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    return `${y}-${m}`;
-}
 
 function lastNMonths(n = 6, referenceDate = new Date()) {
     const capitalize = (s) => {
@@ -130,6 +115,30 @@ function badgeEstado(estadoNombre) {
     }
 }
 
+function setUserRoleLabel() {
+    const roleElement = document.getElementById('userRole');
+    if (!roleElement) return;
+
+    const raw = sessionStorage.getItem('dogtorUser');
+    if (!raw) {
+        roleElement.textContent = 'Visitante';
+        return;
+    }
+    
+    try {
+        const user = JSON.parse(raw);
+        if (user.isAdmin) {
+            roleElement.textContent = 'Administrador';
+        } else {
+            roleElement.textContent = 'Veterinario';
+        }
+    } catch (e) {
+        console.error("Error al determinar rol de usuario:", e);
+        roleElement.textContent = 'Desconocido';
+    }
+}
+
+
 function showLoader() {
     let overlay = document.getElementById('loading-overlay');
     if (!overlay) {
@@ -147,6 +156,7 @@ function hideLoader() {
 }
 
 function setearIniciales() {
+    setUserRoleLabel();
     const badge = $('#avatar') || $('#btnPerfil');
     if (!badge) return;
     const raw = sessionStorage.getItem('dogtorUser');
@@ -166,14 +176,10 @@ function setearIniciales() {
     badge.textContent = initials.toUpperCase();
 }
 
-// ======================================================
-// --- 2.5. FUNCIONES DE MENSAJES EN GRÁFICOS ---
-// ======================================================
 
-// Función para mostrar un mensaje de error o "sin datos" en el contenedor del gráfico
 function showChartMessage(canvas, message, isError = false) {
     const container = canvas.parentNode;
-    container.style.position = 'relative'; // Asegura posicionamiento relativo para el mensaje
+    container.style.position = 'relative'; 
 
     // Clear canvas
     canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
@@ -206,9 +212,7 @@ function hideChartMessage(canvas) {
     }
 }
 
-// ======================================================
-// --- 3. FUNCIONES DE CARGA DE DATOS (API) ---
-// ======================================================
+// FUNCIONES DE CARGA DE DATOS
 
 async function cargarMascotas() {
     try {
@@ -236,12 +240,10 @@ async function cargarDisponibilidad() {
 }
 
 async function cargarTurnosDisponibles() {
-    // Solo se mantiene por si lo usan los KPIs, pero no es crucial para Turno[]
     try { await getTurnosDisponibles(); } catch (err) { /* silent fail */ }
 }
 
 async function cargarTurnosProximos() {
-    // Carga TODOS los turnos para el análisis del dashboard (gráficos por mes)
     try {
         const res = await getAllAtenciones();
         if (!res.ok) throw new Error(`Error al cargar turnos (status ${res.status})`);
@@ -250,7 +252,7 @@ async function cargarTurnosProximos() {
             id: t.codAtencion,
             fecha: t.disponibilidad?.fecha?.split('T')[0] || '',
             hora: t.disponibilidad?.hora?.substring(0, 5) || '',
-            estado: t.disponibilidad?.codEstadoNavigation?.nombre || t.disponibilidad?.estado?.nombre || 'Desconocido',
+            estado: t.disponibilidadNavigation?.estado?.nombre || 'Desconocido',
             nombreMascota: t.mascota?.nombre || '—',
             nombreAtencion: t.tipoAtencion?.atencion || '—',
             importe: t.importe,
@@ -295,10 +297,6 @@ async function cargarDatos(userId) {
     ]);
 }
 
-
-// ======================================================
-// --- 4. FUNCIONES DE DASHBOARD (KPIs y Gráficos) ---
-// ======================================================
 
 function renderKPIs() {
     const kpiPacientes = $('#kpiPacientes');
@@ -358,32 +356,32 @@ async function renderTopServiciosChart(mesDesdeFiltro = null) {
         
         if (response.ok) {
             topServicios = await response.json();
-            console.log("Top servicios:", topServicios);
         } else if (response.status === 404) {
-             errorMessage = `No existen datos de servicios reservados para ${selectedMonthKey || 'el período actual'}.`;
-        } else {
-             errorMessage = `Error ${response.status}: Fallo al cargar los Top Servicios.`;
-             console.error(errorMessage);
+            let periodLabel = 'el período actual';
+            if (selectedMonthKey) {
+                const monthIndex = parseInt(selectedMonthKey.split('-')[1], 10);
+                // El array 'meses' es 0-indexado
+                if (monthIndex >= 1 && monthIndex <= 12) {
+                    periodLabel = meses[monthIndex - 1]; 
+                }
+            }
+            errorMessage = `No existen datos de servicios reservados para ${periodLabel}.`;
         }
     } catch (error) {
         console.error("Error al obtener el Top Servicios:", error);
         errorMessage = `Error de conexión: ${error.message}`;
     }
 
-    // 2. Manejo de SIN DATOS o ERROR
     if (errorMessage || !topServicios.length) {
-        // Usamos showChartMessage para mostrar el mensaje sin romper el DOM
         const isFatal = errorMessage && !errorMessage.includes("No existen datos");
         const messageToShow = errorMessage || 'No hay datos de servicios para mostrar.';
         showChartMessage(canvas, messageToShow, isFatal);
         return;
     }
 
-    // Aseguramos que el canvas esté visible 
     canvas.classList.remove('d-none');
     
-    // 3. Preparar datos y renderizar gráfico
-    // Nota: Usamos 'nombreServicio' y 'totalReservas' según tu implementación actual.
+    // Preparar datos y renderizar gráfico
     const labels = topServicios.map(s => s.nombreServicio);
     const data = topServicios.map(s => s.totalReservas);
     const colors = generateColors(labels.length);
@@ -427,7 +425,6 @@ async function renderTopServiciosChart(mesDesdeFiltro = null) {
                 duration: 1500,
                 easing: 'easeInOutBounce',
                 onProgress: function() {
-                    // Solo actualiza el total si la instancia del chart existe
                     if(chartTopServiciosInstance) {
                        const totalActual = chartTopServiciosInstance.data.datasets[0].data.reduce((a, b) => a + b, 0);
                        if (totalEl) totalEl.textContent = `Total reservas: ${totalActual}`;
@@ -450,67 +447,104 @@ async function renderTopServiciosChart(mesDesdeFiltro = null) {
 }
 
 
-function renderReservasPorDia() {
-    const canvas = document.getElementById('chartReservasDia');
-    if (!canvas || typeof Chart === 'undefined') return;
+async function renderTopVeterinariosChart(fechaInicio = null, fechaFin = null, topN = 5) {
+    console.log("Iniciando renderTopVeterinariosChart...");
+    const canvas = document.getElementById('chartReservasDia'); 
+    
+    // Aquí se verifica que el canvas exista. Si el HTML está mal, devuelve aquí.
+    if (!canvas || typeof Chart === 'undefined') return; 
 
-    // 🚨 Destruir la instancia anterior (Corrección)
-    if (chartReservasDiaInstance) {
-        chartReservasDiaInstance.destroy();
-        chartReservasDiaInstance = null;
+    // Destruye la instancia anterior si existe
+    if (chartTopVeterinariosInstance) chartTopVeterinariosInstance.destroy();
+    
+    hideChartMessage(canvas); // Oculta mensajes anteriores
+    
+    let topVeterinariosData = [];
+    let errorMessage = null;
+
+    try {
+        // MODIFICACIÓN CLAVE: Llamar a la API con los parámetros
+        // Si no se ven requests en Network, el fallo es en getTopVeterinarios o getAuthHeaders()
+        const response = await getTopVeterinarios(fechaInicio, fechaFin, topN);
+        
+        if (response.ok) {
+            topVeterinariosData = await response.json();
+            console.log("Top veterinarios:", topVeterinariosData);
+        } else if (response.status === 404) {
+             errorMessage = 'No se encontraron datos de veterinarios con turnos asignados en el período.';
+        } else {
+             // Intenta leer el mensaje de error del cuerpo de la respuesta si es posible
+             const errorText = await response.text();
+             errorMessage = `Error ${response.status}: Fallo al cargar el ranking de veterinarios.`;
+             try { errorMessage = JSON.parse(errorText).message || errorMessage; } catch { }
+             console.error(errorMessage);
+        }
+    } catch (error) {
+        console.error("Error al obtener Top Veterinarios:", error);
+        errorMessage = `Error de conexión: ${error.message}`;
     }
 
-    chartReservasDiaInstance = new Chart(canvas, {
-        type: 'line',
+    // 2. Manejo de SIN DATOS o ERROR (Asegurando que showChartMessage se llama)
+    if (errorMessage || !topVeterinariosData.length) {
+         const isFatal = errorMessage && !errorMessage.includes("No se encontraron datos");
+         const messageToShow = errorMessage || 'No hay datos de turnos asignados a veterinarios para mostrar.';
+         
+         // SOLUCIÓN: Usar la función de mensaje de error si no hay datos.
+         showChartMessage(canvas, messageToShow, isFatal); 
+         return;
+    }
+    
+    // 3. Preparar datos para Chart.js 
+    const labels = topVeterinariosData.map(v => v.nombreCompleto);
+    const data = topVeterinariosData.map(v => v.totalTurnos);
+    const colors = generateColors(labels.length); // Colores fríos aplicados
+
+    chartTopVeterinariosInstance = new Chart(canvas, {
+        type: 'bar',
         data: {
-            labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+            labels,
             datasets: [{
-                label: 'Reservas',
-                data: [5, 7, 3, 8, 4, 6, 2], // Datos mock
-                borderColor: '#0dcaf0',
-                fill: false
+                label: 'Turnos Asignados',
+                data: data,
+                backgroundColor: colors,
+                // Bordes oscuros para contraste en fondo oscuro
+                borderColor: colors.map(c => c.replace('70%', '50%').replace('60%', '40%')), 
+                borderWidth: 1
             }]
         },
         options: {
-            responsive: true, maintainAspectRatio: false,
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y', 
+            // *** ANIMACIÓN DE CARGA AÑADIDA ***
+            animation: {
+                duration: 1200, // Duración de la animación
+                easing: 'easeInOutQuart',
+                delay: (context) => {
+                    // Retraso por barra para un efecto de "cascada"
+                    return context.dataIndex * 150; 
+                },
+                onProgress: function(animation) {
+                    // Puedes usar esto para un indicador visual
+                },
+                onComplete: function(animation) {
+                    // Animación terminada
+                }
+            },
             plugins: {
-                legend: { display: true, labels: { color: '#BFD4EA' } },
-                title: { display: true, text: 'Reservas por Día de la Semana', color: '#BFD4EA' },
-                tooltip: { callbacks: { label: ctx => `Reservas: ${ctx.parsed.y}` } }
+                legend: { display: false },
+                title: { display: true, text: `Top ${topN} Veterinarios por Cantidad de Turnos`, color: '#BFD4EA' },
+                tooltip: { callbacks: { label: ctx => `Turnos: ${ctx.parsed.x}` } }
             },
             scales: {
-                x: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: '#9CB2CC' } },
-                y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: '#9CB2CC' } }
+                x: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: '#9CB2CC', precision: 0 } },
+                y: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: '#9CB2CC' } }
             }
         }
     });
 }
 
-function renderTiposAtencionChart() {
-    const canvas = document.getElementById('chartTiposAtencion');
-    if (!canvas || typeof Chart === 'undefined') return;
 
-    // 🚨 Destruir la instancia anterior (Corrección)
-    if (chartTiposAtencionInstance) {
-        chartTiposAtencionInstance.destroy();
-        chartTiposAtencionInstance = null;
-    }
-
-    chartTiposAtencionInstance = new Chart(canvas, {
-        type: 'doughnut',
-        data: {
-            labels: ['Consulta', 'Vacunación', 'Cirugía', 'Control'],
-            datasets: [{
-                data: [30, 20, 10, 40], // Datos mock o calculados de Tipo_Atencion
-                backgroundColor: ['#198754', '#ffc107', '#dc3545', '#0d6efd']
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: { legend: { position: 'bottom', labels: { color: '#BFD4EA' } } }
-        }
-    });
-}
 
 function aggregateDailyData(datos) {
     const aggregated = datos.reduce((acc, curr) => {
@@ -568,10 +602,6 @@ async function renderFacturacionSemanalChart() {
 
     document.getElementById('chartFacturacionTotal').textContent = `Total: $${total.toLocaleString('es-AR', { maximumFractionDigits: 0 })}`;
 }
-
-// ======================================================
-// --- 5. FUNCIONES DE INICIO.HTML (Tablas y Modal) ---
-// ======================================================
 
 function renderProximos(Turno) {
     const lista = document.getElementById("listaProximos");
@@ -805,7 +835,7 @@ function renderDisponibilidad() {
 }
 
 
-// --- Lógica del Modal de Turnos ---
+// logica del Modal de Turnos 
 
 async function poblarSelectMascotasPorCliente(codCliente) {
     const selectMascota = $('#tMascota');
@@ -1051,11 +1081,32 @@ function cargarHorasDisponiblesPorFecha() {
         alertBox.classList.add('d-none');
     }
 }
+function setupPermissions() {
+    const raw = sessionStorage.getItem('dogtorUser');
+    const dashboardLink = document.querySelector('a[href="./dashboard.html"]');
 
+    if (!raw) {
+        // Si no hay usuario, forzar a index.html (esto ya lo hace initClientes)
+        if (dashboardLink) dashboardLink.style.display = 'none';
+        return;
+    }
 
-// ======================================================
-// --- 6. INICIALIZACIÓN PRINCIPAL Y DISPATCHER ---
-// ======================================================
+    try {
+        const user = JSON.parse(raw);
+        const isAdmin = user.isAdmin;
+
+        if (dashboardLink && !isAdmin) {
+            dashboardLink.classList.add('d-none');
+        } else if (dashboardLink && isAdmin) {
+            // Asegurar que sea visible si es admin
+            dashboardLink.classList.remove('d-none');
+        }
+
+    } catch (e) {
+        console.error("Error al parsear datos de usuario:", e);
+        if (dashboardLink) dashboardLink.style.display = 'none';
+    }
+}
 
 async function initDashboard() {
     const raw = sessionStorage.getItem('dogtorUser');
@@ -1063,44 +1114,64 @@ async function initDashboard() {
         window.location.href = '../Pages/index.html';
         return;
     }
+    setupPermissions()
     showLoader();
     const user = JSON.parse(raw);
 
     try {
-        // Carga de datos base (Mascotas, TiposAtencion, Disponibilidad, TurnosDisponibles)
         await cargarDatos(user.id);
-
-        // Configuración de UI común
         setearIniciales();
         setupPerfilMenu();
         setupFormTurnoSubmit();
         setupBusquedaDinamica();
 
-        // --- LÓGICA ESPECÍFICA POR PÁGINA ---
 
-        if (currentPage === 'dashboard.html') {
-            // Cargar TODOS los turnos para estadísticas del dashboard
-            await cargarTurnosProximos();
+       if (currentPage === 'dashboard.html') {
+    await cargarTurnosProximos();
+    renderKPIs();
+    populateMonthFilter(); // Llama a renderTopServiciosChart por defecto
+    
+    // --- Lógica de Facturación ---
+    document.getElementById('btnFiltrarFacturacion')?.addEventListener('click', renderFacturacionSemanalChart);
+    renderFacturacionSemanalChart();
 
-            // Renderizado de elementos de Dashboard
-            renderKPIs();
-            populateMonthFilter(); // Inicializa filtro y llama a renderTopServiciosChart()
-            document.getElementById('btnFiltrarFacturacion')?.addEventListener('click', renderFacturacionSemanalChart);
-            
-            // CORRECCIÓN CLAVE: Envolver la llamada en una función anónima
-            document.getElementById('btnFiltrarMes')?.addEventListener('click', () => {
-                 renderTopServiciosChart();
-            });
-            
-            renderReservasPorDia();
-            renderTiposAtencionChart();
-            renderFacturacionSemanalChart();
+    // Listener para Top Servicios (Mes). Solo llama al render, sin anidamiento.
+    document.getElementById('btnFiltrarMes')?.addEventListener('click', renderTopServiciosChart);
+    document.getElementById('filtroMes')?.addEventListener('change', renderTopServiciosChart);
 
-        } else if (currentPage === 'inicio.html') {
-            // Cargar turnos específicos del veterinario (o solo los próximos/reservados)
+    // --- LÓGICA DE TOP VETERINARIOS ---
+    
+    // 1. Obtener y verificar elementos
+    const fechaDesdeInput = document.getElementById('filtroVetDesde');
+    const fechaHastaInput = document.getElementById('filtroVetHasta');
+    const topNSelect = document.getElementById('filtroVetTopN');
+    const btnFiltrar = document.getElementById('btnFiltrarVeterinarios');
+    
+    console.log("BTN:", btnFiltrar); // Este console.log debería mostrarte el elemento <button>
+    
+    const aplicarFiltroVeterinarios = () => {
+        // Leer los valores de los inputs *aquí dentro* para asegurar que son los actuales
+        const fechaInicio = fechaDesdeInput?.value || null;
+        const fechaFin = fechaHastaInput?.value || null;
+        // topNSelect se inicializa con 5 por defecto en el HTML, pero lo leemos igual
+        const topN = parseInt(topNSelect?.value, 10) || 5; 
+
+        // 💡 DEBUG: Confirma que la función se ejecuta y los valores se leen
+        console.log(`✅ Click en Filtrar Veterianarios. Enviando: Desde ${fechaInicio}, Hasta ${fechaFin}, Top ${topN}`);
+
+        renderTopVeterinariosChart(fechaInicio, fechaFin, topN);
+    };
+
+    // 2. Adjuntar listener
+    if (btnFiltrar) {
+        btnFiltrar.addEventListener('click', aplicarFiltroVeterinarios);
+    }
+    
+    // 3. Renderizado inicial
+    renderTopVeterinariosChart(); 
+
+} else if (currentPage === 'inicio.html') {
             await cargarTurnosVeterinario();
-
-            // Renderizar elementos de trabajo diario
             renderKPIs();
             paginaActualTurnos = 1;
             renderProximos();

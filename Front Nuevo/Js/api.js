@@ -1,10 +1,25 @@
-const API_URL = 'https://localhost:7033/api';
+const API_URL = 'https://localhost:7033/api'; 
 
-// USUARIO
+function getAuthHeaders(contentType = 'application/json') {
+    const token = localStorage.getItem('token'); 
+    const headers = {
+        'Accept': 'application/json'
+    };
+    if (contentType) {
+        headers['Content-Type'] = contentType;
+    }
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+    return headers;
+}
+
+// USUARIO 
+
 export async function registerUser(userData) {
     return fetch(`${API_URL}/User/register`, {  
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(), 
         body: JSON.stringify(userData)
     });
 }
@@ -12,29 +27,58 @@ export async function registerUser(userData) {
 export async function loginUser(credentials) {
     return fetch(`${API_URL}/User/login`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify(credentials)
     });
 }
 
 export async function getUserByUsername(username) {
-    return fetch(`${API_URL}/User/${username}`);
+    return fetch(`${API_URL}/User/${username}`, {
+        method: 'GET',
+        headers: getAuthHeaders()
+    });
 }
+
+// RECUPERACIoN DE CONTRASEÑA (Públicas)
+export async function forgotPassword(email) {
+    return fetch(`${API_URL}/User/forgot-password`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(email)
+    });
+}
+
+export async function resetPassword(token, nuevaContraseña) {
+    return fetch(`${API_URL}/User/reset-password`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ token, NuevaContraseña: nuevaContraseña })
+    });
+}
+
 
 // MASCOTA
+
 export async function getAllMascotas() {
-    return fetch(`${API_URL}/Mascotas`);
-}
+    return fetch(`${API_URL}/Mascotas`, {
+        method: 'GET',
+        headers: getAuthHeaders()
+})}
 
 export async function getMascotaById(id) {
-    return fetch(`${API_URL}/Mascotas/id/${id}`);
+    return fetch(`${API_URL}/Mascotas/id/${id}`, {
+        method: 'GET',
+        headers: getAuthHeaders()
+    });
 }
 
 export async function getMascotaByClienteId(clienteId) {
-    return fetch(`${API_URL}/Mascotas/cliente/${clienteId}`);
+    return fetch(`${API_URL}/Mascotas/cliente/${clienteId}`, {
+        method: 'GET',
+        headers: getAuthHeaders()
+    });
 }
 
-// api.js
 export async function createMascota(mascota, imagenArchivo) {
     const formData = new FormData();
 
@@ -50,6 +94,7 @@ export async function createMascota(mascota, imagenArchivo) {
 
     return fetch(`${API_URL}/Mascotas`, {
         method: 'POST',
+        headers: getAuthHeaders(null), 
         body: formData
     });
 }
@@ -58,145 +103,169 @@ export async function createMascota(mascota, imagenArchivo) {
 export async function updateMascota(id, mascotaData) {
     return fetch(`${API_URL}/Mascotas/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify(mascotaData)
     });
 }
 
 export async function deleteMascota(id) {
     return fetch(`${API_URL}/Mascotas/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: getAuthHeaders() 
     });
 }
 
 export async function getTiposMascota() {
-    return fetch(`${API_URL}/Mascotas/Tipos`);
+    return fetch(`${API_URL}/Mascotas/Tipos`, {
+        method: 'GET',
+        headers: getAuthHeaders()
+})
 }
 
-// ATENCION
-
+// ATENCION / TURNOS / DISPONIBILIDAD
 export async function getAllAtenciones() {
-    return fetch(`${API_URL}/Turnos`);
+    return fetch(`${API_URL}/Turnos`, {
+        method: 'GET',
+        headers: getAuthHeaders() 
+    });
 }
 
-// ACTUALIZAR ESTADO DEL TURNO
 export async function actualizarEstadoTurno(codDisponibilidad, nuevoEstado) {
     return fetch(`${API_URL}/Turnos/estado/${codDisponibilidad}?nuevoEstado=${nuevoEstado}`, {
-        method: 'PUT'
+        method: 'PUT',
+        headers: getAuthHeaders() 
     });
 }
 
-
-// Dashboard
-export async function getTopServiciosReservados(mes = null) {
-    let url = `${API_URL}/Dashboard/GetTopServiciosReservados`;
-    
-    if (mes) {
-        // mes debe venir en formato 'YYYY-MM', por ejemplo '2025-04'
-        url += `?mes=${mes}`;
-    }
-
-    return fetch(url, {
-        method: 'GET',
-        headers: { 'Accept': 'application/json' }
-    });
-}
 export async function getAtencionByClienteId(id) {
-    return fetch(`${API_URL}/Turnos/AtencionesxCliente/${id}`);
+    return fetch(`${API_URL}/Turnos/AtencionesxCliente/${id}`, {
+        method: 'GET',
+        headers: getAuthHeaders() 
+    });
 }
 
 export async function getTurnosDisponibles() {
-    return fetch(`${API_URL}/Turnos/disponibilidad/`);
+    return fetch(`${API_URL}/Turnos/disponibilidad/`, {
+        method: 'GET',
+        headers: getAuthHeaders()
+    });
 }
-
-
 
 export async function deleteAtencion(id) {
     return fetch(`${API_URL}/Atencion/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: getAuthHeaders()
     });
 }
 
 export async function getTiposAtencion() {
-    return fetch(`${API_URL}/Turnos/Tipos`);
+    return fetch(`${API_URL}/Turnos/Tipos`, {
+        method: 'GET',
+        headers: getAuthHeaders()
+    });
 }
 
-// TURNOS x VETERINARIO
 export async function getTurnosByVeterinarioId(veterinarioId) {
-    return fetch(`${API_URL}/Turnos/AtencionesxVeterinario/${veterinarioId}`);
+    return fetch(`${API_URL}/Turnos/AtencionesxVeterinario/${veterinarioId}`, {
+        method: 'GET',
+        headers: getAuthHeaders() 
+    });
 }
 
-// TURNOS / ATENCION
 export async function createAtencion(atencionData, codDisponibilidad) {
-    return fetch(`${API_URL}/Turnos/insertar/${codDisponibilidad}`, { 
+    return fetch(`${API_URL}/Turnos/insertar/${codDisponibilidad}`, {  
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify(atencionData)
     });
 }
 
-
-// DISPONIBILIDAD
 export async function getDisponibilidad() {
-    return fetch(`${API_URL}/Turnos/disponibilidad`);
+    return fetch(`${API_URL}/Turnos/disponibilidad`, {
+        method: 'GET',
+        headers: getAuthHeaders()
+    });
 }
-
-
 
 export async function getDisponibilidadHora() {
-    return fetch(`${API_URL}/Atencion/Disponibilidad/Hora`);
+    return fetch(`${API_URL}/Atencion/Disponibilidad/Hora`, {
+        method: 'GET',
+        headers: getAuthHeaders() 
+    });
 }
 
-// CLIENTES
+// CLIENTES (Autenticadas)
+
 export async function getAllClientes() {
-    return fetch(`${API_URL}/Clientes`);
+    return fetch(`${API_URL}/Clientes`, {
+        method: 'GET',
+        headers: getAuthHeaders() 
+    });
 }
 
 export async function getClientesByDNI(dni) {
     return fetch(`${API_URL}/Clientes/${dni}`, {
         method: 'GET',
-        headers: { 'Accept': 'application/json' }
+        headers: getAuthHeaders() 
     });
 }
 
 export async function createCliente(cliente) {
   return fetch(`${API_URL}/Clientes`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getAuthHeaders(), 
     body: JSON.stringify(cliente)
   });
 }
 
-// RECUPERACIoN DE CONTRASEÑA
-export async function forgotPassword(email) {
-    return fetch(`${API_URL}/User/forgot-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(email)
+// DASHBOARD (Autenticadas - Admin)
+
+
+export async function getTopServiciosReservados(mes = null) {
+    let url = `${API_URL}/Dashboard/GetTopServiciosReservados`;    
+    if (mes) {
+        url += `?mes=${mes}`;
+    }
+
+    return fetch(url, {
+        method: 'GET',
+        headers: getAuthHeaders() 
     });
 }
 
-export async function resetPassword(token, nuevaContraseña) {
-    return fetch(`${API_URL}/User/reset-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, NuevaContraseña: nuevaContraseña }) // <-- mayúscula
-    });
-}
-
-
-// FACTURACIÓN SEMANAL
 export async function getFacturacionSemanal(fecMin, fecMax) {
-const url = `${API_URL}/ServicioMasFacturado?fecMin=${fecMin}&fecMax=${fecMax}`;
-  
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: { 'Accept': 'application/json' }
-  });
+const url = `${API_URL}/ServicioMasFacturado?fecMin=${fecMin}&fecMax=${fecMax}`;    
+    const response = await fetch(url, {
+        method: 'GET',
+        headers: getAuthHeaders() 
+    });
 
-  if (!response.ok) {
-    throw new Error('Error al obtener la facturación semanal');
-  }
+    if (!response.ok) {
+        throw new Error('Error al obtener la facturación semanal');
+    }
 
-  return response.json();
+    return response.json();
+}
+
+export async function getTopVeterinarios(fechaInicio = null, fechaFin = null, topN = 5) {
+    const urlBase = `${API_URL}/VeterinarioConMasTurnos`;
+    const params = new URLSearchParams();
+    console.log(urlBase)
+    if (fechaInicio) {
+        params.append('fechaInicio', fechaInicio);
+    }
+    if (fechaFin) {
+        params.append('fechaFin', fechaFin); 
+    }
+    if (topN !== 5) {
+        params.append('topN', topN.toString());
+    }
+   const url = params.toString() ? `${urlBase}?${params.toString()}` : urlBase;
+    
+    console.log("URL de API para Top Veterinarios:", url); // <--- AÑADE ESTO
+    
+    return fetch(url, {
+        method: 'GET',
+        headers: getAuthHeaders()
+    });
 }

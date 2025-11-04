@@ -63,7 +63,8 @@ const SWAL_THEME = {
                     apellido: user.apellido,
                     matricula: user.matricula,
                     email: user.email,
-                    token: data.token
+                    token: data.token,
+                    isAdmin: user.isAdmin 
                 }));
 
                 localStorage.setItem('token', data.token);

@@ -238,6 +238,9 @@ public partial class veterinariaContext : DbContext
                 .HasMaxLength(100)
                 .IsUnicode(false)
                 .HasColumnName("email");
+            entity.Property(e => e.IsAdmin)
+                .HasAnnotation("Relational:DefaultConstraintName", "DF_VETERINARIO_isAdmin")
+                .HasColumnName("isAdmin");
             entity.Property(e => e.Matricula)
                 .IsRequired()
                 .HasMaxLength(50)

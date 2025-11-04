@@ -95,6 +95,8 @@ CREATE TABLE [dbo].[VETERINARIO](
     [password] [varchar](150) NOT NULL, -- Hash de Password para login
 	[resetToken] [varchar](200) NULL,
 	[resetTokenExpiration] DATETIME NULL,  
+	[isAdmin] [bit] NOT NULL CONSTRAINT [DF_Veterinario_isAdmin] DEFAULT 0,
+
 PRIMARY KEY CLUSTERED ([cod_veterinario] ASC),
 UNIQUE NONCLUSTERED ([email] ASC) -- El email debe ser único para el login
 ) ON [PRIMARY]

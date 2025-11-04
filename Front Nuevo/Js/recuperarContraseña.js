@@ -1,11 +1,5 @@
 import { forgotPassword } from './api.js';
 
-// ===== FUNCIONES DE LOADING =====
-// Las copiamos aquí para que este script las pueda usar
-
-/**
- * Muestra el overlay de carga con el logo y el efecto de escaneo.
- */
 function showLoader() {
     let overlay = document.getElementById('loading-overlay');
     
@@ -28,17 +22,12 @@ function showLoader() {
     });
 }
 
-/**
- * Oculta el overlay de carga con una transición suave.
- */
 function hideLoader() {
     const overlay = document.getElementById('loading-overlay');
     if (overlay) {
         overlay.classList.remove('visible');
     }
 }
-// ==================================
-
 
 document.getElementById('forgotForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -46,7 +35,6 @@ document.getElementById('forgotForm').addEventListener('submit', async (e) => {
     const email = document.getElementById('emailForgot').value.trim();
     const message = document.getElementById('message');
     
-    // Capturamos el botón para deshabilitarlo
     const submitButton = e.target.querySelector('button[type="submit"]');
 
     message.textContent = '';
@@ -57,13 +45,11 @@ document.getElementById('forgotForm').addEventListener('submit', async (e) => {
         return;
     }
 
-    // 1. Deshabilitamos el botón y mostramos el loader
     submitButton.disabled = true;
     submitButton.textContent = 'Enviando...';
     showLoader();
 
     try {
-        // 2. Llamamos al endpoint
         const res = await forgotPassword(email);
         const data = await res.json();
 
@@ -95,8 +81,6 @@ document.getElementById('forgotForm').addEventListener('submit', async (e) => {
             confirmButtonColor: '#00BFFF'
         });
     } finally {
-        // 3. (IMPORTANTE) Ocultamos el loader y rehabilitamos el botón
-        //    (esto se ejecuta SIEMPRE, con éxito o error)
         hideLoader();
         submitButton.disabled = false;
         submitButton.textContent = 'Enviar enlace';

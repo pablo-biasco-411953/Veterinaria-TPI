@@ -1,4 +1,4 @@
-import { resetPassword, loginUser } from './api.js'; // funciones que agregamos en api.js
+import { resetPassword, loginUser } from './api.js'; 
 
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('resetForm');
@@ -7,7 +7,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const message = document.getElementById('message');
     const tipsContainer = document.getElementById('passwordTips');
 
-    // 1. Tips de contraseña en vivo
     const tips = {
         length: createTip('* Al menos 8 caracteres'),
         upper: createTip('* Una mayúscula'),
@@ -52,7 +51,6 @@ document.addEventListener('DOMContentLoaded', () => {
         validarPasswordLive(newPasswordInput.value);
     });
 
-    // 2. Toggle visibility
     document.querySelectorAll('.toggle-password').forEach(btn => {
         btn.addEventListener('click', () => {
             const input = btn.previousElementSibling;
@@ -61,7 +59,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // 3. Validacion para submit
     function validarPassword(password) {
         const minLength = 8;
         if (password.length < minLength) return 'La contraseña debe tener al menos 8 caracteres.';
@@ -71,7 +68,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return null;
     }
 
-    // 4. Submit form
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         message.textContent = '';
@@ -105,7 +101,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            // Llamada al endpoint de reset
             const res = await resetPassword(token, newPassword); 
             const data = await res.json();
 

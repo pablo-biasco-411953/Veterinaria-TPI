@@ -127,7 +127,7 @@
               <div class="kpi-icon"><i class="bi bi-cash-coin"></i></div>
               <div>
                 <div class="kpi-value" id="kpiFacturacion">—</div>
-                <div class="kpi-label">Facturación Total</div>
+                <div class="kpi-label">Facturación Total (entre todos los empleados)</div>
               </div>
             </div>
           </div>
@@ -196,31 +196,32 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- 3. GRÁFICO SECUNDARIO: TIPOS DE ATENCIÓN (50% de Ancho) -->
-                <div class="col-lg-6">
-                    <div class="card h-100">
-                        <div class="card-header">
-                            <h5>Distribución de Servicios</h5>
-                        </div>
-                        <div class="card-body">
-                            <span class="text-secondary small mb-3 d-block">Proporción de tipos de atención (ejemplo)</span>
-                            <div class="chart-box">
-                                <canvas id="chartTiposAtencion"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+               <div class="col-lg-6">
+    <div class="card h-100">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h5 class="mb-0">Top Veterinarios por Turnos</h5>
+            <div class="d-flex align-items-center gap-2">
                 
-                <!-- 4. GRÁFICO DE EJEMPLO DE RESERVAS POR DÍA (opcional, en una nueva fila si lo necesitas) -->
-                <div class="col-12 d-none">
-                    <div class="card h-100">
-                        <h5>Reservas por Día de la Semana</h5>
-                        <div class="chart-box">
-                            <canvas id="chartReservasDia"></canvas>
-                        </div>
-                    </div>
-                </div>
+                <input type="date" id="filtroVetDesde" class="form-control form-control-sm" placeholder="Desde" />
+                <input type="date" id="filtroVetHasta" class="form-control form-control-sm" placeholder="Hasta" />
+                <select id="filtroVetTopN" class="form-select form-select-sm w-auto">
+                    <option value="3">Top 3</option>
+                    <option value="5" selected>Top 5</option>
+                    <option value="10">Top 10</option>
+                </select>
+                <button id="btnFiltrarVeterinarios" class="btn btn-sm btn-info" aria-label="Actualizar ranking de veterinarios">
+                    <i class="bi bi-filter"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="card-body"> 
+            <div class="chart-box">
+                <canvas id="chartReservasDia" aria-label="Gráfico Top Veterinarios por Turnos" role="img"></canvas>
+            </div>
+        </div>
+        </div>
+</div>
             </section>
 
             <footer class="py-4 text-center text-secondary small">
