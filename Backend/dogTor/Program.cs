@@ -24,6 +24,7 @@ builder.Services.AddScoped<IAtencionRepository, AtencionRepository>();
 builder.Services.AddScoped<IServicioReservadoRepository, ServicioReservadoRepository>();
 builder.Services.AddScoped<IClienteService, ClienteService>();
 builder.Services.AddScoped<IClienteRepository, ClienteRepository>();
+builder.Services.AddScoped<IServicioMasFacturadoRepository, ServicioMasFacturadoRepository>();
 
 // Servicios
 builder.Services.AddScoped<IMascotaService, MascotaService>();

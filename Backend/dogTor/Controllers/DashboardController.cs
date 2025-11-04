@@ -16,7 +16,6 @@ namespace dogTor.Controllers
             _servicioReservadoRepository = servicioReservadoRepository;
         }
 
-
         [HttpGet("GetTopServiciosReservados")]
         public async Task<IActionResult> GetTiposMascota()
         {
@@ -36,6 +35,5 @@ namespace dogTor.Controllers
                 return StatusCode(500, "Error interno al recuperar esto.");
             }
         }
-
     }
 }
