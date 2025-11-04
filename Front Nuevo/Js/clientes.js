@@ -126,7 +126,7 @@ function renderFiltroTipoMascota() {
 
 // ===== Render mascotas =====
 function renderMascotas() {
-    const grid = $('#gridMascotas');
+    const grid = document.getElementById('gridMascotas');
     if (!grid) return;
     grid.innerHTML = '';
 
@@ -138,35 +138,70 @@ function renderMascotas() {
     const fin = inicio + MASCOTAS_POR_PAGINA;
     const mascotasPagina = Mascotas.slice(inicio, fin);
 
-    mascotasPagina.forEach(m => {
-        const col = document.createElement('div');
-        col.className = 'col-6 col-md-4 card-mascota';
-        col.dataset.clienteId = m.cliente?.codCliente || '';
-        col.dataset.tipo = m.tipo?.codTipoMascota || '';
+    mascotasPagina.forEach((m, index) => {
+    const col = document.createElement('div');
+    col.className = 'col-6 col-md-4 card-mascota';
+    col.dataset.clienteId = m.cliente?.codCliente || '';
+    col.dataset.tipo = m.tipo?.codTipoMascota || '';
 
-        const imgSrc = m.imagenMascota || imagenPorTipo(m.tipo?.nombre);
+    const imgSrc = m.imagenMascota || imagenPorTipo(m.tipo?.nombre);
 
-        col.innerHTML = `
-            <div class="card h-100 shadow-sm border-0 rounded-3 overflow-hidden">
-                <div class="ratio" style="--bs-aspect-ratio: 70%; background-color:#f8f9fa; display:flex; align-items:center; justify-content:center;">
-                    <img src="${imgSrc}" class="card-img-top w-100 h-100" alt="${m.tipo?.nombre || 'Mascota'}" style="object-fit: contain; width: 100%; height: 100%; padding: 0.5rem;">
-                </div>
-                <div class="card-body">
-                    <h5 class="card-title mb-1">${m.nombre}</h5>
-                    <p class="card-text mb-1 text-secondary small">Tipo: ${m.tipo?.nombre || '—'}</p>
-                    <p class="card-text mb-1 text-secondary small">Edad: ${m.edad || '—'}</p>
-                    <p class="card-text small text-muted">Dueño: ${m.cliente?.nombre || '—'} ${m.cliente?.apellido || ''}</p>
-                </div>
+    col.innerHTML = `
+        <div class="card h-100 shadow-sm border-0 rounded-3 overflow-hidden">
+            <div class="ratio" style="--bs-aspect-ratio: 70%; position:relative;">
+                <div class="card-glow"></div>
+                <img src="${imgSrc}" class="card-img-top w-100 h-100" alt="${m.tipo?.nombre || 'Mascota'}" style="object-fit: contain; width: 100%; height: 100%; padding: 0.5rem;">
             </div>
-        `;
-        grid.appendChild(col);
-    });
+            <div class="card-body text-center">
+                <h5 class="card-title mb-1">${m.nombre}</h5>
+                <p class="card-text mb-1 text-secondary small">Tipo: ${m.tipo?.nombre || '—'}</p>
+                <p class="card-text mb-1 text-secondary small">Edad: ${m.edad || '—'}</p>
+                <p class="card-text small text-muted">Dueño: ${m.cliente?.nombre || '—'} ${m.cliente?.apellido || ''}</p>
+            </div>
+        </div>
+    `;
 
-    const count = $('#count');
+    grid.appendChild(col);
+
+    setTimeout(() => col.classList.add('show'), index * 100); // 100ms entre cada card
+});
+
+    const count = document.getElementById('count');
     if (count) count.textContent = totalMascotas;
 
     renderPaginacion(totalPaginas);
 }
+
+function agregarEfecto3D() {
+    const cards = document.querySelectorAll('.card-mascota .card');
+
+    cards.forEach(card => {
+        card.addEventListener('mousemove', e => {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+
+            const rotateX = ((y - centerY) / centerY) * 10; // rotación eje X
+            const rotateY = ((x - centerX) / centerX) * 10; // rotación eje Y
+
+            card.style.transform = `rotateX(${-rotateX}deg) rotateY(${rotateY}deg) scale(1.05)`;
+        });
+
+        card.addEventListener('mouseleave', () => {
+            card.style.transform = `rotateX(0deg) rotateY(0deg) scale(1)`;
+        });
+    });
+}
+
+renderMascotas = (function(orig) {
+    return function() {
+        orig();
+        agregarEfecto3D();
+    }
+})(renderMascotas);
 
 function renderPaginacion(totalPaginas) {
     const footer = document.querySelector('footer');

@@ -17,6 +17,7 @@
   /* success */
 }
 
+
 * {
   box-sizing: border-box
 }
@@ -107,6 +108,92 @@ body::before {
   background: linear-gradient(90deg, rgba(0, 191, 255, .18), transparent);
   color: #EAF6FF;
   border: 1px solid rgba(0, 191, 255, .25)
+}
+.card-mascota .card {
+  background: linear-gradient(145deg, #1f1f1f, #2c2c2c);
+  border-radius: 1rem;
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+  border: 2px solid #0dcaf0;
+  perspective: 1000px;
+}
+
+.card-mascota .card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(45deg, #0dcaf0, #ff00ff, #ffdd00, #0dcaf0);
+  z-index: 0;
+  filter: blur(12px);
+  opacity: 0.6;
+  border-radius: 1rem;
+  transition: opacity 0.4s ease;
+  animation: hueRotate 5s linear infinite;
+}
+
+@keyframes hueRotate {
+  0% { filter: hue-rotate(0deg) blur(12px); }
+  100% { filter: hue-rotate(360deg) blur(12px); }
+}
+
+.card-mascota .card-body {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  padding: 1rem;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(4px);
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.card-mascota img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-bottom: 1px solid rgba(255,255,255,0.2);
+  transition: transform 0.5s ease;
+}
+
+.card-mascota:hover img {
+  transform: scale(1.05) rotate(1.5deg);
+}
+
+.card-mascota .card:hover {
+  transform: translateY(-10px) rotateX(5deg) rotateY(5deg) scale(1.03);
+  box-shadow: 0 15px 25px rgba(0, 191, 255, 0.5), 0 0 30px rgba(62, 198, 255, 0.3);
+}
+
+.card-mascota h5 {
+  color: #00bfff;
+  font-family: 'Orbitron', sans-serif;
+  margin-bottom: 0.2rem;
+}
+
+.card-mascota p {
+  color: #b0b0b0;
+  margin: 0.1rem 0;
+  font-size: 0.85rem;
+}
+
+@keyframes cardAppear {
+  0% {
+    transform: scale(0.8) rotateX(15deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.05) rotateX(-5deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotateX(0deg);
+    opacity: 1;
+  }
+}
+
+.card-mascota.show {
+  animation: cardAppear 0.6s ease forwards;
 }
 
 .content {
@@ -264,6 +351,17 @@ body::before {
 }
 
 #listaProximos {
+    max-height: 400px; /* altura máxima del contenedor */
+    overflow-y: auto;  /* scroll si hay muchos turnos */
+    padding: 0.5rem;   /* opcional, para que no quede pegado */
+}
+
+/* Opcional: que las filas tengan un poco de espacio */
+#listaProximos .list-group-item {
+    padding: 0.5rem 0.75rem;
+}
+
+#listaProximos {
     --bs-list-group-bg: #ece9ea;
 }
 
@@ -403,9 +501,22 @@ body::before {
 }
 
 /*Tarjetas de mascotas*/
+.card-mascota .card,
 .pet-card {
-  overflow: hidden;
-  border-radius: 16px;
+  perspective: 1000px; /* Necesario para que funcione el 3D */
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-mascota .card-inner,
+.pet-card-inner {
+  transform-style: preserve-3d;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  will-change: transform;
+}
+
+.card-mascota .card:hover,
+.pet-card:hover {
+  cursor: pointer;
 }
 
 .pet-card .pet-cover {

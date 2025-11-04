@@ -18,6 +18,43 @@ const SWAL_THEME = {
     confirmButtonColor: '#3498db',
     customClass: { title: 'text-info' }
 };
+const btnPerfil = document.getElementById('btnPerfil');
+const menuPerfil = document.getElementById('menuPerfil');
+
+btnPerfil.addEventListener('click', () => {
+    menuPerfil.classList.toggle('d-none');
+});
+
+document.addEventListener('click', (e) => {
+    if (!btnPerfil.contains(e.target) && !menuPerfil.contains(e.target)) {
+        menuPerfil.classList.add('d-none');
+    }
+});
+
+
+function setearIniciales() {
+    const badge = $('#avatar') || $('#btnPerfil');
+    if (!badge) return;
+
+
+    const raw = sessionStorage.getItem('dogtorUser');
+    let initials = 'US';
+    if (raw) {
+        try {
+            const u = JSON.parse(raw);
+            console.log(u)
+            const email = (u.email || '').trim();
+            if (email) {
+                const namePart = email.split('@')[0];
+                const parts = namePart.split(/[._-]+/).filter(Boolean);
+                if (parts.length === 1) initials = parts[0].slice(0, 2);
+                else initials = (parts[0][0] || '') + (parts[1][0] || '');
+            }
+        } catch { }
+    }
+    badge.textContent = initials.toUpperCase();
+}
+
 const hoy = new Date();
 const yyyy_mm_dd = hoy.toISOString().slice(0, 10);
 
@@ -32,9 +69,7 @@ function formatFecha(fecha) {
 }
 
 function normalizarEstado(nombre) {
-    console.log("pene ", nombre)
     if (!nombre) return '';
-        console.log("pene entro", nombre)
 
     nombre = nombre.toLowerCase();
     if (nombre === 'atendido') return 'finalizado'; // normalizamos
@@ -80,7 +115,7 @@ function renderTurnosPaginado(lista) {
     const end = start + pageSize;
     const pageItems = lista.slice(start, end);
 
-    pageItems.forEach(t => {
+    pageItems.forEach((t, index) => {
         const disp = t.disponibilidadNavigation;
         const tipoA = t.tipoAtencionNavigation;
         const mascota = t.mascotaNavigation;
@@ -104,12 +139,18 @@ function renderTurnosPaginado(lista) {
                 </button>
             </td>
         `;
+
+        // Añadimos la animación flotante con delay escalonado
+        tr.classList.add('float-in');
+        tr.style.animationDelay = `${index * 50}ms`; // cada fila 50ms más tarde
+
         tbody.appendChild(tr);
     });
 
     setupEditarEstadoButtons();
     renderPaginacion(lista);
 }
+
 
 function renderPaginacion(lista) {
     const tbody = $('#tablaTurnos');
@@ -527,10 +568,20 @@ async function initTurnosPage(codVeterinario) {
         Swal.fire({ title: 'Error', text: 'No se pudo cargar la lista de turnos', icon: 'error', ...SWAL_THEME });
     }
     finally {
-
+        setearIniciales()
         hideLoader();
     }
 }
+  // Cerrar sesión
+    const btnCerrarSesion = document.getElementById('btnCerrarSesion');
+    btnCerrarSesion?.addEventListener('click', (e) => {
+        e.preventDefault();
+        sessionStorage.removeItem('dogtorUser');
+        localStorage.removeItem('token');
+        localStorage.removeItem('userEmail');
+        window.location.href = '../Pages/index.html';
+    });
+
 
 // ===== Ejecutar al cargar =====
 document.addEventListener('DOMContentLoaded', async () => {
